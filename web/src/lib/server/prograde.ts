@@ -1,4 +1,4 @@
-import { join, resolve } from "node:path";
+import { join } from "node:path";
 import { createCtx, type Ctx } from "../../../../src/core/context.ts";
 import {
   listCourses,
@@ -16,7 +16,7 @@ import { renderMarkdown } from "../markdown.ts";
 
 /** Web も CLI と同じ core を使う。ここだけがファイルシステムに触る。 */
 export function webCtx(): Ctx {
-  return createCtx({ root: resolve(process.env.PROGRADE_ROOT ?? process.cwd()) });
+  return createCtx();
 }
 
 export interface FileView {

@@ -348,4 +348,4 @@ timeout は不合格（1）として理由を明示。
 | M5 Web | 完了 | SvelteKit SSR + Tailwind、core 共有、採点フォーム |
 | M6 拡張実証 | 一部 | シェル + Python で本体差分ゼロを確認。Go/SQL/React はコース追加のみ |
 
-コース（`tracks/`）はリポジトリに含めない（`.gitignore`）。テストは一時ディレクトリに生成したコースだけを使う。
+コース（`tracks/`）と進捗（`state/`）はリポジトリに含めない。既定のデータルートは `~/.prograde/` で、`--root` > `PROGRADE_ROOT` > ホームの順に解決する。テストは一時ディレクトリに生成したコースだけを使う。

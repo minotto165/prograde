@@ -109,7 +109,7 @@ export async function main(argv: string[]): Promise<void> {
     .name("prograde")
     .description("ローカル完結のプログラミング練習プラットフォーム")
     .version("0.2.0", "-v, --version", "バージョンを表示")
-    .option("--root <dir>", "プロジェクトのルート（既定: カレント）")
+    .option("--root <dir>", "データルート（既定: $PROGRADE_ROOT か ~/.prograde）")
     .option("-c, --course <id>", "コース ID（省略時は唯一のコース）")
     .option("--json", "1行の JSON で出力")
     .exitOverride();

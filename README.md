@@ -7,7 +7,8 @@
 - 演習を解いて `prograde check` すると、ビルドして実行して、結果（終了コード・標準出力・ファイル）だけで合否を返す。
 - 教材・環境・判定はすべてコースのデータ（`tracks/<id>/`）に書く。エンジンは言語を知らない。
 - 進捗は `state/history.jsonl` への追記が真実。`state/progress.json` はいつでも作り直せる投影。
-- コース（`tracks/`）は手元の教材置き場。リポジトリには含めない（`.gitignore`）。
+- コース（`tracks/`）と進捗（`state/`）はホームの `~/.prograde/` に置く。リポジトリには含めない。
+- データの場所は `--root` > `PROGRADE_ROOT` > `~/.prograde` の順で決まる。
 
 ## 使い方
 
@@ -24,7 +25,7 @@ bun bin/prograde.ts -c example-echo selftest
 bun bin/prograde.ts -c example-echo lint
 ```
 
-上の例は、手元に `tracks/example-echo` を置いている場合。
+上の例は、`~/.prograde/tracks/example-echo` を置いている場合（`--root` で別の場所も指定できる）。
 
 終了コード: 0 合格 / 1 不合格 / 2 データ・使い方の誤り / 3 環境が用意できない / 4 内部エラー。
 timeout は不合格扱い。
@@ -111,11 +112,11 @@ Web だけで学習を完結できる（CLI は不要）。
 
 ```bash
 cd web && bun run build
-PROGRADE_ROOT=$(cd .. && pwd) ORIGIN=http://127.0.0.1:4173 PORT=4173 bun build/index.js
+ORIGIN=http://127.0.0.1:4173 PORT=4173 bun build/index.js
 ```
 
 - `ORIGIN` は必須。無いとフォームの POST が 403 になる。
-- `PROGRADE_ROOT` は `tracks/` と `state/` を持つリポジトリのルート。
+- データは既定で `~/.prograde/`。`PROGRADE_ROOT` で別の場所を指せる。
 
 画面と操作:
 
@@ -144,4 +145,5 @@ bun run typecheck # tsc --noEmit
 
 `tests/no-hardcode.test.ts` が `src/core` と `src/cli` に言語固有の語（rustc, npm, docker など）が入っていないことを検証する。
 テストは一時ディレクトリにコースを生成するので、`tracks/` が無くても通る。
-新しい言語を足すときは `tracks/` にコースを足すだけで、エンジンには触らない。コースはリポジトリにコミットしない。
+新しい言語を足すときは `~/.prograde/tracks/` にコースを足すだけで、エンジンには触らない。コースはリポジトリにコミットしない。
+データを非公開 Git で管理したい場合は、`~/.prograde` で `git init` し、`state/` と `work/` を `.gitignore` する。

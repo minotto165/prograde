@@ -4,9 +4,9 @@
 
 | 状態 | 寿命 | 場所 | 真実か |
 | --- | --- | --- | --- |
-| content | 静的。手で書ける | `tracks/<course>/` | はい（教材の唯一の出所） |
-| attempt | 使い捨て | `work/<course>/<exId>/.attempts/<rand>/` | いいえ（採点後に消える） |
-| progress | 永続。復旧可能 | `state/history.jsonl` + `state/progress.json` | 追記ログが真実、投影は従 |
+| content | 静的。手で書ける | `~/.prograde/tracks/<course>/` | はい（教材の唯一の出所） |
+| attempt | 使い捨て | `~/.prograde/work/<course>/<exId>/.attempts/<rand>/` | いいえ（採点後に消える） |
+| progress | 永続。復旧可能 | `~/.prograde/state/history.jsonl` + `state/progress.json` | 追記ログが真実、投影は従 |
 
 ## 本体 API
 
@@ -34,7 +34,7 @@ readProgress/recordAttempt 履歴に追記して投影を返す
 ## 不変条件
 
 - 判定は実行結果だけを見る（コードを読まない）。
-- 言語を足す = `tracks/` にディレクトリを足す。エンジンに if 文を足さない（`tests/no-hardcode.test.ts` が強制）。
+- 言語を足す = `~/.prograde/tracks/` にディレクトリを足す。エンジンに if 文を足さない（`tests/no-hardcode.test.ts` が強制）。
 - ID は不変。教材本文は複製しない（メタデータのみ）。
 - 進捗は壊れても手で直せる（`history.jsonl` を消せば最初から、壊れた行は無視）。
 - 失敗は次の手まで返す（`remediation`、ヒント、診断、exit code）。

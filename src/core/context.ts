@@ -1,6 +1,7 @@
+import { homedir } from "node:os";
 import { join, resolve } from "node:path";
 
-/** 実行に必要なディレクトリの束。既定はカレント配下。 */
+/** 実行に必要なディレクトリの束。既定は ~/.prograde 配下。 */
 export interface Ctx {
   root: string;
   /** コース置き場（既定 tracks/）。 */
@@ -23,8 +24,13 @@ export interface CtxOptions {
   cacheDir?: string;
 }
 
+/** データの既定ルート。PROGRADE_ROOT があればそれ、無ければ ~/.prograde。 */
+export function defaultDataRoot(): string {
+  return process.env.PROGRADE_ROOT ?? join(homedir(), ".prograde");
+}
+
 export function createCtx(options: CtxOptions = {}): Ctx {
-  const root = resolve(options.root ?? process.cwd());
+  const root = resolve(options.root ?? defaultDataRoot());
   const stateDir = resolve(root, options.stateDir ?? "state");
   return {
     root,
