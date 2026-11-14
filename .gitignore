@@ -1,0 +1,9 @@
+node_modules/
+.bun-cache/
+state/
+work/
+tracks/
+web/.svelte-kit/
+web/build/
+*.log
+.DS_Store
