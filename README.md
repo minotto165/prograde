@@ -16,7 +16,7 @@
 bun bin/prograde.ts courses
 bun bin/prograde.ts -c example-echo list
 bun bin/prograde.ts -c example-echo lesson echo-01
-bun bin/prograde.ts -c example-echo lesson echo-01 --slide 2
+bun bin/prograde.ts -c example-echo lesson echo-01 --slide 1
 bun bin/prograde.ts -c example-echo lesson echo-01 --json
 bun bin/prograde.ts -c example-echo quiz echo-01 --answer q1=a
 bun bin/prograde.ts -c example-echo open echo-01-e01
