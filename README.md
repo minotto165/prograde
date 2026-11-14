@@ -16,6 +16,8 @@
 bun bin/prograde.ts courses
 bun bin/prograde.ts -c example-echo list
 bun bin/prograde.ts -c example-echo lesson echo-01
+bun bin/prograde.ts -c example-echo lesson echo-01 --slide 2
+bun bin/prograde.ts -c example-echo lesson echo-01 --json
 bun bin/prograde.ts -c example-echo quiz echo-01 --answer q1=a
 bun bin/prograde.ts -c example-echo open echo-01-e01
 bun bin/prograde.ts -c example-echo check echo-01-e01
@@ -38,7 +40,8 @@ timeout は不合格扱い。
 tracks/<courseId>/
   course.json                 # id, label, ext, envs, lessons
   content/<lessonId>/
-    lesson.md                 # レッスン本文
+    slides/NN.md              # ページ送り教材（1枚=1ファイル）
+    lesson.md                 # 旧形式の1枚教材（slides/ とは併用不可）
     quiz.json                 # 振り返りクイズ（任意）
     ex/<exId>/
       exercise.json           # 環境・ファイル・実行・観測・判定
@@ -125,7 +128,7 @@ ORIGIN=http://127.0.0.1:4173 PORT=4173 bun build/index.js
 | `/` | 学習状況（Lv / XP / 解いた数 / 連続日数）とコース一覧、続きから解く導線 |
 | `/help` | 使い方と採点の仕組み |
 | `/c/<course>` | レッスンごとの進捗と演習チップ、次の演習 |
-| `/c/<course>/l/<lesson>` | Markdown 本文、振り返りクイズ（その場で採点）、演習一覧 |
+| `/c/<course>/l/<lesson>` | 教材の1枚目。`/<n>` でページ送り、最終スライドで振り返りクイズと演習一覧 |
 | `/c/<course>/e/<exercise>` | 3ペイン（手順 / エディタ / コンソールと見本）、採点 / 実行だけ / 雛形に戻す、レッスン進捗バー |
 
 - 演習画面は左に手順（課題・判定・ヒント）、中央にファイルタブ付きエディタ、右にコンソールと見本を並べる。下部はレッスンの進捗バー。
@@ -133,6 +136,7 @@ ORIGIN=http://127.0.0.1:4173 PORT=4173 bun build/index.js
 - 採点結果は合格・不合格、判定ごとの期待値と実際値、診断、標準出力・標準エラーで返す。
 - 「実行だけ」は判定を表示せず、終了コードと出力だけを見せる（履歴には記録しない）。
 - 提出したコードは作業コピーに保存されるので、次に開くと続きから書ける。「雛形に戻す」で初期状態に戻る。
+- レッスンは `slides/NN.md` を番号順に1ページずつ表示する（`lesson.md` だけなら1ページ）。クイズと演習は最後のスライドまで進むと出る。
 - クイズの回答は保存しない（何度でも試せる）。
 - SSR のみで、クライアント JS が無くてもフォームが動く。CLI と同じ `src/core` を共有する。
 

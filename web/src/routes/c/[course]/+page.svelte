@@ -25,7 +25,11 @@
         <p class="text-xs text-emerald-700">次に解く演習</p>
         <p class="text-sm font-medium text-slate-900">{data.next.title}</p>
       </div>
-      <a href={`/c/${data.id}/e/${data.next.id}`} class="rounded-md bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700">始める</a>
+      <div class="flex flex-wrap items-center gap-2">
+        <a href={`/c/${data.id}/l/${data.next.lessonId}`}
+           class="rounded-md border border-emerald-300 bg-white px-3 py-2 text-sm font-medium text-emerald-800 hover:bg-emerald-50">解説を読む</a>
+        <a href={`/c/${data.id}/e/${data.next.id}`} class="rounded-md bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700">始める</a>
+      </div>
     </div>
   {:else}
     <p class="mt-4 rounded-lg bg-emerald-50 px-4 py-3 text-sm text-emerald-700">このコースはすべて解けています。</p>

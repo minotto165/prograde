@@ -83,6 +83,19 @@ export function exerciseJson(input: Record<string, unknown>): string {
   );
 }
 
+/** レッスンに slides/NN.md を追加する（配列の順に 01, 02, ...）。 */
+export function withSlides(
+  files: Record<string, string>,
+  lessonId: string,
+  slides: string[],
+): Record<string, string> {
+  const out = { ...files };
+  for (const [offset, body] of slides.entries()) {
+    out["content/" + lessonId + "/slides/" + String(offset + 1).padStart(2, "0") + ".md"] = body;
+  }
+  return out;
+}
+
 /** 最小構成のコース（1レッスン、指定した演習、シェル環境）。 */
 export function basicCourseFiles(id: string, exerciseIds: string[]): Record<string, string> {
   const files: Record<string, string> = {

@@ -27,11 +27,24 @@ export interface ExerciseEntry {
   index: number;
 }
 
+export interface LoadedSlide {
+  /** 1 始まり。 */
+  index: number;
+  /** ファイル名の番号（lesson.md は "lesson"）。 */
+  id: string;
+  file: string;
+  /** レッスンディレクトリからの相対パス。 */
+  relPath: string;
+  /** 最初の # 見出し。無ければ null。 */
+  title: string | null;
+  body: string;
+}
+
 export interface LoadedLesson {
   ref: LessonRef;
   index: number;
   dir: string;
-  doc: string | null;
+  slides: LoadedSlide[];
   quiz: Quiz | null;
   exercises: ExerciseEntry[];
 }
@@ -126,6 +139,77 @@ export async function resolveCourseId(ctx: Ctx, requested?: string): Promise<str
   );
 }
 
+const SLIDE_FILE = /^(\d{2})(?:[-_].+)?\.md$/;
+
+function slideTitle(body: string): string | null {
+  const match = /^#\s+(.+?)\s*$/m.exec(body);
+  return match ? match[1].trim() : null;
+}
+
+/**
+ * レッスン本文を読む。
+ * - content/<lessonId>/slides/NN.md（NN は 2 桁。NN-名前.md も可）を番号順に並べる。
+ * - 旧形式の lesson.md は 1 枚のスライドとして読む。slides/ との併用はエラー。
+ */
+async function readSlides(courseId: string, lessonId: string, lessonDir: string): Promise<LoadedSlide[]> {
+  const slidesDir = join(lessonDir, "slides");
+  const relDir = "content/" + lessonId + "/slides";
+  let names: string[] = [];
+  if (await pathExists(slidesDir)) {
+    names = (await readdir(slidesDir)).filter((name) => name.endsWith(".md")).sort();
+    if (names.length === 0) {
+      fail(courseId, "スライドがありません: " + relDir + "（NN.md を置くか、slides/ を削除してください）");
+    }
+  }
+
+  const legacy = await readTextIfExists(join(lessonDir, "lesson.md"));
+  if (names.length > 0 && legacy !== null) {
+    fail(courseId, "lesson.md と slides/ は同時に使えません: content/" + lessonId);
+  }
+  if (names.length === 0) {
+    if (legacy === null) return [];
+    return [
+      {
+        index: 1,
+        id: "lesson",
+        file: "lesson.md",
+        relPath: "lesson.md",
+        title: slideTitle(legacy),
+        body: legacy,
+      },
+    ];
+  }
+
+  const seen = new Map<string, string>();
+  const slides: LoadedSlide[] = [];
+  for (const name of names) {
+    const match = SLIDE_FILE.exec(name);
+    if (!match) {
+      fail(courseId, "スライドのファイル名が不正です: " + relDir + "/" + name + "（NN.md か NN-名前.md）");
+    }
+    const number = match[1];
+    const previous = seen.get(number);
+    if (previous !== undefined) {
+      fail(courseId, "スライド番号が重複しています: " + relDir + "/" + previous + " と " + name);
+    }
+    seen.set(number, name);
+    const body = await readTextIfExists(join(slidesDir, name));
+    if (body === null) fail(courseId, "スライドが読めません: " + relDir + "/" + name);
+    slides.push({
+      index: 0,
+      id: number,
+      file: name,
+      relPath: "slides/" + name,
+      title: slideTitle(body),
+      body,
+    });
+  }
+
+  slides.sort((a, b) => Number(a.id) - Number(b.id));
+  for (const [offset, slide] of slides.entries()) slide.index = offset + 1;
+  return slides;
+}
+
 export async function loadCourse(ctx: Ctx, id: string): Promise<LoadedCourse> {
   const dir = join(ctx.coursesDir, id);
   const spec = await readJson(join(dir, "course.json"), CourseSchema);
@@ -139,7 +223,7 @@ export async function loadCourse(ctx: Ctx, id: string): Promise<LoadedCourse> {
     const lessonIndex = lessonOffset + 1;
     const lessonDir = join(dir, "content", ref.id);
     if (!(await pathExists(lessonDir))) fail(id, "レッスンのディレクトリがありません: content/" + ref.id);
-    const doc = await readTextIfExists(join(lessonDir, "lesson.md"));
+    const slides = await readSlides(id, ref.id, lessonDir);
     const quiz = await readJsonIfExists(join(lessonDir, "quiz.json"), QuizSchema);
     const lessonExercises: ExerciseEntry[] = [];
 
@@ -168,7 +252,7 @@ export async function loadCourse(ctx: Ctx, id: string): Promise<LoadedCourse> {
       byId.set(exerciseId, entry);
     }
 
-    lessons.push({ ref, index: lessonIndex, dir: lessonDir, doc, quiz, exercises: lessonExercises });
+    lessons.push({ ref, index: lessonIndex, dir: lessonDir, slides, quiz, exercises: lessonExercises });
   }
 
   return { id, dir, spec, lessons, exercises, byId };

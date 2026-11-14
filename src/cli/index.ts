@@ -233,14 +233,64 @@ export async function main(argv: string[]): Promise<void> {
   program
     .command("lesson")
     .argument("<lessonId>", "レッスン ID")
-    .description("レッスン本文と演習一覧を表示")
-    .action(async (lessonId: string, _options, command: Command) => {
+    .description("レッスン本文（スライド）と演習一覧を表示")
+    .option("--slide <n>", "スライド番号（1 始まり）")
+    .action(async (lessonId: string, options: { slide?: string }, command: Command) => {
       const { course } = await courseOf(command);
+      const globals = command.optsWithGlobals() as GlobalOptions;
       const lesson = findLesson(course, lessonId);
+
+      if (options.slide !== undefined && globals.json) {
+        throw new UserError("--slide と --json は同時に指定できません");
+      }
+
+      if (globals.json) {
+        return printJson({
+          courseId: course.id,
+          lessonId: lesson.ref.id,
+          title: lesson.ref.title,
+          goal: lesson.ref.goal ?? "",
+          slides: lesson.slides.map((slide) => ({
+            index: slide.index,
+            id: slide.id,
+            title: slide.title,
+            body: slide.body,
+          })),
+          exercises: lesson.exercises.map((entry) => ({ id: entry.id, title: entry.spec.title })),
+        });
+      }
+
       console.log(pc.bold(lesson.ref.title) + pc.dim("  (" + lessonId + ")"));
       if (lesson.ref.goal) console.log(pc.dim("目標: " + lesson.ref.goal));
       console.log("");
-      console.log(lesson.doc?.trim() ?? pc.yellow("（本文がありません）"));
+
+      if (options.slide !== undefined) {
+        if (lesson.slides.length === 0) throw new UserError("スライドがありません: " + lessonId);
+        if (!/^\d+$/.test(options.slide)) {
+          throw new UserError(
+            "--slide は 1〜" + lesson.slides.length + " の整数で指定してください: " + options.slide,
+          );
+        }
+        const number = Number(options.slide);
+        const slide = lesson.slides[number - 1];
+        if (!slide) {
+          throw new UserError(
+            "--slide は 1〜" + lesson.slides.length + " の整数で指定してください: " + options.slide,
+          );
+        }
+        console.log(slide.body.trim());
+      } else if (lesson.slides.length === 0) {
+        console.log(pc.yellow("（本文がありません）"));
+      } else {
+        for (const slide of lesson.slides) {
+          if (lesson.slides.length > 1) {
+            console.log(pc.dim("スライド " + slide.index + "/" + lesson.slides.length));
+          }
+          console.log(slide.body.trim());
+          console.log("");
+        }
+      }
+
       console.log("");
       for (const entry of lesson.exercises) {
         console.log("  " + entry.id + "  " + entry.spec.title);

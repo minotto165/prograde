@@ -2,10 +2,8 @@ import { fail } from "@sveltejs/kit";
 import { gradeQuiz, lessonPage } from "$lib/server/prograde";
 
 export async function load({ params }) {
-  const { course, lesson, progress, docHtml, quiz, exercises, prevLesson, nextLesson } = await lessonPage(
-    params.course,
-    params.lesson,
-  );
+  const { course, lesson, progress, slide, slideHtml, prevSlide, nextSlide, isLast, quiz, exercises, prevLesson, nextLesson } =
+    await lessonPage(params.course, params.lesson, params.slide);
   return {
     courseId: course.id,
     courseLabel: course.spec.label,
@@ -14,7 +12,11 @@ export async function load({ params }) {
     goal: lesson.ref.goal ?? "",
     skills: lesson.ref.skills ?? [],
     estimateMin: lesson.ref.estimateMin ?? null,
-    docHtml,
+    slide,
+    slideHtml,
+    prevSlide,
+    nextSlide,
+    isLast,
     quiz,
     exercises,
     prevLesson,

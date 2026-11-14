@@ -1,4 +1,5 @@
 import { join } from "node:path";
+import { error } from "@sveltejs/kit";
 import { createCtx, type Ctx } from "../../../../src/core/context.ts";
 import {
   listCourses,
@@ -136,15 +137,30 @@ export async function coursePage(courseId: string) {
   };
 }
 
-export async function lessonPage(courseId: string, lessonId: string) {
+export async function lessonPage(courseId: string, lessonId: string, slideParam?: string) {
   const { course, progress } = await coursePage(courseId);
   const lesson = findLesson(course, lessonId);
   const index = course.lessons.findIndex((item) => item.ref.id === lessonId);
+  const total = lesson.slides.length;
+  let slideIndex = 0;
+  if (total > 0 && slideParam !== undefined) {
+    if (!/^\d+$/.test(slideParam)) throw error(404, "スライドが見つかりません");
+    const number = Number(slideParam);
+    if (number < 1 || number > total) throw error(404, "スライドが見つかりません");
+    slideIndex = number - 1;
+  }
+  const current = total > 0 ? lesson.slides[slideIndex] : null;
   return {
     course,
     lesson,
     progress,
-    docHtml: lesson.doc ? renderMarkdown(lesson.doc) : "",
+    slide: current
+      ? { index: current.index, total, id: current.id, title: current.title }
+      : null,
+    slideHtml: current ? renderMarkdown(current.body) : "",
+    prevSlide: current && slideIndex > 0 ? slideIndex : null,
+    nextSlide: current && slideIndex < total - 1 ? slideIndex + 2 : null,
+    isLast: current ? slideIndex === total - 1 : true,
     quiz: lesson.quiz,
     exercises: lesson.exercises.map((entry) => ({
       id: entry.id,
