@@ -8,33 +8,33 @@
   description="prograde の進め方、採点の仕組み、データの保存先、キーボード操作をまとめています。"
 />
 
-<h1 class="text-3xl font-medium tracking-tight text-ink sm:text-4xl">使い方</h1>
+<h1 class="text-3xl font-medium tracking-tight text-ink">使い方</h1>
 
-<section class="mt-7 grid gap-4 sm:grid-cols-2">
-  <article class="card p-5">
+<section class="mt-8 grid gap-4 sm:grid-cols-2">
+  <article class="card p-5 sm:p-6">
     <h2 class="font-medium text-ink">解説と演習を交互に進める</h2>
-    <p class="mt-1 text-sm leading-relaxed text-muted">
+    <p class="mt-2 text-sm leading-relaxed text-muted">
       コースからレッスンを開くと、ページ送りの解説が始まります。何枚か読むと演習が挟まり、解き終えるとまた次の解説へ進みます。
     </p>
   </article>
 
-  <article class="card p-5">
+  <article class="card p-5 sm:p-6">
     <h2 class="font-medium text-ink">演習を解く</h2>
-    <p class="mt-1 text-sm leading-relaxed text-muted">
+    <p class="mt-2 text-sm leading-relaxed text-muted">
       エディタにコードを書いて「できた！」を押します。ビルド・実行・結果の比較まで自動で走ります。途中経過は右上の実行ボタンで確認できます。書いたコードは自動で保存されます。
     </p>
   </article>
 
-  <article class="card p-5">
+  <article class="card p-5 sm:p-6">
     <h2 class="font-medium text-ink">結果を読む</h2>
-    <p class="mt-1 text-sm leading-relaxed text-muted">
+    <p class="mt-2 text-sm leading-relaxed text-muted">
       合否・判定項目・コンパイラの診断・標準出力が並びます。失敗した理由がそのまま次の一手になります。判定はコードの書き方ではなく、実行結果だけを見ます。
     </p>
   </article>
 
-  <article class="card p-5">
+  <article class="card p-5 sm:p-6">
     <h2 class="font-medium text-ink">進捗は自動で残る</h2>
-    <p class="mt-1 text-sm leading-relaxed text-muted">
+    <p class="mt-2 text-sm leading-relaxed text-muted">
       合格すると進捗が残り、次に解く演習が示されます。閉じても続きから編集できます。「雛形に戻す」で初期状態に戻せます。
     </p>
   </article>
@@ -111,7 +111,7 @@
   <h2 class="text-xl font-medium tracking-tight text-ink">よくある質問</h2>
   <div class="mt-3 space-y-2">
     <details class="group card overflow-hidden">
-      <summary class="flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-3 text-sm font-semibold text-ink">
+      <summary class="flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-3 text-sm font-medium text-ink">
         コードはどこに保存されますか？
         <Icon name="chevron-down" size={16} className="shrink-0 text-muted transition-transform group-open:rotate-180" />
       </summary>
@@ -121,7 +121,7 @@
     </details>
 
     <details class="group card overflow-hidden">
-      <summary class="flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-3 text-sm font-semibold text-ink">
+      <summary class="flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-3 text-sm font-medium text-ink">
         環境の準備に失敗します
         <Icon name="chevron-down" size={16} className="shrink-0 text-muted transition-transform group-open:rotate-180" />
       </summary>
@@ -131,7 +131,7 @@
     </details>
 
     <details class="group card overflow-hidden">
-      <summary class="flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-3 text-sm font-semibold text-ink">
+      <summary class="flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-3 text-sm font-medium text-ink">
         コースを追加できますか？
         <Icon name="chevron-down" size={16} className="shrink-0 text-muted transition-transform group-open:rotate-180" />
       </summary>
@@ -141,7 +141,7 @@
     </details>
 
     <details class="group card overflow-hidden">
-      <summary class="flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-3 text-sm font-semibold text-ink">
+      <summary class="flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-3 text-sm font-medium text-ink">
         進捗をリセットしたい
         <Icon name="chevron-down" size={16} className="shrink-0 text-muted transition-transform group-open:rotate-180" />
       </summary>
@@ -152,7 +152,7 @@
   </div>
 </section>
 
-<div class="mt-9 flex flex-wrap gap-3">
+<div class="mt-8 flex flex-wrap gap-3">
   <a href="/" class="btn btn-primary">
     <Icon name="home" size={16} />
     コースへ戻る

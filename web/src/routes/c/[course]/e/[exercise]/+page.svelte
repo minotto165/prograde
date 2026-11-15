@@ -67,27 +67,27 @@
       { label: data.lessonTitle, href: lessonUrl },
     ]}
   />
-  <div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted sm:ml-auto">
+  <div class="flex w-full flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted sm:ml-auto sm:w-auto">
     <span class="font-mono">演習 {data.position.index} / {data.position.total}</span>
     <span class="font-mono">{data.env}</span>
     {#if solved}
       <span class="inline-flex items-center text-brand-strong">
-        <Icon name="check" size={13} />
+        <Icon name="check" size={16} />
         <span class="sr-only">合格済み</span>
       </span>
     {/if}
   </div>
 </div>
 
-<h1 class="mt-2 text-xl font-medium leading-tight tracking-tight text-ink sm:text-2xl">
+<h1 class="mt-3 text-xl font-medium leading-tight tracking-tight text-ink sm:text-2xl">
   {data.title}
 </h1>
 
 <div
-  class="mt-3 grid items-start gap-4 lg:grid-cols-[minmax(280px,340px)_minmax(0,1fr)] xl:min-h-0 xl:flex-1 xl:grid-cols-[minmax(270px,310px)_minmax(0,1fr)_minmax(320px,370px)] xl:items-stretch"
+  class="mt-4 grid items-start gap-4 lg:grid-cols-[minmax(280px,320px)_minmax(0,1fr)] xl:min-h-0 xl:flex-1 xl:grid-cols-[minmax(280px,320px)_minmax(0,1fr)_minmax(320px,360px)] xl:items-stretch"
 >
   <aside
-    class="card overflow-hidden xl:h-full xl:overflow-y-auto"
+    class="card overflow-hidden xl:max-h-[calc(100vh-7rem)] xl:self-start xl:overflow-y-auto"
     aria-label="この演習の手順"
   >
     <div class="border-b border-line px-5 py-4">
@@ -112,7 +112,7 @@
       <details class="group mx-5 mb-5 rounded-xl border border-accent/20 bg-accent-soft/60 px-4 py-3">
         <summary class="flex cursor-pointer list-none items-center justify-between gap-2 text-xs font-medium text-accent">
           ヒント
-          <Icon name="chevron-down" size={14} className="shrink-0 transition-transform group-open:rotate-180" />
+          <Icon name="chevron-down" size={16} className="shrink-0 transition-transform group-open:rotate-180" />
         </summary>
         <ol class="mt-2.5 list-decimal space-y-1.5 pl-4 text-xs leading-relaxed text-ink-soft">
           {#each data.hints as hint, index (index)}
@@ -129,7 +129,7 @@
       id="exercise-form"
       method="POST"
       action="?/grade"
-      class="flex min-h-[560px] flex-col overflow-hidden rounded-2xl border border-white/10 bg-code shadow-sm xl:h-full xl:min-h-0"
+      class="flex min-h-[440px] flex-col overflow-hidden rounded-2xl border border-white/10 bg-code shadow-sm sm:min-h-[520px] xl:h-full xl:min-h-0"
     >
       <div class="flex items-stretch border-b border-white/10 bg-white/[0.04]">
         <div class="flex min-w-0 flex-1 items-center gap-1 overflow-x-auto px-2 pt-2" role="group" aria-label="編集するファイル">
@@ -188,7 +188,7 @@
 
     <div id="result" class="flex min-h-0 scroll-mt-28 flex-col gap-4 xl:h-full xl:overflow-y-auto">
       <section
-        class="flex min-h-[190px] max-h-[260px] flex-col overflow-hidden rounded-2xl border border-white/10 bg-code shadow-sm xl:min-h-0 xl:max-h-none xl:flex-1"
+        class="flex min-h-[192px] max-h-[256px] flex-col overflow-hidden rounded-2xl border border-white/10 bg-code shadow-sm xl:min-h-0 xl:max-h-none xl:flex-1"
         aria-label="あなたの標準出力"
         aria-live="polite"
       >
@@ -202,7 +202,7 @@
             aria-label="コードを実行"
             title="コードを実行"
           >
-            <Icon name="play" size={15} />
+            <Icon name="play" size={16} />
           </button>
         </header>
         <div class="min-h-0 flex-1 overflow-y-auto px-4 pb-4">
@@ -231,7 +231,7 @@
       </section>
 
       <section
-        class="flex min-h-[190px] max-h-[260px] flex-col overflow-hidden rounded-2xl border border-white/10 bg-code shadow-sm xl:min-h-0 xl:max-h-none xl:flex-1"
+        class="flex min-h-[192px] max-h-[256px] flex-col overflow-hidden rounded-2xl border border-white/10 bg-code shadow-sm xl:min-h-0 xl:max-h-none xl:flex-1"
         aria-label="お手本の標準出力"
       >
         <header class="flex shrink-0 items-center justify-between gap-2 px-4 py-2.5">
@@ -244,7 +244,7 @@
             aria-label="お手本を実行"
             title="お手本を実行"
           >
-            <Icon name="play" size={15} />
+            <Icon name="play" size={16} />
           </button>
         </header>
         <div class="min-h-0 flex-1 overflow-y-auto px-4 pb-4">
@@ -268,9 +268,9 @@
         <summary class="flex cursor-pointer list-none items-center justify-between gap-2 border-t border-line px-1 py-2.5 text-xs">
           <span class="font-medium text-ink">判定</span>
           <span class="flex items-center gap-1 font-medium {result.ok ? 'text-brand-strong' : 'text-danger'}">
-            <Icon name={result.ok ? "check" : "x"} size={13} />
+            <Icon name={result.ok ? "check" : "x"} size={16} />
             {result.ok ? "合格" : "不合格"} · {passedCount} / {result.checks.length}
-            <Icon name="chevron-down" size={14} className="ml-1 shrink-0 text-muted transition-transform group-open:rotate-180" />
+            <Icon name="chevron-down" size={16} className="ml-1 shrink-0 text-muted transition-transform group-open:rotate-180" />
           </span>
         </summary>
         <div class="mt-2 max-h-56 overflow-y-auto rounded-xl border border-line bg-surface px-4 py-3">
@@ -284,7 +284,7 @@
                       ? 'bg-brand-soft text-brand-strong'
                       : 'bg-danger-soft text-danger'}"
                   >
-                    <Icon name={check.ok ? "check" : "x"} size={12} />
+                    <Icon name={check.ok ? "check" : "x"} size={16} />
                   </span>
                   <div class="min-w-0 flex-1">
                     <p class="font-mono text-xs font-medium text-ink-soft">{check.name}</p>
@@ -336,12 +336,12 @@
             : data.nextStep.kind === "exercise"
               ? "次の演習へ"
               : "次のレッスンへ"}
-          <Icon name="arrow-right" size={15} />
+          <Icon name="arrow-right" size={16} />
         </a>
       {:else}
         <a href={'/c/' + data.courseId} class="btn btn-primary w-full shrink-0">
           コースへ戻る
-          <Icon name="arrow-right" size={15} />
+          <Icon name="arrow-right" size={16} />
         </a>
       {/if}
     {/if}
@@ -350,11 +350,11 @@
 </div>
 
 <div class="mt-6 flex flex-wrap items-center gap-x-4 gap-y-3 xl:shrink-0">
-  <a href={data.slideHref} class="inline-flex min-h-9 items-center gap-1 text-xs font-medium text-ink-soft hover:text-ink">
-    <Icon name="arrow-left" size={14} />
+  <a href={data.slideHref} class="order-1 inline-flex min-h-9 items-center gap-1 text-xs font-medium text-ink-soft hover:text-ink">
+    <Icon name="arrow-left" size={16} />
     スライドを見る
   </a>
-  <div class="flex w-full items-center gap-3 sm:ml-auto sm:w-56">
+  <div class="order-3 flex w-full items-center gap-3 sm:order-2 sm:ml-auto sm:w-56">
     <ProgressBar value={progressPercent} size="sm" />
     <span class="shrink-0 text-xs font-medium text-muted">
       {data.lessonProgress.solved} / {data.lessonProgress.total} クリア
@@ -364,7 +364,7 @@
     type="submit"
     form="exercise-form"
     formaction="?/grade"
-    class="btn btn-primary ml-auto min-h-9 shrink-0 sm:ml-3"
+    class="btn btn-primary order-2 ml-auto shrink-0 sm:order-3 sm:ml-3 sm:min-h-9"
     title="採点する（⌘/Ctrl + Enter）"
   >
     できた！

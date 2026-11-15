@@ -20,19 +20,14 @@
 
 <Breadcrumb items={[{ label: "コース", href: "/" }, { label: data.label }]} />
 
-<header class="mt-3 flex flex-wrap items-end justify-between gap-x-5 gap-y-2">
-  <div class="min-w-0">
-    <h1 class="text-2xl font-medium tracking-tight text-ink sm:text-3xl">{data.label}</h1>
-    {#if data.description}
-      <p class="mt-1 max-w-2xl text-sm leading-relaxed text-ink-soft">{data.description}</p>
-    {/if}
-  </div>
-  <p class="shrink-0 text-xs text-muted">
-    {data.lessons.length} レッスン
-  </p>
+<header class="mt-3">
+  <h1 class="text-2xl font-medium tracking-tight text-ink sm:text-3xl">{data.label}</h1>
+  {#if data.description}
+    <p class="mt-2 max-w-2xl text-sm leading-relaxed text-ink-soft">{data.description}</p>
+  {/if}
 </header>
 
-<div class="mt-5 flex max-w-xl items-center gap-3">
+<div class="mt-5 flex max-w-md items-center gap-3">
   <ProgressBar value={percent} size="sm" />
   <p class="shrink-0 text-xs tabular-nums text-muted">
     <strong class="font-medium text-ink">{data.stats.solved}</strong> / {data.totalExercises} 演習
@@ -40,25 +35,29 @@
 </div>
 
 <section class="mt-8">
-  <h2 class="text-xl font-medium tracking-tight text-ink">レッスン</h2>
+  <div class="flex items-baseline justify-between gap-3">
+    <h2 class="text-xl font-medium tracking-tight text-ink">レッスン</h2>
+    <span class="text-xs tabular-nums text-muted">{data.lessons.length} レッスン</span>
+  </div>
 
-  <ol class="mt-3 grid gap-3">
+  <ol class="mt-4 grid gap-3">
     {#each data.lessons as lesson, index (lesson.id)}
       {@const complete = lesson.total > 0 && lesson.solved === lesson.total}
       {@const started = lesson.solved > 0 && !complete}
-      <li class="card p-4 sm:p-5">
-        <div class="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-start sm:justify-between sm:gap-x-4">
+      {@const isNext = lesson.id === data.nextLesson}
+      <li class="card p-5">
+        <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-x-4">
           <div class="min-w-0 flex-1">
-            <div class="flex flex-wrap items-center gap-x-2.5 gap-y-1">
+            <div class="flex flex-wrap items-center gap-x-2 gap-y-1">
               <span
-                class="grid size-7 shrink-0 place-items-center rounded-full border text-[11px] font-medium {complete
+                class="grid size-7 shrink-0 place-items-center rounded-full border text-xs font-medium {complete
                   ? 'border-brand bg-brand text-white'
                   : started
                     ? 'border-accent/30 bg-accent-soft text-accent'
                     : 'border-line bg-surface-2 text-muted'}"
               >
                 {#if complete}
-                  <Icon name="check" size={14} />
+                  <Icon name="check" size={16} />
                   <span class="sr-only">完了</span>
                 {:else}
                   {index + 1}
@@ -68,7 +67,7 @@
             </div>
 
             {#if lesson.goal}
-              <p class="mt-1.5 text-sm leading-relaxed text-muted">{lesson.goal}</p>
+              <p class="mt-2 text-sm leading-relaxed text-muted">{lesson.goal}</p>
             {/if}
 
             <div class="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted">
@@ -84,19 +83,22 @@
             </div>
           </div>
 
-          <a href={lesson.start.href} class="btn btn-primary w-full shrink-0 sm:w-auto">
+          <a
+            href={lesson.start.href}
+            class="btn {isNext ? 'btn-primary' : 'btn-secondary'} w-full shrink-0 sm:w-auto"
+          >
             {lesson.start.label}
-            <Icon name="arrow-right" size={15} />
+            <Icon name="arrow-right" size={16} />
           </a>
         </div>
 
         {#if lesson.exercises.length > 0}
-          <details class="group mt-3 border-t border-line pt-2">
-            <summary class="flex cursor-pointer list-none items-center gap-1.5 text-xs text-muted hover:text-ink">
+          <details class="group mt-4 border-t border-line pt-2">
+            <summary class="flex cursor-pointer list-none items-center gap-2 py-1 text-xs text-muted hover:text-ink">
               内容を見る
               <Icon
                 name="chevron-down"
-                size={14}
+                size={16}
                 className="ml-auto shrink-0 transition-transform group-open:rotate-180"
               />
             </summary>
@@ -110,7 +112,7 @@
                     <span class="min-w-0 truncate">{exercise.title}</span>
                     {#if exercise.solved}
                       <span class="flex shrink-0 items-center text-brand-strong">
-                        <Icon name="check" size={12} />
+                        <Icon name="check" size={16} />
                         <span class="sr-only">合格済み</span>
                       </span>
                     {/if}

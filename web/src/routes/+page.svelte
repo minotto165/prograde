@@ -25,10 +25,10 @@
   </div>
 </div>
 
-<ul class="mt-6 grid gap-4 md:grid-cols-2">
+<ul class="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
   {#each data.courses as course (course.id)}
     {@const percent = course.exercises === 0 ? 0 : Math.round((course.solved / course.exercises) * 100)}
-    <li class="card flex flex-col p-5 sm:p-6">
+    <li class="card flex h-full flex-col p-5 sm:p-6">
       <div class="flex flex-wrap items-start justify-between gap-x-3 gap-y-1">
         <h3 class="text-lg font-medium tracking-tight text-ink">
           <a href={`/c/${course.id}`} class="transition-colors hover:text-brand-strong">{course.label}</a>
@@ -42,7 +42,7 @@
         <p class="mt-1 line-clamp-2 text-sm leading-relaxed text-muted">{course.description}</p>
       {/if}
 
-      <div class="mt-4">
+      <div class="mt-5">
         <ProgressBar value={percent} ariaLabel="演習の進捗" size="sm" />
       </div>
 
@@ -55,14 +55,14 @@
           class="inline-flex items-center gap-1 text-sm font-medium text-ink-soft transition-colors hover:text-ink"
         >
           レッスン一覧
-          <Icon name="arrow-right" size={14} />
+          <Icon name="arrow-right" size={16} />
         </a>
       </div>
     </li>
   {:else}
-    <li class="rounded-2xl border border-dashed border-line bg-surface-2 p-8 text-center md:col-span-2">
+    <li class="rounded-2xl border border-dashed border-line bg-surface-2 p-10 text-center md:col-span-2 xl:col-span-3">
       <span class="mx-auto grid size-11 place-items-center rounded-xl bg-surface text-muted">
-        <Icon name="book" size={22} />
+        <Icon name="book" size={20} />
       </span>
       <p class="mt-3 font-medium text-ink">コースがありません</p>
       <p class="mt-1 text-sm text-muted">

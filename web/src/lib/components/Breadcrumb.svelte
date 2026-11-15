@@ -12,7 +12,7 @@
   <ol class="flex flex-wrap items-center gap-1.5 text-xs text-muted">
     {#each items as item, index (item.label + index)}
       <li class="flex min-w-0 items-center gap-1.5">
-        {#if index > 0}<Icon name="chevron-right" size={12} className="shrink-0 text-line" />{/if}
+        {#if index > 0}<Icon name="chevron-right" size={16} className="shrink-0 text-line" />{/if}
         {#if item.href}
           <a href={item.href} class="truncate transition-colors hover:text-ink hover:underline">{item.label}</a>
         {:else}

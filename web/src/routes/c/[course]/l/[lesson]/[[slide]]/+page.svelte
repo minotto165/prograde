@@ -42,6 +42,7 @@
 
 <PageHead title={data.title} description={data.goal || `${data.title} のレッスン。`} />
 
+<div class="mx-auto w-full max-w-3xl">
 <Breadcrumb
   items={[
     { label: "コース", href: "/" },
@@ -50,13 +51,11 @@
   ]}
 />
 
-<header class="mt-3 flex flex-wrap items-end justify-between gap-x-5 gap-y-2">
-  <div class="min-w-0">
-    <h1 class="text-2xl font-medium tracking-tight text-ink sm:text-3xl">{data.title}</h1>
-    {#if data.goal}
-      <p class="mt-1 text-sm leading-relaxed text-ink-soft">{data.goal}</p>
-    {/if}
-  </div>
+<header class="mt-3">
+  <h1 class="text-2xl font-medium tracking-tight text-ink sm:text-3xl">{data.title}</h1>
+  {#if data.goal}
+    <p class="mt-2 text-sm leading-relaxed text-ink-soft">{data.goal}</p>
+  {/if}
 </header>
 
 {#if data.slide}
@@ -67,15 +66,15 @@
     </span>
   </div>
 
-  <article class="card mt-3 overflow-hidden">
-    <div class="px-5 py-7 sm:px-9 sm:py-9">
-      <div class="doc mx-auto max-w-[68ch]">
+  <article class="card mt-4 overflow-hidden">
+    <div class="px-5 py-7 sm:px-10 sm:py-10">
+      <div class="doc">
         {@html data.slideHtml}
       </div>
     </div>
 
     <nav
-      class="flex flex-wrap items-center justify-between gap-3 border-t border-line bg-surface-2 px-4 py-3 sm:px-6"
+      class="flex flex-wrap items-center justify-between gap-3 border-t border-line bg-surface-2 px-4 py-3 sm:px-8"
       aria-label="レッスンの移動"
     >
       {#if data.prevStep}
@@ -113,3 +112,4 @@
     このレッスンにはスライドがありません。
   </p>
 {/if}
+</div>
