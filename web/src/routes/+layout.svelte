@@ -52,15 +52,4 @@
       {@render children()}
     </main>
   </div>
-
-  {#if !wide}
-    <footer class="mt-auto shrink-0 border-t border-line/70">
-      <div class="mx-auto flex max-w-6xl flex-col gap-2 px-4 py-7 text-xs text-muted sm:flex-row sm:items-center sm:justify-between sm:px-6">
-        <p>採点はこのマシンの中だけで完結します。</p>
-        <p>
-          データの保存先は <a href="/help#data" class="font-medium text-ink-soft underline underline-offset-2 hover:text-ink">ヘルプ</a> を参照してください。
-        </p>
-      </div>
-    </footer>
-  {/if}
 </div>
