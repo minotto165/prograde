@@ -24,6 +24,23 @@
       : 0,
   );
   let passedCount = $derived(result ? result.checks.filter((check) => check.ok).length : 0);
+  let referenceOverride = $state<typeof data.reference>(null);
+  let reference = $derived(referenceOverride ?? data.reference);
+  let referenceBusy = $state(false);
+
+  async function rerunReference() {
+    if (referenceBusy) return;
+    referenceBusy = true;
+    try {
+      const response = await fetch(
+        `/api/reference/${encodeURIComponent(data.courseId)}/${encodeURIComponent(data.exerciseId)}?fresh=1`,
+      );
+      if (!response.ok) return;
+      referenceOverride = (await response.json()) as typeof data.reference;
+    } finally {
+      referenceBusy = false;
+    }
+  }
 
   function line(text: string): string {
     return text.replace(/\r\n/g, "\n");
@@ -119,61 +136,11 @@
       </details>
     {/if}
 
-    {#if data.lessonExercises.length > 1}
-      <div class="border-t border-line px-5 py-4">
-        <p class="text-xs font-medium text-ink">このレッスンの演習</p>
-        <ol class="mt-2 grid gap-1">
-          {#each data.lessonExercises as item, index (item.id)}
-            <li>
-              <a
-                href={`/c/${data.courseId}/e/${item.id}`}
-                aria-current={item.id === data.exerciseId ? "page" : undefined}
-                class="flex min-h-9 items-center gap-2 rounded-lg px-2 py-1.5 text-xs transition-colors {item.id ===
-                data.exerciseId
-                  ? 'bg-brand-soft font-medium text-brand-strong'
-                  : 'text-ink-soft hover:bg-surface-2'}"
-              >
-                <span
-                  class="grid size-5 shrink-0 place-items-center rounded-full border text-[11px] font-medium {item.solved
-                    ? 'border-brand/30 bg-brand-soft text-brand-strong'
-                    : 'border-line bg-surface text-muted'}"
-                >
-                  {#if item.solved}
-                    <Icon name="check" size={11} />
-                  {:else}
-                    {index + 1}
-                  {/if}
-                </span>
-                <span class="min-w-0 truncate">{item.title}</span>
-              </a>
-            </li>
-          {/each}
-        </ol>
-      </div>
-    {/if}
-
-    <div class="flex items-center justify-between gap-2 border-t border-line px-4 py-3 text-xs">
-      {#if data.prev}
-        <a href={`/c/${data.courseId}/e/${data.prev.id}`} class="flex min-w-0 items-center gap-1 text-muted hover:text-ink">
-          <Icon name="arrow-left" size={13} className="shrink-0" />
-          <span class="truncate">{data.prev.title}</span>
-        </a>
-      {:else}
-        <span></span>
-      {/if}
-      {#if data.next}
-        <a href={`/c/${data.courseId}/e/${data.next.id}`} class="flex min-w-0 items-center gap-1 text-right text-muted hover:text-ink">
-          <span class="truncate">{data.next.title}</span>
-          <Icon name="arrow-right" size={13} className="shrink-0" />
-        </a>
-      {:else}
-        <span></span>
-      {/if}
-    </div>
   </aside>
 
   <div class="flex min-w-0 flex-col gap-4 xl:contents">
     <form
+      id="exercise-form"
       method="POST"
       action="?/grade"
       class="flex min-h-[560px] flex-col overflow-hidden rounded-2xl border border-white/10 bg-code shadow-sm xl:h-full xl:min-h-0"
@@ -234,26 +201,6 @@
         </div>
       {/if}
 
-      <div class="flex flex-wrap items-center gap-2 border-t border-white/10 bg-white/[0.04] px-3 py-2.5">
-        <span class="hidden items-center gap-1 text-xs text-white/60 sm:flex">
-          <span class="rounded border border-white/15 px-1.5 py-0.5 font-mono">⌘/Ctrl</span>
-          <span>+</span>
-          <span class="rounded border border-white/15 px-1.5 py-0.5 font-mono">Enter</span>
-          <span>で採点</span>
-        </span>
-        <div class="ml-auto flex items-center gap-2">
-          <button
-            type="submit"
-            formaction="?/run"
-            class="btn border border-white/20 text-white/80 hover:bg-white/10"
-          >
-            実行だけ
-          </button>
-          <button type="submit" class="btn bg-brand text-white hover:bg-brand-strong">
-            採点する
-          </button>
-        </div>
-      </div>
     </form>
 
   <div id="result" class="flex min-h-0 scroll-mt-28 flex-col gap-4 xl:h-full xl:overflow-y-auto">
@@ -264,13 +211,25 @@
     >
       <header class="flex shrink-0 items-center justify-between gap-2 border-b border-line px-4 py-2.5">
         <h3 class="text-xs font-medium text-ink-soft">あなたの実行結果</h3>
-        {#if result}
-          <span class="font-mono text-[11px] text-muted">
-            exit {result.exitCode === null ? "-" : result.exitCode}
-            {#if result.timedOut} · 時間切れ{/if}
-            · {result.durationMs}ms
-          </span>
-        {/if}
+        <div class="flex items-center gap-2">
+          {#if result}
+            <span class="font-mono text-[11px] text-muted">
+              exit {result.exitCode === null ? "-" : result.exitCode}
+              {#if result.timedOut} · 時間切れ{/if}
+              · {result.durationMs}ms
+            </span>
+          {/if}
+          <button
+            type="submit"
+            form="exercise-form"
+            formaction="?/run"
+            class="grid size-8 shrink-0 place-items-center rounded-lg border border-line text-ink-soft transition-colors hover:bg-surface-2 hover:text-ink"
+            aria-label="コードを実行"
+            title="コードを実行"
+          >
+            <Icon name="play" size={15} />
+          </button>
+        </div>
       </header>
       <div class="p-4 xl:min-h-0 xl:flex-1 xl:overflow-y-auto">
         {#if form?.error}
@@ -315,30 +274,42 @@
     >
       <header class="flex shrink-0 items-center justify-between gap-2 border-b border-line px-4 py-2.5">
         <h3 class="text-xs font-medium text-ink-soft">お手本の実行結果</h3>
-        {#if data.reference}
-          <span class="font-mono text-[11px] text-muted">
-            exit {data.reference.exitCode === null ? "-" : data.reference.exitCode}
-            {#if data.reference.timedOut} · 時間切れ{/if}
-            · {data.reference.durationMs}ms
-          </span>
-        {/if}
+        <div class="flex items-center gap-2">
+          {#if reference}
+            <span class="font-mono text-[11px] text-muted">
+              exit {reference.exitCode === null ? "-" : reference.exitCode}
+              {#if reference.timedOut} · 時間切れ{/if}
+              · {reference.durationMs}ms
+            </span>
+          {/if}
+          <button
+            type="button"
+            onclick={rerunReference}
+            disabled={referenceBusy}
+            class="grid size-8 shrink-0 place-items-center rounded-lg border border-line text-ink-soft transition-colors hover:bg-surface-2 hover:text-ink disabled:opacity-50"
+            aria-label="お手本を実行"
+            title="お手本を実行"
+          >
+            <Icon name="play" size={15} />
+          </button>
+        </div>
       </header>
       <div class="p-4 xl:min-h-0 xl:flex-1 xl:overflow-y-auto">
-        {#if data.reference}
-          {#if data.reference.stdout}
+        {#if reference}
+          {#if reference.stdout}
             <p class="text-xs font-medium text-muted">標準出力</p>
-            <pre class="mt-1 max-h-56 overflow-auto whitespace-pre-wrap break-words rounded-lg bg-code p-3 font-mono text-[11px] leading-5 text-white/90">{line(data.reference.stdout)}</pre>
+            <pre class="mt-1 max-h-56 overflow-auto whitespace-pre-wrap break-words rounded-lg bg-code p-3 font-mono text-[11px] leading-5 text-white/90">{line(reference.stdout)}</pre>
           {/if}
-          {#if data.reference.stderr}
+          {#if reference.stderr}
             <div class="mt-3">
               <p class="text-xs font-medium text-muted">標準エラー</p>
-              <pre class="mt-1 max-h-56 overflow-auto whitespace-pre-wrap break-words rounded-lg bg-code p-3 font-mono text-[11px] leading-5 text-danger-soft">{line(data.reference.stderr)}</pre>
+              <pre class="mt-1 max-h-56 overflow-auto whitespace-pre-wrap break-words rounded-lg bg-code p-3 font-mono text-[11px] leading-5 text-danger-soft">{line(reference.stderr)}</pre>
             </div>
           {/if}
-          {#if !data.reference.stdout && !data.reference.stderr}
+          {#if !reference.stdout && !reference.stderr}
             <p class="text-xs text-muted">出力はありません。</p>
           {/if}
-          {#if data.reference.truncated}
+          {#if reference.truncated}
             <p class="mt-2 text-xs text-muted">出力が長いため途中で切り詰めています。</p>
           {/if}
         {:else}
@@ -434,12 +405,21 @@
     <Icon name="arrow-left" size={14} />
     スライドを見る
   </a>
-  <a href="/help" class="ml-auto inline-flex min-h-9 items-center text-xs text-muted hover:text-ink sm:order-last sm:ml-0">ヘルプ</a>
+  <a href="/help" class="ml-auto inline-flex min-h-9 items-center text-xs text-muted hover:text-ink sm:order-3 sm:ml-0">ヘルプ</a>
   <div class="flex w-full items-center gap-3 sm:order-2 sm:w-auto sm:flex-1">
     <ProgressBar value={progressPercent} size="sm" />
     <span class="shrink-0 text-xs font-medium text-muted">
       {data.lessonProgress.solved} / {data.lessonProgress.total} クリア
     </span>
   </div>
+  <button
+    type="submit"
+    form="exercise-form"
+    formaction="?/grade"
+    class="btn btn-primary ml-auto min-h-9 shrink-0 sm:order-4 sm:ml-0"
+    title="採点する（⌘/Ctrl + Enter）"
+  >
+    できた！
+  </button>
 </div>
 </div>

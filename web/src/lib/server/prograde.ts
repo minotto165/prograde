@@ -74,10 +74,12 @@ export interface ReferenceRun {
 /** 解答例を実行した結果。ページを開くたびに走らせないよう、成功したものだけ覚えておく。 */
 const referenceCache = new Map<string, ReferenceRun>();
 
-async function referenceRun(ctx: Ctx, course: LoadedCourse, entry: ExerciseEntry): Promise<ReferenceRun> {
+async function referenceRun(ctx: Ctx, course: LoadedCourse, entry: ExerciseEntry, force = false): Promise<ReferenceRun> {
   const key = `${course.id}/${entry.id}`;
-  const cached = referenceCache.get(key);
-  if (cached) return cached;
+  if (!force) {
+    const cached = referenceCache.get(key);
+    if (cached) return cached;
+  }
   const result = await grade(ctx, course, entry, { solution: true, fresh: true });
   const reference: ReferenceRun = {
     exitCode: result.exitCode,
@@ -89,6 +91,12 @@ async function referenceRun(ctx: Ctx, course: LoadedCourse, entry: ExerciseEntry
   };
   referenceCache.set(key, reference);
   return reference;
+}
+
+/** お手本をもう一度実行する（Web の再実行アイコン用）。 */
+export async function referenceRunFor(courseId: string, exerciseId: string, force = false): Promise<ReferenceRun> {
+  const { ctx, course, entry } = await loadEntry(courseId, exerciseId);
+  return await referenceRun(ctx, course, entry, force);
 }
 
 export async function dashboard() {
