@@ -1,9 +1,8 @@
 <script lang="ts">
   import "../app.css";
   import { page } from "$app/stores";
-  import Icon from "$lib/components/Icon.svelte";
 
-  let { data, children } = $props();
+  let { children } = $props();
 
   let path = $derived($page.url.pathname);
   let wide = $derived(path.includes("/e/"));
@@ -32,17 +31,6 @@
         <a href="/" class={navClass(coursesActive)} aria-current={coursesActive ? "page" : undefined}>コース</a>
         <a href="/help" class={navClass(helpActive)} aria-current={helpActive ? "page" : undefined}>使い方</a>
       </nav>
-
-      <div class="flex items-center gap-2.5 text-xs text-muted" aria-label="学習状況">
-        <span class="tabular-nums">Lv {data.totals.level}</span>
-        <span class="hidden tabular-nums sm:inline">{data.totals.xp} XP</span>
-        {#if data.totals.streak > 0}
-          <span class="inline-flex items-center gap-1 tabular-nums text-accent" title="連続学習日数">
-            <Icon name="flame" size={13} />
-            {data.totals.streak}日
-          </span>
-        {/if}
-      </div>
     </div>
   </header>
 

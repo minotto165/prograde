@@ -44,7 +44,7 @@
     <p class="font-mono text-xs text-muted">04</p>
     <h2 class="mt-2 font-medium text-ink">進捗は自動で残る</h2>
     <p class="mt-1 text-sm leading-relaxed text-muted">
-      合格すると XP とレベルが増え、次に解く演習が示されます。閉じても続きから編集できます。「雛形に戻す」で初期状態に戻せます。
+      合格すると進捗が残り、次に解く演習が示されます。閉じても続きから編集できます。「雛形に戻す」で初期状態に戻せます。
     </p>
   </article>
 </section>

@@ -231,7 +231,7 @@
                 {exercise.title}
               </a>
               <p class="mt-0.5 text-xs text-muted">
-                {exercise.env} ・ {exercise.xp} XP
+                {exercise.env}
                 {#if exercise.attempts > 0} ・ {exercise.attempts} 回挑戦{/if}
                 {#if exercise.hints > 0} ・ ヒント {exercise.hints} 件{/if}
               </p>

@@ -31,7 +31,6 @@
     {/if}
   </div>
   <div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted">
-    <span class="tabular-nums">Lv {data.stats.level}</span>
     <span>{data.lessons.length} レッスン</span>
     <span>{data.totalExercises} 演習</span>
   </div>
@@ -57,23 +56,6 @@
         <ProgressBar value={percent} size="md" />
       </div>
 
-      <dl class="mt-5 grid grid-cols-3 gap-3 border-t border-line pt-4">
-        <div>
-          <dt class="text-xs text-muted">レベル</dt>
-          <dd class="mt-0.5 text-lg font-medium tabular-nums text-ink">{data.stats.level}</dd>
-        </div>
-        <div>
-          <dt class="text-xs text-muted">XP</dt>
-          <dd class="mt-0.5 text-lg font-medium tabular-nums text-ink">{data.stats.xp}</dd>
-        </div>
-        <div>
-          <dt class="text-xs text-muted">連続日数</dt>
-          <dd class="mt-0.5 flex items-center gap-1 text-lg font-medium tabular-nums text-ink">
-            <Icon name="flame" size={16} className="text-accent" />
-            {data.stats.streak}<span class="text-xs font-medium text-muted">日</span>
-          </dd>
-        </div>
-      </dl>
     </div>
 
     <div class="border-t border-line bg-surface-2 p-5 sm:p-6 lg:border-l lg:border-t-0">

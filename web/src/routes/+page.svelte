@@ -77,25 +77,6 @@
   </div>
 </section>
 
-<dl class="mt-6 grid grid-cols-2 gap-px overflow-hidden rounded-xl border border-line bg-line sm:grid-cols-4">
-  <div class="bg-surface px-4 py-3">
-    <dt class="text-xs text-muted">レベル</dt>
-    <dd class="mt-0.5 text-lg font-medium tabular-nums text-ink">{data.totals.level}</dd>
-  </div>
-  <div class="bg-surface px-4 py-3">
-    <dt class="text-xs text-muted">XP</dt>
-    <dd class="mt-0.5 text-lg font-medium tabular-nums text-ink">{data.totals.xp}</dd>
-  </div>
-  <div class="bg-surface px-4 py-3">
-    <dt class="text-xs text-muted">解いた演習</dt>
-    <dd class="mt-0.5 text-lg font-medium tabular-nums text-ink">{data.totals.solved} <span class="text-sm text-muted">/ {data.totals.total}</span></dd>
-  </div>
-  <div class="bg-surface px-4 py-3">
-    <dt class="text-xs text-muted">連続日数</dt>
-    <dd class="mt-0.5 text-lg font-medium tabular-nums text-ink">{data.totals.streak}日</dd>
-  </div>
-</dl>
-
 <div class="mt-10 flex flex-wrap items-end justify-between gap-3">
   <div>
     <h2 class="text-xl font-medium tracking-tight text-ink">コース</h2>
@@ -120,13 +101,11 @@
             <p class="mt-1 line-clamp-2 text-sm leading-relaxed text-muted">{course.description}</p>
           {/if}
         </div>
-        <span class="shrink-0 text-xs tabular-nums text-muted">Lv {course.level}</span>
       </div>
 
       <div class="mt-4 flex flex-wrap gap-x-5 gap-y-1 text-xs text-muted">
         <span><strong class="font-medium text-ink-soft">{course.lessons}</strong> レッスン</span>
         <span><strong class="font-medium text-ink-soft">{course.exercises}</strong> 演習</span>
-        <span><strong class="font-medium text-ink-soft">{course.xp}</strong> XP</span>
       </div>
 
       <div class="mt-4">

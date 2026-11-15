@@ -92,7 +92,6 @@
   </div>
   <div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted">
     <span class="font-mono">{data.env}</span>
-    <span>{data.xp} XP</span>
     {#if data.attempts > 0}
       <span>{data.attempts} 回挑戦</span>
     {/if}
