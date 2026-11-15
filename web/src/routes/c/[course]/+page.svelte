@@ -11,9 +11,6 @@
       ? 0
       : Math.round((data.stats.solved / data.totalExercises) * 100),
   );
-  let completedLessons = $derived(
-    data.lessons.filter((lesson) => lesson.total > 0 && lesson.solved === lesson.total).length,
-  );
 </script>
 
 <PageHead
@@ -39,16 +36,11 @@
   <ProgressBar value={percent} size="sm" />
   <p class="shrink-0 text-xs tabular-nums text-muted">
     <strong class="font-medium text-ink">{data.stats.solved}</strong> / {data.totalExercises} 演習
-    <span class="mx-1 text-line">・</span>
-    {completedLessons} / {data.lessons.length} レッスン完了
   </p>
 </div>
 
 <section class="mt-8">
-  <div class="flex flex-wrap items-end justify-between gap-2">
-    <h2 class="text-xl font-medium tracking-tight text-ink">レッスン</h2>
-    <span class="text-xs text-muted">上から順に進めるのがおすすめです。</span>
-  </div>
+  <h2 class="text-xl font-medium tracking-tight text-ink">レッスン</h2>
 
   <ol class="mt-3 grid gap-3">
     {#each data.lessons as lesson, index (lesson.id)}
@@ -67,16 +59,12 @@
               >
                 {#if complete}
                   <Icon name="check" size={14} />
+                  <span class="sr-only">完了</span>
                 {:else}
                   {index + 1}
                 {/if}
               </span>
               <h3 class="font-medium leading-snug text-ink">{lesson.title}</h3>
-              {#if complete}
-                <span class="chip chip-brand">完了</span>
-              {:else if started}
-                <span class="chip chip-accent">進行中</span>
-              {/if}
             </div>
 
             {#if lesson.goal}
@@ -106,7 +94,6 @@
           <details class="group mt-3 border-t border-line pt-2">
             <summary class="flex cursor-pointer list-none items-center gap-1.5 text-xs text-muted hover:text-ink">
               内容を見る
-              <span class="tabular-nums">（{lesson.exercises.length} 演習）</span>
               <Icon
                 name="chevron-down"
                 size={14}
@@ -121,14 +108,12 @@
                     class="flex items-center justify-between gap-3 rounded-lg px-2 py-1.5 text-sm text-ink-soft transition-colors hover:bg-surface-2 hover:text-ink"
                   >
                     <span class="min-w-0 truncate">{exercise.title}</span>
-                    <span class="flex shrink-0 items-center gap-1 text-xs {exercise.solved ? 'text-brand-strong' : 'text-muted'}">
-                      {#if exercise.solved}
+                    {#if exercise.solved}
+                      <span class="flex shrink-0 items-center text-brand-strong">
                         <Icon name="check" size={12} />
-                        合格済み
-                      {:else}
-                        未完了
-                      {/if}
-                    </span>
+                        <span class="sr-only">合格済み</span>
+                      </span>
+                    {/if}
                   </a>
                 </li>
               {/each}

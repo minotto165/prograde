@@ -28,7 +28,6 @@
       <p class="mt-1 text-sm leading-relaxed text-ink-soft">{data.goal}</p>
     {/if}
   </div>
-  <p class="shrink-0 text-xs tabular-nums text-muted">演習 {data.solved} / {data.totalExercises}</p>
 </header>
 
 {#if data.slide}

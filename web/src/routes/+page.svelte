@@ -10,43 +10,22 @@
   );
 </script>
 
-<PageHead
-  title="コース"
-  description="解説を読み、コードを書き、実行結果で確かめる。ローカルで完結するプログラミング練習プラットフォーム prograde。"
-/>
+<PageHead title="コース" />
 
-<section class="card p-6 sm:p-8">
-  <div class="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px] lg:items-end">
-    <div>
-      <h1 class="text-balance text-2xl font-medium leading-tight tracking-tight text-ink sm:text-4xl">
-        演習を解いて、<span class="inline-block">実行結果</span>で確かめる。
-      </h1>
-      <p class="mt-2 max-w-lg text-sm leading-relaxed text-ink-soft">
-        採点はビルドと実行の結果だけを見ます。コードの書き方は自由です。コースを選んで、レッスンから始めてください。
-      </p>
+<div class="flex flex-wrap items-end justify-between gap-x-6 gap-y-4">
+  <h1 class="text-2xl font-medium tracking-tight text-ink sm:text-3xl">コース</h1>
+  <div class="w-full sm:w-80">
+    <div class="mb-1.5 flex items-baseline justify-between gap-3">
+      <span class="text-xs font-medium text-muted">全体の進捗</span>
+      <span class="text-xs tabular-nums text-muted">
+        <strong class="font-medium text-ink">{data.totals.solved}</strong> / {data.totals.total} 演習
+      </span>
     </div>
-
-    <div>
-      <div class="mb-1.5 flex items-baseline justify-between gap-3">
-        <span class="text-xs font-medium text-muted">全体の進捗</span>
-        <span class="text-xs tabular-nums text-muted">
-          <strong class="font-medium text-ink">{data.totals.solved}</strong> / {data.totals.total} 演習
-        </span>
-      </div>
-      <ProgressBar value={overall} size="sm" />
-    </div>
+    <ProgressBar value={overall} size="sm" />
   </div>
-</section>
-
-<div class="mt-9 flex flex-wrap items-end justify-between gap-2">
-  <h2 class="text-xl font-medium tracking-tight text-ink">コース</h2>
-  <a href="/help" class="inline-flex items-center gap-1 text-sm font-medium text-brand-strong hover:underline">
-    はじめての方はこちら
-    <Icon name="arrow-right" size={15} />
-  </a>
 </div>
 
-<ul class="mt-3 grid gap-4 md:grid-cols-2">
+<ul class="mt-6 grid gap-4 md:grid-cols-2">
   {#each data.courses as course (course.id)}
     {@const percent = course.exercises === 0 ? 0 : Math.round((course.solved / course.exercises) * 100)}
     <li class="card flex flex-col p-5 sm:p-6">
@@ -64,7 +43,7 @@
       {/if}
 
       <div class="mt-4">
-        <ProgressBar value={percent} label="演習の進捗" size="sm" />
+        <ProgressBar value={percent} ariaLabel="演習の進捗" size="sm" />
       </div>
 
       <div class="mt-auto flex items-center justify-between gap-3 border-t border-line pt-3">

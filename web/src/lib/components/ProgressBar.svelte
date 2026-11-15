@@ -2,11 +2,13 @@
   let {
     value,
     label = "",
+    ariaLabel = "",
     tone = "brand",
     size = "md",
   }: {
     value: number;
     label?: string;
+    ariaLabel?: string;
     tone?: "brand" | "ink" | "accent";
     size?: "sm" | "md";
   } = $props();
@@ -28,7 +30,7 @@
   <div
     class="{track} w-full overflow-hidden rounded bg-line/60"
     role="progressbar"
-    aria-label={label || "進捗"}
+    aria-label={ariaLabel || label || "進捗"}
     aria-valuemin={0}
     aria-valuemax={100}
     aria-valuenow={clamped}

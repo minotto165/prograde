@@ -32,7 +32,6 @@
         <span class="grid size-8 place-items-center rounded-lg bg-brand text-sm font-semibold text-white shadow-sm">P</span>
         <span class="text-lg font-semibold tracking-tight text-ink">prograde</span>
       </a>
-      <span class="hidden text-xs text-muted md:inline">ローカル完結の練習プラットフォーム</span>
 
       <nav class="ml-auto flex items-center gap-1" aria-label="メイン">
         <a href="/" class={navClass(coursesActive)} aria-current={coursesActive ? "page" : undefined}>コース</a>

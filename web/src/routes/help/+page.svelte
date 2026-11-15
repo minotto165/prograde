@@ -8,41 +8,32 @@
   description="prograde の進め方、採点の仕組み、データの保存先、キーボード操作をまとめています。"
 />
 
-<div class="max-w-3xl">
-  <h1 class="text-3xl font-medium tracking-tight text-ink sm:text-4xl">使い方</h1>
-  <p class="mt-3 text-sm leading-relaxed text-ink-soft">
-    この画面だけで学習が完結します。CLI は不要です。解説を読み、コードを書き、実行結果で確かめる。その繰り返しで進みます。
-  </p>
-</div>
+<h1 class="text-3xl font-medium tracking-tight text-ink sm:text-4xl">使い方</h1>
 
 <section class="mt-7 grid gap-4 sm:grid-cols-2">
   <article class="card p-5">
-    <p class="font-mono text-xs text-muted">01</p>
-    <h2 class="mt-2 font-medium text-ink">解説と演習を交互に進める</h2>
+    <h2 class="font-medium text-ink">解説と演習を交互に進める</h2>
     <p class="mt-1 text-sm leading-relaxed text-muted">
       コースからレッスンを開くと、ページ送りの解説が始まります。何枚か読むと演習が挟まり、解き終えるとまた次の解説へ進みます。
     </p>
   </article>
 
   <article class="card p-5">
-    <p class="font-mono text-xs text-muted">02</p>
-    <h2 class="mt-2 font-medium text-ink">演習を解く</h2>
+    <h2 class="font-medium text-ink">演習を解く</h2>
     <p class="mt-1 text-sm leading-relaxed text-muted">
       エディタにコードを書いて「できた！」を押します。ビルド・実行・結果の比較まで自動で走ります。途中経過は右上の実行ボタンで確認できます。書いたコードは自動で保存されます。
     </p>
   </article>
 
   <article class="card p-5">
-    <p class="font-mono text-xs text-muted">03</p>
-    <h2 class="mt-2 font-medium text-ink">結果を読む</h2>
+    <h2 class="font-medium text-ink">結果を読む</h2>
     <p class="mt-1 text-sm leading-relaxed text-muted">
       合否・判定項目・コンパイラの診断・標準出力が並びます。失敗した理由がそのまま次の一手になります。判定はコードの書き方ではなく、実行結果だけを見ます。
     </p>
   </article>
 
   <article class="card p-5">
-    <p class="font-mono text-xs text-muted">04</p>
-    <h2 class="mt-2 font-medium text-ink">進捗は自動で残る</h2>
+    <h2 class="font-medium text-ink">進捗は自動で残る</h2>
     <p class="mt-1 text-sm leading-relaxed text-muted">
       合格すると進捗が残り、次に解く演習が示されます。閉じても続きから編集できます。「雛形に戻す」で初期状態に戻せます。
     </p>
@@ -52,8 +43,7 @@
 <section id="data" class="card mt-8 overflow-hidden scroll-mt-28">
   <div class="grid md:grid-cols-[minmax(0,1fr)_320px]">
     <div class="p-6">
-      <p class="meta-label">採点の仕組み</p>
-      <h2 class="mt-2 text-xl font-medium tracking-tight text-ink">答えではなく、結果を見ます</h2>
+      <h2 class="text-xl font-medium tracking-tight text-ink">採点の仕組み</h2>
       <ul class="mt-5 space-y-3">
         <li class="flex gap-3">
           <span class="mt-2 size-1.5 shrink-0 rounded-full bg-brand" aria-hidden="true"></span>
@@ -102,7 +92,6 @@
 
 <section class="mt-8">
   <h2 class="text-xl font-medium tracking-tight text-ink">キーボード</h2>
-  <p class="mt-1 text-sm text-muted">演習画面では、手をキーボードから離さずに操作できます。</p>
   <div class="mt-3 grid gap-2 sm:grid-cols-2">
     <div class="flex items-center justify-between gap-4 rounded-xl border border-line bg-surface px-4 py-3 text-sm">
       <span class="text-ink-soft">採点する（できた！）</span>

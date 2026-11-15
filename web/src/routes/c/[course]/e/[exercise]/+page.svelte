@@ -71,9 +71,9 @@
     <span class="font-mono">演習 {data.position.index} / {data.position.total}</span>
     <span class="font-mono">{data.env}</span>
     {#if solved}
-      <span class="inline-flex items-center gap-1 font-medium text-brand-strong">
+      <span class="inline-flex items-center text-brand-strong">
         <Icon name="check" size={13} />
-        合格済み
+        <span class="sr-only">合格済み</span>
       </span>
     {/if}
   </div>
@@ -91,12 +91,7 @@
     aria-label="この演習の手順"
   >
     <div class="border-b border-line px-5 py-4">
-      <div class="flex items-center justify-between gap-2">
-        <p class="meta-label">手順</p>
-        <span class="text-xs tabular-nums text-muted">
-          {data.lessonProgress.index} / {data.lessonProgress.total}
-        </span>
-      </div>
+      <p class="meta-label">手順</p>
       {#if data.objective}
         <div class="mt-3 border-l-2 border-brand pl-3">
           <p class="text-xs font-medium text-brand-strong">目標</p>
@@ -116,7 +111,7 @@
     {#if data.hints.length > 0}
       <details class="group mx-5 mb-5 rounded-xl border border-accent/20 bg-accent-soft/60 px-4 py-3">
         <summary class="flex cursor-pointer list-none items-center justify-between gap-2 text-xs font-medium text-accent">
-          ヒント（{data.hints.length} 段）
+          ヒント
           <Icon name="chevron-down" size={14} className="shrink-0 transition-transform group-open:rotate-180" />
         </summary>
         <ol class="mt-2.5 list-decimal space-y-1.5 pl-4 text-xs leading-relaxed text-ink-soft">
@@ -231,7 +226,7 @@
           </div>
         {:else if outcome?.kind === "reset"}
           <p class="text-sm leading-relaxed text-ink-soft">
-            雛形に戻しました。もう一度コードを書いて採点してください。
+            雛形に戻しました。
           </p>
         {:else if result}
           {#if result.stdout}
@@ -397,8 +392,7 @@
     <Icon name="arrow-left" size={14} />
     スライドを見る
   </a>
-  <a href="/help" class="ml-auto inline-flex min-h-9 items-center text-xs text-muted hover:text-ink sm:order-3 sm:ml-0">ヘルプ</a>
-  <div class="flex w-full items-center gap-3 sm:order-2 sm:w-auto sm:flex-1">
+  <div class="flex w-full items-center gap-3 sm:ml-auto sm:w-56">
     <ProgressBar value={progressPercent} size="sm" />
     <span class="shrink-0 text-xs font-medium text-muted">
       {data.lessonProgress.solved} / {data.lessonProgress.total} クリア
@@ -408,7 +402,7 @@
     type="submit"
     form="exercise-form"
     formaction="?/grade"
-    class="btn btn-primary ml-auto min-h-9 shrink-0 sm:order-4 sm:ml-0"
+    class="btn btn-primary ml-auto min-h-9 shrink-0 sm:ml-3"
     title="採点する（⌘/Ctrl + Enter）"
   >
     できた！
