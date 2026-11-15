@@ -19,6 +19,8 @@ export async function load({ params }) {
     attempts: page.attempts,
     prev: page.prev,
     next: page.next,
+    nextStep: page.nextStep,
+    slideHref: page.slideHref,
     position: page.position,
     lessonProgress: page.lessonProgress,
     lessonExercises: page.lessonExercises,

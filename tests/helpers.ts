@@ -45,6 +45,7 @@ export function courseJson(input: {
   exercises: string[];
   lessonId?: string;
   ext?: string;
+  steps?: { type: "slide" | "exercise"; id: string }[];
 }): string {
   return JSON.stringify(
     {
@@ -58,6 +59,7 @@ export function courseJson(input: {
           id: input.lessonId ?? "l1",
           title: "lesson",
           exercises: input.exercises,
+          ...(input.steps ? { steps: input.steps } : {}),
         },
       ],
     },

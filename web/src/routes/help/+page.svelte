@@ -18,9 +18,9 @@
 <section class="mt-7 grid gap-4 sm:grid-cols-2">
   <article class="card p-5">
     <p class="font-mono text-xs text-muted">01</p>
-    <h2 class="mt-2 font-medium text-ink">レッスンを読む</h2>
+    <h2 class="mt-2 font-medium text-ink">解説と演習を交互に進める</h2>
     <p class="mt-1 text-sm leading-relaxed text-muted">
-      コースからレッスンを開くと、ページ送りの解説が始まります。最後のページで振り返りクイズと演習の一覧が出ます。クイズは選んで「答え合わせ」を押すと、その場で採点されます。
+      コースからレッスンを開くと、ページ送りの解説が始まります。何枚か読むと演習が挟まり、解き終えるとまた次の解説へ進みます。
     </p>
   </article>
 
@@ -28,7 +28,7 @@
     <p class="font-mono text-xs text-muted">02</p>
     <h2 class="mt-2 font-medium text-ink">演習を解く</h2>
     <p class="mt-1 text-sm leading-relaxed text-muted">
-      エディタにコードを書いて「採点する」。ビルド・実行・結果の比較まで自動で走ります。途中経過は「実行だけ」で確認できます。書いたコードは自動で保存されます。
+      エディタにコードを書いて「できた！」を押します。ビルド・実行・結果の比較まで自動で走ります。途中経過は右上の実行ボタンで確認できます。書いたコードは自動で保存されます。
     </p>
   </article>
 
@@ -105,7 +105,7 @@
   <p class="mt-1 text-sm text-muted">演習画面では、手をキーボードから離さずに操作できます。</p>
   <div class="mt-3 grid gap-2 sm:grid-cols-2">
     <div class="flex items-center justify-between gap-4 rounded-xl border border-line bg-surface px-4 py-3 text-sm">
-      <span class="text-ink-soft">採点する</span>
+      <span class="text-ink-soft">採点する（できた！）</span>
       <span class="flex shrink-0 items-center gap-1">
         <span class="kbd">⌘</span><span class="text-xs text-muted">/</span><span class="kbd">Ctrl</span>
         <span class="text-xs text-muted">+</span><span class="kbd">Enter</span>
@@ -127,7 +127,7 @@
         <Icon name="chevron-down" size={16} className="shrink-0 text-muted transition-transform group-open:rotate-180" />
       </summary>
       <p class="border-t border-line px-4 py-3 text-sm leading-relaxed text-muted">
-        演習ごとの作業ディレクトリに保存されます。「採点する」「実行だけ」を押した時点で書き込まれます。ブラウザを閉じても、次に開いたときは続きから編集できます。
+        演習ごとの作業ディレクトリに保存されます。「できた！」「実行」を押した時点で書き込まれます。ブラウザを閉じても、次に開いたときは続きから編集できます。
       </p>
     </details>
 

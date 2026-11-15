@@ -172,6 +172,12 @@ export const ExerciseSchema = z.object({
 // コース
 // ---------------------------------------------------------------------------
 
+/** レッスン内の1ステップ。スライドか演習のどちらか。 */
+export const LessonStepSchema = z.discriminatedUnion("type", [
+  z.object({ type: z.literal("slide"), id: z.string().min(1) }),
+  z.object({ type: z.literal("exercise"), id: z.string().min(1) }),
+]);
+
 export const LessonRefSchema = z.object({
   id: z.string().regex(/^[a-z0-9][a-z0-9_-]*$/),
   title: z.string().min(1),
@@ -181,6 +187,11 @@ export const LessonRefSchema = z.object({
   publicId: z.string().optional(),
   /** 演習 ID の並び（表示順）。 */
   exercises: z.array(z.string().min(1)).min(1),
+  /**
+   * スライドと演習を交互に進める順序。
+   * 省略時は「全スライド → 全演習」の従来順。
+   */
+  steps: z.array(LessonStepSchema).min(1).optional(),
 });
 
 export const CourseSchema = z
@@ -229,6 +240,7 @@ export type Observe = z.infer<typeof ObserveSchema>;
 export type Judge = z.infer<typeof JudgeSchema>;
 export type DiagnosticSpec = z.infer<typeof DiagnosticSpecSchema>;
 export type Exercise = z.infer<typeof ExerciseSchema>;
+export type LessonStepSpec = z.infer<typeof LessonStepSchema>;
 export type LessonRef = z.infer<typeof LessonRefSchema>;
 export type Course = z.infer<typeof CourseSchema>;
 export type Quiz = z.infer<typeof QuizSchema>;

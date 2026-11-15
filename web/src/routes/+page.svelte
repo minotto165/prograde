@@ -5,8 +5,6 @@
 
   let { data } = $props();
 
-  let firstCourse = $derived(data.courses.find((course) => course.next) ?? null);
-  let firstNext = $derived(firstCourse?.next ?? null);
   let overall = $derived(
     data.totals.total === 0 ? 0 : Math.round((data.totals.solved / data.totals.total) * 100),
   );
@@ -17,118 +15,69 @@
   description="解説を読み、コードを書き、実行結果で確かめる。ローカルで完結するプログラミング練習プラットフォーム prograde。"
 />
 
-<section class="card overflow-hidden">
-  <div class="grid gap-7 p-6 sm:p-8 lg:grid-cols-[minmax(0,1fr)_360px] lg:items-center">
+<section class="card p-6 sm:p-8">
+  <div class="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px] lg:items-end">
     <div>
-      <h1 class="text-3xl font-medium leading-[1.25] tracking-tight text-ink sm:text-4xl">
-        演習を解いて、<br class="hidden sm:block" />実行結果で確かめる。
+      <h1 class="text-balance text-2xl font-medium leading-tight tracking-tight text-ink sm:text-4xl">
+        演習を解いて、<span class="inline-block">実行結果</span>で確かめる。
       </h1>
-      <p class="mt-3 max-w-lg text-sm leading-relaxed text-ink-soft">
-        採点はビルドと実行の結果だけを見ます。コードの書き方は自由です。まずは続きから、または気になるコースを選んでください。
+      <p class="mt-2 max-w-lg text-sm leading-relaxed text-ink-soft">
+        採点はビルドと実行の結果だけを見ます。コードの書き方は自由です。コースを選んで、レッスンから始めてください。
       </p>
-
-      <div class="mt-7 max-w-md">
-        <div class="mb-1.5 flex items-baseline justify-between gap-3">
-          <span class="text-xs font-medium text-muted">全体の進捗</span>
-          <span class="text-xs tabular-nums text-muted">
-            <strong class="font-medium text-ink tabular-nums">{data.totals.solved}</strong> / {data.totals.total} 演習
-          </span>
-        </div>
-        <ProgressBar value={overall} size="sm" />
-      </div>
     </div>
 
-    <div class="rounded-2xl bg-ink p-5 text-white shadow-sm sm:p-6">
-      {#if firstNext && firstCourse}
-        <p class="text-xs font-medium text-brand-soft">続きから</p>
-        <p class="mt-2 text-xs text-white/60">{firstCourse.label} ・ {firstNext.lessonTitle}</p>
-        <p class="mt-1 text-lg font-medium leading-snug">{firstNext.title}</p>
-        <div class="mt-5 flex flex-wrap gap-2">
-          <a href={`/c/${firstCourse.id}/e/${firstNext.id}`} class="btn btn-primary">
-            <Icon name="play" size={16} />
-            演習をはじめる
-          </a>
-          <a
-            href={`/c/${firstCourse.id}/l/${firstNext.lessonId}`}
-            class="btn border border-white/20 text-white hover:bg-white/10"
-          >
-            <Icon name="book" size={16} />
-            解説を読む
-          </a>
-        </div>
-      {:else}
-        <span class="grid size-11 place-items-center rounded-xl bg-white/10 text-brand-soft">
-          <Icon name="check" size={22} />
+    <div>
+      <div class="mb-1.5 flex items-baseline justify-between gap-3">
+        <span class="text-xs font-medium text-muted">全体の進捗</span>
+        <span class="text-xs tabular-nums text-muted">
+          <strong class="font-medium text-ink">{data.totals.solved}</strong> / {data.totals.total} 演習
         </span>
-        <p class="mt-3 text-lg font-medium leading-snug">
-          {data.courses.length === 0 ? "コースがまだありません" : "すべての演習を解きました"}
-        </p>
-        <p class="mt-1.5 text-sm leading-relaxed text-white/60">
-          {data.courses.length === 0
-            ? "データルートの tracks/ にコースを追加すると、ここに表示されます。"
-            : "おつかれさまでした。復習したい演習を開いて、もう一度確かめてみるのもおすすめです。"}
-        </p>
-        <a href="/help" class="btn mt-4 border border-white/20 text-white hover:bg-white/10">
-          <Icon name="help" size={16} />
-          使い方を見る
-        </a>
-      {/if}
+      </div>
+      <ProgressBar value={overall} size="sm" />
     </div>
   </div>
 </section>
 
-<div class="mt-10 flex flex-wrap items-end justify-between gap-3">
-  <div>
-    <h2 class="text-xl font-medium tracking-tight text-ink">コース</h2>
-    <p class="mt-1 text-sm text-muted">レッスンで解説を読み、演習で手を動かします。</p>
-  </div>
+<div class="mt-9 flex flex-wrap items-end justify-between gap-2">
+  <h2 class="text-xl font-medium tracking-tight text-ink">コース</h2>
   <a href="/help" class="inline-flex items-center gap-1 text-sm font-medium text-brand-strong hover:underline">
     はじめての方はこちら
     <Icon name="arrow-right" size={15} />
   </a>
 </div>
 
-<ul class="mt-4 grid gap-4 md:grid-cols-2">
+<ul class="mt-3 grid gap-4 md:grid-cols-2">
   {#each data.courses as course (course.id)}
     {@const percent = course.exercises === 0 ? 0 : Math.round((course.solved / course.exercises) * 100)}
     <li class="card flex flex-col p-5 sm:p-6">
-      <div class="flex items-start justify-between gap-3">
-        <div class="min-w-0">
-          <h3 class="text-lg font-medium tracking-tight text-ink">
-            <a href={`/c/${course.id}`} class="transition-colors hover:text-brand-strong">{course.label}</a>
-          </h3>
-          {#if course.description}
-            <p class="mt-1 line-clamp-2 text-sm leading-relaxed text-muted">{course.description}</p>
-          {/if}
-        </div>
+      <div class="flex flex-wrap items-start justify-between gap-x-3 gap-y-1">
+        <h3 class="text-lg font-medium tracking-tight text-ink">
+          <a href={`/c/${course.id}`} class="transition-colors hover:text-brand-strong">{course.label}</a>
+        </h3>
+        <span class="shrink-0 text-xs tabular-nums text-muted">
+          {course.lessons} レッスン・{course.exercises} 演習
+        </span>
       </div>
 
-      <div class="mt-4 flex flex-wrap gap-x-5 gap-y-1 text-xs text-muted">
-        <span><strong class="font-medium text-ink-soft">{course.lessons}</strong> レッスン</span>
-        <span><strong class="font-medium text-ink-soft">{course.exercises}</strong> 演習</span>
-      </div>
+      {#if course.description}
+        <p class="mt-1 line-clamp-2 text-sm leading-relaxed text-muted">{course.description}</p>
+      {/if}
 
       <div class="mt-4">
         <ProgressBar value={percent} label="演習の進捗" size="sm" />
       </div>
 
-      <div class="mt-auto flex flex-wrap items-center gap-2 border-t border-line pt-4">
-        <a href={`/c/${course.id}`} class="btn btn-secondary">
+      <div class="mt-auto flex items-center justify-between gap-3 border-t border-line pt-3">
+        <span class="text-xs tabular-nums text-muted">
+          <strong class="font-medium text-ink">{course.solved}</strong> / {course.exercises} クリア
+        </span>
+        <a
+          href={`/c/${course.id}`}
+          class="inline-flex items-center gap-1 text-sm font-medium text-ink-soft transition-colors hover:text-ink"
+        >
           レッスン一覧
+          <Icon name="arrow-right" size={14} />
         </a>
-        {#if course.next}
-          <a href={`/c/${course.id}/e/${course.next.id}`} class="btn btn-primary ml-auto">
-            <Icon name="play" size={15} />
-            次の演習
-          </a>
-        {:else if course.exercises > 0}
-          <span class="ml-auto inline-flex items-center gap-1 text-xs font-medium text-brand-strong">
-            <Icon name="check" size={13} />
-            全問クリア
-          </span>
-        {:else}
-          <span class="ml-auto text-xs text-muted">演習はまだありません</span>
-        {/if}
       </div>
     </li>
   {:else}

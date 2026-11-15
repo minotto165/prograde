@@ -372,9 +372,13 @@
     {/if}
 
     {#if result?.ok && outcome?.kind === "grade"}
-      {#if data.next}
-        <a href={'/c/' + data.courseId + '/e/' + data.next.id} class="btn btn-primary w-full shrink-0">
-          次の演習: {data.next.title}
+      {#if data.nextStep}
+        <a href={data.nextStep.href} class="btn btn-primary w-full shrink-0">
+          {data.nextStep.kind === "slide"
+            ? "次のスライドへ"
+            : data.nextStep.kind === "exercise"
+              ? "次の演習へ"
+              : "次のレッスンへ"}
           <Icon name="arrow-right" size={15} />
         </a>
       {:else}
@@ -389,7 +393,7 @@
 </div>
 
 <div class="mt-6 flex flex-wrap items-center gap-x-4 gap-y-3 xl:shrink-0">
-  <a href={lessonUrl} class="inline-flex min-h-9 items-center gap-1 text-xs font-medium text-ink-soft hover:text-ink">
+  <a href={data.slideHref} class="inline-flex min-h-9 items-center gap-1 text-xs font-medium text-ink-soft hover:text-ink">
     <Icon name="arrow-left" size={14} />
     スライドを見る
   </a>

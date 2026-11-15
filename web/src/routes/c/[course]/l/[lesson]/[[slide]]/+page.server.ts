@@ -1,8 +1,7 @@
-import { fail } from "@sveltejs/kit";
-import { gradeQuiz, lessonPage } from "$lib/server/prograde";
+import { lessonPage } from "$lib/server/prograde";
 
 export async function load({ params }) {
-  const { course, lesson, progress, slide, slideHtml, prevSlide, nextSlide, isLast, quiz, exercises, prevLesson, nextLesson } =
+  const { course, lesson, progress, slide, slideHtml, prevStep, nextStep, nextLesson, prevLesson } =
     await lessonPage(params.course, params.lesson, params.slide);
   return {
     courseId: course.id,
@@ -10,30 +9,13 @@ export async function load({ params }) {
     id: lesson.ref.id,
     title: lesson.ref.title,
     goal: lesson.ref.goal ?? "",
-    skills: lesson.ref.skills ?? [],
-    estimateMin: lesson.ref.estimateMin ?? null,
     slide,
     slideHtml,
-    prevSlide,
-    nextSlide,
-    isLast,
-    quiz,
-    exercises,
-    prevLesson,
+    prevStep,
+    nextStep,
     nextLesson,
+    prevLesson,
     solved: progress.lessons[lesson.ref.id]?.solved ?? 0,
+    totalExercises: lesson.exercises.length,
   };
 }
-
-export const actions = {
-  quiz: async ({ request, params }) => {
-    const { quiz } = await lessonPage(params.course, params.lesson);
-    if (!quiz) return fail(400, { error: "このレッスンにクイズはありません。" });
-    const form = await request.formData();
-    const selected = new Map<string, string[]>();
-    for (const question of quiz.questions) {
-      selected.set(question.id, form.getAll("q:" + question.id).map(String));
-    }
-    return { quizResult: gradeQuiz(quiz, selected) };
-  },
-};

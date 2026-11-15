@@ -8,6 +8,8 @@ import {
   findLesson,
   type ExerciseEntry,
   type LoadedCourse,
+  type LoadedLesson,
+  type LoadedStep,
 } from "../../../../src/core/course.ts";
 import { grade, type GradeResult } from "../../../../src/core/grader.ts";
 import { describeJudge } from "../../../../src/core/judge.ts";
@@ -50,6 +52,55 @@ function stats(course: LoadedCourse, progress: CourseProgress): CourseStats {
 
 function link(entry: ExerciseEntry): ExerciseLink {
   return { id: entry.id, title: entry.spec.title, lessonId: entry.lessonId, lessonTitle: entry.lessonTitle };
+}
+
+export interface StepLink {
+  kind: "slide" | "exercise" | "lesson";
+  href: string;
+  label: string;
+}
+
+function slideHref(courseId: string, lessonId: string, slideIndex: number): string {
+  return slideIndex <= 1
+    ? `/c/${courseId}/l/${lessonId}`
+    : `/c/${courseId}/l/${lessonId}/${slideIndex}`;
+}
+
+function stepHref(courseId: string, lessonId: string, step: LoadedStep): string {
+  return step.type === "slide"
+    ? slideHref(courseId, lessonId, step.slide.index)
+    : `/c/${courseId}/e/${step.exercise.id}`;
+}
+
+function stepLink(courseId: string, lessonId: string, step: LoadedStep): StepLink {
+  if (step.type === "slide") {
+    return { kind: "slide", href: slideHref(courseId, lessonId, step.slide.index), label: "次のスライド" };
+  }
+  return {
+    kind: "exercise",
+    href: `/c/${courseId}/e/${step.exercise.id}`,
+    label: "演習: " + step.exercise.spec.title,
+  };
+}
+
+function lessonStart(
+  courseId: string,
+  lesson: LoadedLesson,
+  progress: CourseProgress,
+): { href: string; label: string } {
+  const firstOpen = lesson.steps.findIndex(
+    (step) => step.type === "exercise" && !progress.exercises[step.exercise.id]?.solved,
+  );
+  if (firstOpen === -1) {
+    return { href: stepHref(courseId, lesson.ref.id, lesson.steps[0]), label: "復習する" };
+  }
+  let start = firstOpen;
+  while (start > 0 && lesson.steps[start - 1].type === "slide") start -= 1;
+  const step = lesson.steps[start];
+  return {
+    href: stepHref(courseId, lesson.ref.id, step),
+    label: step.type === "exercise" ? "演習をはじめる" : "レッスンをはじめる",
+  };
 }
 
 async function readEditable(workspace: string, entry: ExerciseEntry): Promise<FileView[]> {
@@ -156,14 +207,13 @@ export async function coursePage(courseId: string) {
     progress,
     stats: stats(course, progress),
     next,
-    lessons: course.lessons.map((lesson, index) => ({
+    lessons: course.lessons.map((lesson) => ({
       id: lesson.ref.id,
       title: lesson.ref.title,
       goal: lesson.ref.goal ?? "",
-      skills: lesson.ref.skills ?? [],
-      estimateMin: lesson.ref.estimateMin ?? null,
       solved: progress.lessons[lesson.ref.id]?.solved ?? 0,
       total: lesson.exercises.length,
+      start: lessonStart(courseId, lesson, progress),
       exercises: lesson.exercises.map((entry) => ({
         id: entry.id,
         title: entry.spec.title,
@@ -188,29 +238,38 @@ export async function lessonPage(courseId: string, lessonId: string, slideParam?
     slideIndex = number - 1;
   }
   const current = total > 0 ? lesson.slides[slideIndex] : null;
+  const currentStep = current
+    ? lesson.steps.findIndex((step) => step.type === "slide" && step.slide.id === current.id)
+    : -1;
+  const prevStep = currentStep > 0 ? lesson.steps[currentStep - 1] : null;
+  const nextStep = currentStep >= 0 ? lesson.steps[currentStep + 1] ?? null : null;
+  const nextLesson = index >= 0 && index < course.lessons.length - 1 ? course.lessons[index + 1] : null;
   return {
     course,
     lesson,
     progress,
     slide: current
-      ? { index: current.index, total, id: current.id, title: current.title }
+      ? {
+          index: current.index,
+          total,
+          id: current.id,
+          title: current.title,
+          stepIndex: currentStep + 1,
+          stepTotal: lesson.steps.length,
+        }
       : null,
     slideHtml: current ? renderMarkdown(current.body) : "",
-    prevSlide: current && slideIndex > 0 ? slideIndex : null,
-    nextSlide: current && slideIndex < total - 1 ? slideIndex + 2 : null,
-    isLast: current ? slideIndex === total - 1 : true,
-    quiz: lesson.quiz,
-    exercises: lesson.exercises.map((entry) => ({
-      id: entry.id,
-      title: entry.spec.title,
-      env: entry.spec.env,
-      xp: entry.spec.xp,
-      hints: entry.spec.hints.length,
-      solved: progress.exercises[entry.id]?.solved ?? false,
-      attempts: progress.exercises[entry.id]?.attempts ?? 0,
-    })),
+    prevStep: prevStep ? stepLink(courseId, lessonId, prevStep) : null,
+    nextStep: nextStep ? stepLink(courseId, lessonId, nextStep) : null,
+    hasNextLesson: Boolean(nextLesson),
+    nextLesson: nextLesson
+      ? {
+          kind: "lesson" as const,
+          href: `/c/${courseId}/l/${nextLesson.ref.id}`,
+          label: "次のレッスン: " + nextLesson.ref.title,
+        }
+      : null,
     prevLesson: index > 0 ? course.lessons[index - 1].ref : null,
-    nextLesson: index >= 0 && index < course.lessons.length - 1 ? course.lessons[index + 1].ref : null,
   };
 }
 
@@ -229,6 +288,32 @@ export async function exercisePage(courseId: string, exerciseId: string) {
   const current = progress.exercises[entry.id];
   const lesson = findLesson(course, entry.lessonId);
   const lessonIds = lesson.exercises.map((item) => item.id);
+  const lessonIndex = course.lessons.findIndex((item) => item.ref.id === lesson.ref.id);
+  const stepIndex = lesson.steps.findIndex(
+    (step) => step.type === "exercise" && step.exercise.id === entry.id,
+  );
+  const nextStep = stepIndex >= 0 ? lesson.steps[stepIndex + 1] ?? null : null;
+  const nextLesson =
+    lessonIndex >= 0 && lessonIndex < course.lessons.length - 1
+      ? course.lessons[lessonIndex + 1]
+      : null;
+  let previousSlide: Extract<LoadedStep, { type: "slide" }> | null = null;
+  for (let i = stepIndex - 1; i >= 0; i -= 1) {
+    const candidate = lesson.steps[i];
+    if (candidate.type === "slide") {
+      previousSlide = candidate;
+      break;
+    }
+  }
+  const nextLink: StepLink | null = nextStep
+    ? stepLink(courseId, lesson.ref.id, nextStep)
+    : nextLesson
+      ? {
+          kind: "lesson",
+          href: `/c/${courseId}/l/${nextLesson.ref.id}`,
+          label: "次のレッスン: " + nextLesson.ref.title,
+        }
+      : null;
   return {
     course,
     entry,
@@ -242,6 +327,10 @@ export async function exercisePage(courseId: string, exerciseId: string) {
     lesson: entry.lessonTitle,
     prev: previous ? link(previous) : null,
     next: following ? link(following) : null,
+    nextStep: nextLink,
+    slideHref: previousSlide
+      ? slideHref(courseId, lesson.ref.id, previousSlide.slide.index)
+      : `/c/${courseId}/l/${lesson.ref.id}`,
     position: { index: index + 1, total: course.exercises.length },
     lessonProgress: {
       index: lessonIds.indexOf(entry.id) + 1,
@@ -319,7 +408,6 @@ export async function reset(courseId: string, exerciseId: string): Promise<Submi
   return { kind: "reset", result: null, files: await readEditable(await ensureWorkspace(ctx, entry), entry), solved: false };
 }
 
-export { gradeQuiz, type QuizResult } from "../../../../src/core/quiz.ts";
 export { EnvError } from "../../../../src/core/errors.ts";
 
 export type { LoadedCourse };

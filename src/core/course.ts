@@ -9,6 +9,7 @@ import {
   type Observe,
   type Quiz,
   type LessonRef,
+  type LessonStepSpec,
 } from "../schema/index.ts";
 import { pathExists, readJson, readJsonIfExists, readTextIfExists } from "./fsx.ts";
 import { UserError } from "./errors.ts";
@@ -40,6 +41,10 @@ export interface LoadedSlide {
   body: string;
 }
 
+export type LoadedStep =
+  | { index: number; type: "slide"; slide: LoadedSlide }
+  | { index: number; type: "exercise"; exercise: ExerciseEntry };
+
 export interface LoadedLesson {
   ref: LessonRef;
   index: number;
@@ -47,6 +52,8 @@ export interface LoadedLesson {
   slides: LoadedSlide[];
   quiz: Quiz | null;
   exercises: ExerciseEntry[];
+  /** スライドと演習を1列に並べた進行順。 */
+  steps: LoadedStep[];
 }
 
 export interface LoadedCourse {
@@ -210,6 +217,69 @@ async function readSlides(courseId: string, lessonId: string, lessonDir: string)
   return slides;
 }
 
+/**
+ * レッスンの進行順を決める。
+ * steps があればその順に解決し、無ければ従来どおり全スライド→全演習。
+ * steps を書いたときは、全スライド・全演習を過不足なく含めることを要求する。
+ */
+function resolveSteps(
+  courseId: string,
+  lessonId: string,
+  ref: LessonRef,
+  slides: LoadedSlide[],
+  exercises: ExerciseEntry[],
+): LoadedStep[] {
+  const slideById = new Map(slides.map((slide) => [slide.id, slide]));
+  const exerciseById = new Map(exercises.map((exercise) => [exercise.id, exercise]));
+
+  let steps: LoadedStep[];
+  if (ref.steps) {
+    const usedSlides = new Set<string>();
+    const usedExercises = new Set<string>();
+    steps = ref.steps.map((step: LessonStepSpec) => {
+      if (step.type === "slide") {
+        const slide = slideById.get(step.id);
+        if (!slide) {
+          fail(courseId, "レッスン " + lessonId + " の steps に無いスライドがあります: " + step.id);
+        }
+        if (usedSlides.has(step.id)) {
+          fail(courseId, "レッスン " + lessonId + " の steps でスライドが重複しています: " + step.id);
+        }
+        usedSlides.add(step.id);
+        return { index: 0, type: "slide" as const, slide };
+      }
+      const exercise = exerciseById.get(step.id);
+      if (!exercise) {
+        fail(courseId, "レッスン " + lessonId + " の steps に無い演習があります: " + step.id);
+      }
+      if (usedExercises.has(step.id)) {
+        fail(courseId, "レッスン " + lessonId + " の steps で演習が重複しています: " + step.id);
+      }
+      usedExercises.add(step.id);
+      return { index: 0, type: "exercise" as const, exercise };
+    });
+
+    for (const slide of slides) {
+      if (!usedSlides.has(slide.id)) {
+        fail(courseId, "レッスン " + lessonId + " の steps にスライドが含まれていません: " + slide.id);
+      }
+    }
+    for (const exercise of exercises) {
+      if (!usedExercises.has(exercise.id)) {
+        fail(courseId, "レッスン " + lessonId + " の steps に演習が含まれていません: " + exercise.id);
+      }
+    }
+  } else {
+    steps = [
+      ...slides.map((slide) => ({ index: 0, type: "slide" as const, slide })),
+      ...exercises.map((exercise) => ({ index: 0, type: "exercise" as const, exercise })),
+    ];
+  }
+
+  for (const [offset, step] of steps.entries()) step.index = offset + 1;
+  return steps;
+}
+
 export async function loadCourse(ctx: Ctx, id: string): Promise<LoadedCourse> {
   const dir = join(ctx.coursesDir, id);
   const spec = await readJson(join(dir, "course.json"), CourseSchema);
@@ -252,7 +322,16 @@ export async function loadCourse(ctx: Ctx, id: string): Promise<LoadedCourse> {
       byId.set(exerciseId, entry);
     }
 
-    lessons.push({ ref, index: lessonIndex, dir: lessonDir, slides, quiz, exercises: lessonExercises });
+    const steps = resolveSteps(id, ref.id, ref, slides, lessonExercises);
+    lessons.push({
+      ref,
+      index: lessonIndex,
+      dir: lessonDir,
+      slides,
+      quiz,
+      exercises: lessonExercises,
+      steps,
+    });
   }
 
   return { id, dir, spec, lessons, exercises, byId };
