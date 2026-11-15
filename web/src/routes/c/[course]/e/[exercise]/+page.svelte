@@ -66,6 +66,7 @@
   description={`${data.lessonTitle} の演習。${data.objective || "コードを書いて実行結果で確かめます。"}`}
 />
 
+<div class="xl:flex xl:h-full xl:min-h-0 xl:flex-col">
 <Breadcrumb
   items={[
     { label: "コース", href: "/" },
@@ -99,10 +100,10 @@
 </div>
 
 <div
-  class="mt-5 grid items-start gap-4 lg:grid-cols-[minmax(280px,340px)_minmax(0,1fr)] xl:grid-cols-[minmax(270px,310px)_minmax(0,1fr)_minmax(320px,370px)]"
+  class="mt-5 grid items-start gap-4 lg:grid-cols-[minmax(280px,340px)_minmax(0,1fr)] xl:min-h-0 xl:flex-1 xl:grid-cols-[minmax(270px,310px)_minmax(0,1fr)_minmax(320px,370px)] xl:items-stretch"
 >
   <aside
-    class="card overflow-hidden xl:sticky xl:top-[80px] xl:max-h-[calc(100dvh-6.5rem)] xl:overflow-y-auto"
+    class="card overflow-hidden xl:h-full xl:overflow-y-auto"
     aria-label="この演習の手順"
   >
     <div class="border-b border-line px-5 py-4">
@@ -199,7 +200,7 @@
     <form
       method="POST"
       action="?/grade"
-      class="flex min-h-[560px] flex-col overflow-hidden rounded-2xl border border-white/10 bg-code shadow-sm xl:sticky xl:top-[80px] xl:h-[calc(100dvh-6.5rem)]"
+      class="flex min-h-[560px] flex-col overflow-hidden rounded-2xl border border-white/10 bg-code shadow-sm xl:h-full xl:min-h-0"
     >
       <div class="flex items-stretch border-b border-white/10 bg-white/[0.04]">
         <div class="flex min-w-0 flex-1 items-center gap-1 overflow-x-auto px-2 pt-2" role="group" aria-label="編集するファイル">
@@ -282,7 +283,7 @@
     <section
       id="result"
       aria-live="polite"
-      class="card scroll-mt-28 overflow-hidden xl:sticky xl:top-[80px] xl:max-h-[calc(100dvh-6.5rem)] xl:overflow-y-auto"
+      class="card scroll-mt-28 overflow-hidden xl:h-full xl:overflow-y-auto"
     >
       <header class="flex flex-wrap items-center justify-between gap-2 border-b border-line px-4 py-3">
         <h2 class="text-sm font-medium text-ink">結果</h2>
@@ -446,7 +447,7 @@
   </div>
 </div>
 
-<div class="mt-4 flex flex-wrap items-center gap-x-4 gap-y-3 rounded-2xl border border-line bg-surface px-4 py-3">
+<div class="mt-4 flex flex-wrap items-center gap-x-4 gap-y-3 rounded-2xl border border-line bg-surface px-4 py-3 xl:shrink-0">
   <a href={lessonUrl} class="inline-flex min-h-9 items-center gap-1 text-xs font-medium text-ink-soft hover:text-ink">
     <Icon name="arrow-left" size={14} />
     スライドを見る
@@ -458,4 +459,5 @@
       {data.lessonProgress.solved} / {data.lessonProgress.total} クリア
     </span>
   </div>
+</div>
 </div>
