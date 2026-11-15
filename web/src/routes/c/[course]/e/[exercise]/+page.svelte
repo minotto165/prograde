@@ -187,83 +187,81 @@
     </form>
 
     <div id="result" class="flex min-h-0 scroll-mt-28 flex-col gap-4 xl:h-full xl:overflow-y-auto">
-      <div class="flex min-h-[360px] flex-col overflow-hidden rounded-2xl border border-white/10 bg-code shadow-sm xl:min-h-0 xl:flex-1">
-        <section
-          class="flex min-h-[190px] max-h-[260px] flex-col border-b border-white/10 xl:min-h-0 xl:max-h-none xl:flex-1"
-          aria-label="あなたの標準出力"
-          aria-live="polite"
-        >
-          <header class="flex shrink-0 items-center justify-between gap-2 px-4 py-2.5">
-            <h3 class="font-mono text-[11px] text-white/45">あなた</h3>
-            <button
-              type="submit"
-              form="exercise-form"
-              formaction="?/run"
-              class="grid size-8 shrink-0 place-items-center rounded-lg text-white/55 transition-colors hover:bg-white/10 hover:text-white"
-              aria-label="コードを実行"
-              title="コードを実行"
-            >
-              <Icon name="play" size={15} />
-            </button>
-          </header>
-          <div class="min-h-0 flex-1 overflow-y-auto px-4 pb-4">
-            {#if form?.error}
-              <p class="font-mono text-xs text-danger-soft">実行できませんでした</p>
-              <pre class="mt-2 whitespace-pre-wrap break-words font-mono text-[11px] leading-relaxed text-white/80">{form.error}</pre>
-              {#if form.remediation}
-                <p class="mt-3 font-mono text-[11px] text-white/45">準備手順</p>
-                <pre class="mt-1 whitespace-pre-wrap break-words font-mono text-[11px] leading-relaxed text-white/60">{form.remediation}</pre>
-              {/if}
-            {:else if outcome?.kind === "reset"}
-              <p class="font-mono text-xs text-white/45">雛形に戻しました。</p>
-            {:else if result}
-              {#if result.stdout}
-                <pre class="whitespace-pre-wrap break-words font-mono text-[12px] leading-6 text-white/90">{line(result.stdout)}</pre>
-              {:else}
-                <p class="font-mono text-[11px] text-white/30">出力はありません。</p>
-              {/if}
-              {#if result.truncated}
-                <p class="mt-3 font-mono text-[11px] text-white/30">出力が長いため途中で切り詰めています。</p>
-              {/if}
-            {:else}
-              <p class="font-mono text-[11px] text-white/30">まだ実行していません。</p>
+      <section
+        class="flex min-h-[190px] max-h-[260px] flex-col overflow-hidden rounded-2xl border border-white/10 bg-code shadow-sm xl:min-h-0 xl:max-h-none xl:flex-1"
+        aria-label="あなたの標準出力"
+        aria-live="polite"
+      >
+        <header class="flex shrink-0 items-center justify-between gap-2 px-4 py-2.5">
+          <h3 class="font-mono text-[11px] text-white/45">あなた</h3>
+          <button
+            type="submit"
+            form="exercise-form"
+            formaction="?/run"
+            class="grid size-8 shrink-0 place-items-center rounded-lg text-white/55 transition-colors hover:bg-white/10 hover:text-white"
+            aria-label="コードを実行"
+            title="コードを実行"
+          >
+            <Icon name="play" size={15} />
+          </button>
+        </header>
+        <div class="min-h-0 flex-1 overflow-y-auto px-4 pb-4">
+          {#if form?.error}
+            <p class="font-mono text-xs text-danger-soft">実行できませんでした</p>
+            <pre class="mt-2 whitespace-pre-wrap break-words font-mono text-[11px] leading-relaxed text-white/80">{form.error}</pre>
+            {#if form.remediation}
+              <p class="mt-3 font-mono text-[11px] text-white/45">準備手順</p>
+              <pre class="mt-1 whitespace-pre-wrap break-words font-mono text-[11px] leading-relaxed text-white/60">{form.remediation}</pre>
             {/if}
-          </div>
-        </section>
+          {:else if outcome?.kind === "reset"}
+            <p class="font-mono text-xs text-white/45">雛形に戻しました。</p>
+          {:else if result}
+            {#if result.stdout}
+              <pre class="whitespace-pre-wrap break-words font-mono text-[12px] leading-6 text-white/90">{line(result.stdout)}</pre>
+            {:else}
+              <p class="font-mono text-[11px] text-white/30">出力はありません。</p>
+            {/if}
+            {#if result.truncated}
+              <p class="mt-3 font-mono text-[11px] text-white/30">出力が長いため途中で切り詰めています。</p>
+            {/if}
+          {:else}
+            <p class="font-mono text-[11px] text-white/30">まだ実行していません。</p>
+          {/if}
+        </div>
+      </section>
 
-        <section
-          class="flex min-h-[190px] max-h-[260px] flex-col xl:min-h-0 xl:max-h-none xl:flex-1"
-          aria-label="お手本の標準出力"
-        >
-          <header class="flex shrink-0 items-center justify-between gap-2 px-4 py-2.5">
-            <h3 class="font-mono text-[11px] text-white/45">お手本</h3>
-            <button
-              type="button"
-              onclick={rerunReference}
-              disabled={referenceBusy}
-              class="grid size-8 shrink-0 place-items-center rounded-lg text-white/55 transition-colors hover:bg-white/10 hover:text-white disabled:opacity-50"
-              aria-label="お手本を実行"
-              title="お手本を実行"
-            >
-              <Icon name="play" size={15} />
-            </button>
-          </header>
-          <div class="min-h-0 flex-1 overflow-y-auto px-4 pb-4">
-            {#if reference}
-              {#if reference.stdout}
-                <pre class="whitespace-pre-wrap break-words font-mono text-[12px] leading-6 text-white/90">{line(reference.stdout)}</pre>
-              {:else}
-                <p class="font-mono text-[11px] text-white/30">出力はありません。</p>
-              {/if}
-              {#if reference.truncated}
-                <p class="mt-3 font-mono text-[11px] text-white/30">出力が長いため途中で切り詰めています。</p>
-              {/if}
+      <section
+        class="flex min-h-[190px] max-h-[260px] flex-col overflow-hidden rounded-2xl border border-white/10 bg-code shadow-sm xl:min-h-0 xl:max-h-none xl:flex-1"
+        aria-label="お手本の標準出力"
+      >
+        <header class="flex shrink-0 items-center justify-between gap-2 px-4 py-2.5">
+          <h3 class="font-mono text-[11px] text-white/45">お手本</h3>
+          <button
+            type="button"
+            onclick={rerunReference}
+            disabled={referenceBusy}
+            class="grid size-8 shrink-0 place-items-center rounded-lg text-white/55 transition-colors hover:bg-white/10 hover:text-white disabled:opacity-50"
+            aria-label="お手本を実行"
+            title="お手本を実行"
+          >
+            <Icon name="play" size={15} />
+          </button>
+        </header>
+        <div class="min-h-0 flex-1 overflow-y-auto px-4 pb-4">
+          {#if reference}
+            {#if reference.stdout}
+              <pre class="whitespace-pre-wrap break-words font-mono text-[12px] leading-6 text-white/90">{line(reference.stdout)}</pre>
             {:else}
-              <p class="font-mono text-[11px] text-white/30">お手本の出力を取得できませんでした。</p>
+              <p class="font-mono text-[11px] text-white/30">出力はありません。</p>
             {/if}
-          </div>
-        </section>
-      </div>
+            {#if reference.truncated}
+              <p class="mt-3 font-mono text-[11px] text-white/30">出力が長いため途中で切り詰めています。</p>
+            {/if}
+          {:else}
+            <p class="font-mono text-[11px] text-white/30">お手本の出力を取得できませんでした。</p>
+          {/if}
+        </div>
+      </section>
 
     {#if result && outcome?.kind !== "run"}
       <details class="group shrink-0">
