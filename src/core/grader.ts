@@ -2,7 +2,7 @@ import { join } from "node:path";
 import { readFile } from "node:fs/promises";
 import type { Ctx } from "./context.ts";
 import type { LoadedCourse, ExerciseEntry } from "./course.ts";
-import { observeAliases } from "./course.ts";
+import { observeAliases } from "./course/observe.ts";
 import { ensureEnv } from "./env.ts";
 import { prepareAttempt } from "./attempt.ts";
 import { planExercise } from "./plan.ts";
