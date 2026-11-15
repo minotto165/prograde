@@ -348,8 +348,8 @@
     </section>
 
     {#if result && outcome?.kind !== "run"}
-      <details class="group shrink-0 overflow-hidden rounded-xl border border-line bg-surface">
-        <summary class="flex cursor-pointer list-none items-center justify-between gap-2 px-4 py-2.5 text-xs">
+      <details class="group shrink-0">
+        <summary class="flex cursor-pointer list-none items-center justify-between gap-2 border-t border-line px-1 py-2.5 text-xs">
           <span class="font-medium text-ink">判定</span>
           <span class="flex items-center gap-1 font-medium {result.ok ? 'text-brand-strong' : 'text-danger'}">
             <Icon name={result.ok ? "check" : "x"} size={13} />
@@ -357,7 +357,7 @@
             <Icon name="chevron-down" size={14} className="ml-1 shrink-0 text-muted transition-transform group-open:rotate-180" />
           </span>
         </summary>
-        <div class="max-h-56 overflow-y-auto border-t border-line px-4 py-3">
+        <div class="mt-2 max-h-56 overflow-y-auto rounded-xl border border-line bg-surface px-4 py-3">
           <p class="text-sm leading-relaxed {result.ok ? 'font-medium text-brand-strong' : 'text-danger'}">{result.message}</p>
           <ul class="mt-2 divide-y divide-line overflow-hidden rounded-xl border border-line">
             {#each result.checks as check, index (index)}
