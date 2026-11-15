@@ -447,7 +447,7 @@
   </div>
 </div>
 
-<div class="mt-5 flex flex-wrap items-center gap-x-4 gap-y-3 border-t border-line pt-3 xl:shrink-0">
+<div class="mt-6 flex flex-wrap items-center gap-x-4 gap-y-3 xl:shrink-0">
   <a href={lessonUrl} class="inline-flex min-h-9 items-center gap-1 text-xs font-medium text-ink-soft hover:text-ink">
     <Icon name="arrow-left" size={14} />
     スライドを見る
