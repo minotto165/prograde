@@ -69,7 +69,7 @@
 
   <article class="card mt-3 overflow-hidden">
     <div class="px-5 py-7 sm:px-9 sm:py-9">
-      <div class="doc">
+      <div class="doc mx-auto max-w-[68ch]">
         {@html data.slideHtml}
       </div>
     </div>
