@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { goto } from "$app/navigation";
   import Breadcrumb from "$lib/components/Breadcrumb.svelte";
   import Icon from "$lib/components/Icon.svelte";
   import PageHead from "$lib/components/PageHead.svelte";
@@ -9,7 +10,35 @@
   let percent = $derived(
     data.slide ? Math.round((data.slide.index / data.slide.total) * 100) : 0,
   );
+
+  let prevHref = $derived(data.prevStep?.href ?? null);
+  let nextHref = $derived(data.nextStep?.href ?? data.nextLesson?.href ?? null);
+
+  function isEditable(target: EventTarget | null): boolean {
+    if (!(target instanceof HTMLElement)) return false;
+    return (
+      target.isContentEditable ||
+      target.tagName === "INPUT" ||
+      target.tagName === "TEXTAREA" ||
+      target.tagName === "SELECT"
+    );
+  }
+
+  function handleKeydown(event: KeyboardEvent) {
+    if (!data.slide || event.defaultPrevented || event.repeat) return;
+    if (event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return;
+    if (isEditable(event.target)) return;
+
+    const href =
+      event.key === "ArrowLeft" ? prevHref : event.key === "ArrowRight" ? nextHref : null;
+    if (!href) return;
+
+    event.preventDefault();
+    void goto(href);
+  }
 </script>
+
+<svelte:window onkeydown={handleKeydown} />
 
 <PageHead title={data.title} description={data.goal || `${data.title} のレッスン。`} />
 
