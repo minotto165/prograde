@@ -23,30 +23,6 @@
       ? Math.round((data.lessonProgress.solved / data.lessonProgress.total) * 100)
       : 0,
   );
-  let status = $derived(
-    form?.error
-      ? "エラー"
-      : outcome?.kind === "reset"
-        ? "リセット"
-        : outcome?.kind === "run"
-          ? "実行結果"
-          : result
-            ? result.ok
-              ? "合格"
-              : "不合格"
-            : "未採点",
-  );
-  let statusTone = $derived(
-    form?.error
-      ? "text-danger"
-      : outcome?.kind === "run"
-        ? "text-muted"
-        : result?.ok
-          ? "text-brand-strong"
-          : result
-            ? "text-danger"
-            : "text-muted",
-  );
   let passedCount = $derived(result ? result.checks.filter((check) => check.ok).length : 0);
 
   function line(text: string): string {
@@ -280,29 +256,23 @@
       </div>
     </form>
 
+  <div id="result" class="flex min-h-0 scroll-mt-28 flex-col gap-4 xl:h-full xl:overflow-y-auto">
     <section
-      id="result"
+      class="card flex min-h-0 flex-col overflow-hidden xl:flex-1"
+      aria-label="あなたの実行結果"
       aria-live="polite"
-      class="card scroll-mt-28 flex flex-col overflow-hidden xl:h-full xl:min-h-0"
     >
-      <header class="flex shrink-0 flex-wrap items-center justify-between gap-2 border-b border-line px-4 py-3">
-        <h2 class="text-sm font-medium text-ink">結果</h2>
-        <span class="inline-flex items-center gap-1 text-xs font-medium {statusTone}">
-          {#if status === "合格"}
-            <Icon name="check" size={13} />
-          {:else if status === "不合格" || status === "エラー"}
-            <Icon name="x" size={13} />
-          {/if}
-          {status}
-        </span>
+      <header class="flex shrink-0 items-center justify-between gap-2 border-b border-line px-4 py-2.5">
+        <h3 class="text-xs font-medium text-ink-soft">あなたの実行結果</h3>
+        {#if result}
+          <span class="font-mono text-[11px] text-muted">
+            exit {result.exitCode === null ? "-" : result.exitCode}
+            {#if result.timedOut} · 時間切れ{/if}
+            · {result.durationMs}ms
+          </span>
+        {/if}
       </header>
-
-      <div class="flex min-h-0 flex-1 flex-col divide-y divide-line">
-        <section class="flex min-h-0 flex-col xl:flex-1" aria-label="あなたの実行結果">
-          <div class="flex shrink-0 items-center justify-between gap-2 border-b border-line bg-surface-2/40 px-4 py-2">
-            <h3 class="text-xs font-medium text-ink-soft">あなたの実行結果</h3>
-          </div>
-          <div class="p-4 xl:min-h-0 xl:flex-1 xl:overflow-y-auto">
+      <div class="p-4 xl:min-h-0 xl:flex-1 xl:overflow-y-auto">
         {#if form?.error}
           <div class="rounded-xl border border-danger/20 bg-danger-soft p-4 text-xs text-danger">
             <p class="font-medium">実行できませんでした</p>
@@ -313,24 +283,83 @@
             {/if}
           </div>
         {:else if outcome?.kind === "reset"}
-          <div class="rounded-xl bg-surface-2 px-4 py-3 text-sm text-ink-soft">
+          <p class="text-sm leading-relaxed text-ink-soft">
             雛形に戻しました。もう一度コードを書いて採点してください。
-          </div>
-        {:else if result}
-          <p class="evidence">
-            exit {result.exitCode === null ? "-" : result.exitCode}
-            {#if result.timedOut} · 時間切れ{/if}
-            · {result.durationMs}ms
-            {#if outcome?.kind !== "run"} · 判定 {passedCount} / {result.checks.length}{/if}
           </p>
-
-          {#if outcome?.kind !== "run"}
-            <p class="mt-1 text-sm {result.ok ? 'font-medium text-brand-strong' : 'text-danger'}">
-              {result.message}
-            </p>
+        {:else if result}
+          {#if result.stdout}
+            <p class="text-xs font-medium text-muted">標準出力</p>
+            <pre class="mt-1 max-h-56 overflow-auto whitespace-pre-wrap break-words rounded-lg bg-code p-3 font-mono text-[11px] leading-5 text-white/90">{line(result.stdout)}</pre>
           {/if}
+          {#if result.stderr}
+            <div class="mt-3">
+              <p class="text-xs font-medium text-muted">標準エラー</p>
+              <pre class="mt-1 max-h-56 overflow-auto whitespace-pre-wrap break-words rounded-lg bg-code p-3 font-mono text-[11px] leading-5 text-danger-soft">{line(result.stderr)}</pre>
+            </div>
+          {/if}
+          {#if !result.stdout && !result.stderr}
+            <p class="text-xs text-muted">出力はありません。</p>
+          {/if}
+          {#if result.truncated}
+            <p class="mt-2 text-xs text-muted">出力が長いため途中で切り詰めています。</p>
+          {/if}
+        {:else}
+          <p class="text-xs leading-relaxed text-muted">まだ実行していません。</p>
+        {/if}
+      </div>
+    </section>
 
-          <ul class="mt-3 divide-y divide-line overflow-hidden rounded-xl border border-line">
+    <section
+      class="card flex min-h-0 flex-col overflow-hidden xl:flex-1"
+      aria-label="お手本の実行結果"
+    >
+      <header class="flex shrink-0 items-center justify-between gap-2 border-b border-line px-4 py-2.5">
+        <h3 class="text-xs font-medium text-ink-soft">お手本の実行結果</h3>
+        {#if data.reference}
+          <span class="font-mono text-[11px] text-muted">
+            exit {data.reference.exitCode === null ? "-" : data.reference.exitCode}
+            {#if data.reference.timedOut} · 時間切れ{/if}
+            · {data.reference.durationMs}ms
+          </span>
+        {/if}
+      </header>
+      <div class="p-4 xl:min-h-0 xl:flex-1 xl:overflow-y-auto">
+        {#if data.reference}
+          {#if data.reference.stdout}
+            <p class="text-xs font-medium text-muted">標準出力</p>
+            <pre class="mt-1 max-h-56 overflow-auto whitespace-pre-wrap break-words rounded-lg bg-code p-3 font-mono text-[11px] leading-5 text-white/90">{line(data.reference.stdout)}</pre>
+          {/if}
+          {#if data.reference.stderr}
+            <div class="mt-3">
+              <p class="text-xs font-medium text-muted">標準エラー</p>
+              <pre class="mt-1 max-h-56 overflow-auto whitespace-pre-wrap break-words rounded-lg bg-code p-3 font-mono text-[11px] leading-5 text-danger-soft">{line(data.reference.stderr)}</pre>
+            </div>
+          {/if}
+          {#if !data.reference.stdout && !data.reference.stderr}
+            <p class="text-xs text-muted">出力はありません。</p>
+          {/if}
+          {#if data.reference.truncated}
+            <p class="mt-2 text-xs text-muted">出力が長いため途中で切り詰めています。</p>
+          {/if}
+        {:else}
+          <p class="text-xs leading-relaxed text-muted">お手本の出力を取得できませんでした。</p>
+        {/if}
+      </div>
+    </section>
+
+    {#if result && outcome?.kind !== "run"}
+      <details class="group shrink-0 overflow-hidden rounded-xl border border-line bg-surface">
+        <summary class="flex cursor-pointer list-none items-center justify-between gap-2 px-4 py-2.5 text-xs">
+          <span class="font-medium text-ink">判定</span>
+          <span class="flex items-center gap-1 font-medium {result.ok ? 'text-brand-strong' : 'text-danger'}">
+            <Icon name={result.ok ? "check" : "x"} size={13} />
+            {result.ok ? "合格" : "不合格"} · {passedCount} / {result.checks.length}
+            <Icon name="chevron-down" size={14} className="ml-1 shrink-0 text-muted transition-transform group-open:rotate-180" />
+          </span>
+        </summary>
+        <div class="max-h-56 overflow-y-auto border-t border-line px-4 py-3">
+          <p class="text-sm leading-relaxed {result.ok ? 'font-medium text-brand-strong' : 'text-danger'}">{result.message}</p>
+          <ul class="mt-2 divide-y divide-line overflow-hidden rounded-xl border border-line">
             {#each result.checks as check, index (index)}
               <li class="px-4 py-3 {check.ok ? 'bg-surface' : 'bg-danger-soft/40'}">
                 <div class="flex items-start gap-2">
@@ -361,7 +390,6 @@
               </li>
             {/each}
           </ul>
-
           {#if result.diagnostics.length > 0}
             <div class="mt-3">
               <p class="text-xs font-medium text-muted">診断</p>
@@ -380,112 +408,24 @@
               </ul>
             </div>
           {/if}
+        </div>
+      </details>
+    {/if}
 
-          {#if result.stdout}
-            <div class="mt-3">
-              <p class="text-xs font-medium text-muted">標準出力</p>
-              <pre class="mt-1 max-h-56 overflow-auto whitespace-pre-wrap break-words rounded-lg bg-code p-3 font-mono text-[11px] leading-5 text-white/90">{line(result.stdout)}</pre>
-            </div>
-          {/if}
-          {#if result.stderr}
-            <div class="mt-3">
-              <p class="text-xs font-medium text-muted">標準エラー</p>
-              <pre class="mt-1 max-h-56 overflow-auto whitespace-pre-wrap break-words rounded-lg bg-code p-3 font-mono text-[11px] leading-5 text-danger-soft">{line(result.stderr)}</pre>
-            </div>
-          {/if}
-          {#if result.truncated}
-            <p class="mt-2 text-xs text-muted">出力が長いため途中で切り詰めています。</p>
-          {/if}
-
-          {#if result.ok && outcome?.kind === "grade"}
-            <div class="mt-4 rounded-xl border border-brand/20 bg-brand-soft p-4">
-              <p class="text-xs font-medium text-brand-strong">合格しました</p>
-              <p class="mt-0.5 text-xs leading-relaxed text-ink-soft">
-                {#if data.next}次の演習に進みましょう。{:else}このコースの演習はすべて完了です。{/if}
-              </p>
-              {#if data.next}
-                <a href={`/c/${data.courseId}/e/${data.next.id}`} class="btn btn-primary mt-3 w-full">
-                  次の演習: {data.next.title}
-                  <Icon name="arrow-right" size={15} />
-                </a>
-              {:else}
-                <a href={`/c/${data.courseId}`} class="btn btn-primary mt-3 w-full">
-                  コースへ戻る
-                  <Icon name="arrow-right" size={15} />
-                </a>
-              {/if}
-            </div>
-          {/if}
-        {:else}
-          <div class="flex flex-col items-center px-2 py-6 text-center">
-            <span class="grid size-11 place-items-center rounded-xl bg-surface-2 text-muted">
-              <Icon name="terminal" size={22} />
-            </span>
-            <p class="mt-3 text-sm font-medium text-ink">まだ採点していません</p>
-            <p class="mt-1 text-xs leading-relaxed text-muted">
-              コードを書いて「採点する」を押すと、<br class="hidden sm:block" />ここに実行結果と判定が出ます。
-            </p>
-          </div>
-
-          {#if data.expected.length > 0}
-            <details class="group rounded-xl border border-line bg-surface-2">
-              <summary class="flex cursor-pointer list-none items-center justify-between gap-2 px-4 py-3 text-xs font-medium text-ink-soft">
-                合格条件（{data.expected.length} 件）
-                <Icon name="chevron-down" size={14} className="shrink-0 text-muted transition-transform group-open:rotate-180" />
-              </summary>
-              <ul class="border-t border-line px-4 py-3">
-                {#each data.expected as item, index (index)}
-                  <li class="py-1.5">
-                    <div class="flex items-baseline justify-between gap-2">
-                      <span class="font-mono text-[11px] text-ink-soft">{item.name}</span>
-                      <span class="rounded bg-surface px-1.5 py-0.5 font-mono text-[11px] text-muted">{item.match}</span>
-                    </div>
-                    <pre class="mt-1 whitespace-pre-wrap break-words font-mono text-[11px] leading-5 text-ink">{item.expected}</pre>
-                  </li>
-                {/each}
-              </ul>
-            </details>
-          {/if}
-        {/if}
-          </div>
-        </section>
-
-        <section class="flex min-h-0 flex-col xl:flex-1" aria-label="お手本の実行結果">
-          <div class="flex shrink-0 items-center justify-between gap-2 border-b border-line bg-surface-2/40 px-4 py-2">
-            <h3 class="text-xs font-medium text-ink-soft">お手本の実行結果</h3>
-            {#if data.reference}
-              <span class="font-mono text-[11px] text-muted">
-                exit {data.reference.exitCode === null ? "-" : data.reference.exitCode}
-                {#if data.reference.timedOut} · 時間切れ{/if}
-                · {data.reference.durationMs}ms
-              </span>
-            {/if}
-          </div>
-          <div class="p-4 xl:min-h-0 xl:flex-1 xl:overflow-y-auto">
-            {#if data.reference}
-              {#if data.reference.stdout}
-                <p class="text-xs font-medium text-muted">標準出力</p>
-                <pre class="mt-1 max-h-56 overflow-auto whitespace-pre-wrap break-words rounded-lg bg-code p-3 font-mono text-[11px] leading-5 text-white/90">{line(data.reference.stdout)}</pre>
-              {/if}
-              {#if data.reference.stderr}
-                <div class="mt-3">
-                  <p class="text-xs font-medium text-muted">標準エラー</p>
-                  <pre class="mt-1 max-h-56 overflow-auto whitespace-pre-wrap break-words rounded-lg bg-code p-3 font-mono text-[11px] leading-5 text-danger-soft">{line(data.reference.stderr)}</pre>
-                </div>
-              {/if}
-              {#if !data.reference.stdout && !data.reference.stderr}
-                <p class="text-xs text-muted">出力はありません。</p>
-              {/if}
-              {#if data.reference.truncated}
-                <p class="mt-2 text-xs text-muted">出力が長いため途中で切り詰めています。</p>
-              {/if}
-            {:else}
-              <p class="text-xs leading-relaxed text-muted">お手本の出力を取得できませんでした。</p>
-            {/if}
-          </div>
-        </section>
-      </div>
-    </section>
+    {#if result?.ok && outcome?.kind === "grade"}
+      {#if data.next}
+        <a href={'/c/' + data.courseId + '/e/' + data.next.id} class="btn btn-primary w-full shrink-0">
+          次の演習: {data.next.title}
+          <Icon name="arrow-right" size={15} />
+        </a>
+      {:else}
+        <a href={'/c/' + data.courseId} class="btn btn-primary w-full shrink-0">
+          コースへ戻る
+          <Icon name="arrow-right" size={15} />
+        </a>
+      {/if}
+    {/if}
+  </div>
   </div>
 </div>
 
