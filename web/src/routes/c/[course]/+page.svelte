@@ -46,7 +46,7 @@
             <div class="flex flex-wrap items-center gap-x-2 gap-y-1">
               <span
                 class="grid size-7 shrink-0 place-items-center rounded-full border text-xs font-medium {lesson.complete
-                  ? 'border-brand bg-brand text-white'
+                  ? 'border-brand bg-brand text-white dark:text-canvas'
                   : lesson.solved > 0
                     ? 'border-accent/30 bg-accent-soft text-accent'
                     : 'border-line bg-surface-2 text-muted'}"

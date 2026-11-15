@@ -171,7 +171,7 @@
           <button
             type="submit"
             formaction="?/reset"
-            class="rounded-md bg-danger px-3 py-1.5 font-medium text-white hover:bg-danger/90"
+            class="rounded-md bg-danger px-3 py-1.5 font-medium text-white hover:bg-danger/90 dark:text-canvas"
           >
             雛形に戻す
           </button>

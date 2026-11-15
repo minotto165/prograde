@@ -68,7 +68,7 @@
           >
             <span
               class="mt-0.5 grid size-6 shrink-0 place-items-center rounded-full border text-[11px] font-medium {section.solved
-                ? 'border-brand bg-brand text-white'
+                ? 'border-brand bg-brand text-white dark:text-canvas'
                 : 'border-line bg-surface text-muted'}"
             >
               {#if section.solved}

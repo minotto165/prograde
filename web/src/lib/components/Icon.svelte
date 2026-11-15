@@ -7,7 +7,9 @@
   import chevronDown from "@iconify-icons/lucide/chevron-down";
   import chevronRight from "@iconify-icons/lucide/chevron-right";
   import house from "@iconify-icons/lucide/house";
+  import moon from "@iconify-icons/lucide/moon";
   import play from "@iconify-icons/lucide/play";
+  import sun from "@iconify-icons/lucide/sun";
   import x from "@iconify-icons/lucide/x";
 
   type IconName =
@@ -19,7 +21,9 @@
     | "x"
     | "play"
     | "book"
-    | "home";
+    | "home"
+    | "moon"
+    | "sun";
 
   let {
     name,
@@ -42,6 +46,8 @@
     play: withStroke(play),
     book: withStroke(bookOpen),
     home: withStroke(house),
+    moon: withStroke(moon),
+    sun: withStroke(sun),
   };
 </script>
 

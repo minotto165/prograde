@@ -1,5 +1,7 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 @theme {
   --color-canvas: #f6f4ef;
   --color-surface: #ffffff;
@@ -20,9 +22,32 @@
   --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 }
 
+.dark {
+  --color-canvas: #171411;
+  --color-surface: #201c18;
+  --color-surface-2: #28231e;
+  --color-ink: #f2ede4;
+  --color-ink-soft: #d3cabd;
+  --color-muted: #a89d90;
+  --color-line: #3b332c;
+  --color-brand: #34d399;
+  --color-brand-strong: #6ee7b7;
+  --color-brand-soft: #0f2a20;
+  --color-accent: #fbbf24;
+  --color-accent-soft: #2d2311;
+  --color-danger: #fb7185;
+  --color-danger-soft: #34151d;
+  --color-code: #0e0c0a;
+}
+
 @layer base {
   html {
     scroll-behavior: smooth;
+    color-scheme: light;
+  }
+
+  html.dark {
+    color-scheme: dark;
   }
 
   body {
@@ -49,12 +74,16 @@
     @apply rounded-2xl border border-line bg-surface shadow-[0_1px_2px_rgba(28,25,23,0.05)];
   }
 
+  .dark .card {
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+  }
+
   .btn {
     @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-[10px] px-4 py-2 text-sm font-medium transition-colors disabled:pointer-events-none disabled:opacity-50;
   }
 
   .btn-primary {
-    @apply bg-brand text-white hover:bg-brand-strong;
+    @apply bg-brand text-white hover:bg-brand-strong dark:text-canvas;
   }
 
   .btn-secondary {
@@ -115,7 +144,7 @@
   }
 
   .skip-link {
-    @apply fixed left-4 top-4 z-50 -translate-y-24 rounded-lg bg-ink px-4 py-2 text-sm font-semibold text-white transition-transform focus:translate-y-0;
+    @apply fixed left-4 top-4 z-50 -translate-y-24 rounded-lg bg-ink px-4 py-2 text-sm font-semibold text-canvas transition-transform focus:translate-y-0;
   }
 }
 
