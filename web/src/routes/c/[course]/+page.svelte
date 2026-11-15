@@ -58,7 +58,9 @@
                   {index + 1}
                 {/if}
               </span>
-              <h3 class="font-medium leading-snug text-ink">{lesson.title}</h3>
+              <h3 class="font-medium leading-snug text-ink">
+                <a href={lesson.href} class="hover:underline">{lesson.title}</a>
+              </h3>
             </div>
 
             {#if lesson.description}
@@ -81,10 +83,10 @@
           </div>
 
           <a
-            href={lesson.start.href}
+            href={lesson.href}
             class="btn {lesson.isNext ? 'btn-primary' : 'btn-secondary'} w-full shrink-0 sm:w-auto"
           >
-            {lesson.start.label}
+            レッスンをひらく
             <Icon name="arrow-right" size={16} />
           </a>
         </div>

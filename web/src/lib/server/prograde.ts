@@ -274,6 +274,7 @@ export async function coursePage(courseId: string) {
         solved,
         total: lesson.exercises.length,
         complete: lesson.exercises.length > 0 && solved === lesson.exercises.length,
+        href: lessonHref(courseId, lesson.ref.id),
         start: lessonStart(courseId, course, lesson, progress),
         isNext: nextEntry ? lesson.exercises.some((entry) => entry.id === nextEntry.id) : false,
       };
