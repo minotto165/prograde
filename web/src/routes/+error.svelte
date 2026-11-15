@@ -17,8 +17,8 @@
 </svelte:head>
 
 <section class="mx-auto flex min-h-[62vh] max-w-xl flex-col items-center justify-center text-center">
-  <span class="chip chip-brand font-mono">{status}</span>
-  <h1 class="mt-5 text-3xl font-bold tracking-tight text-ink sm:text-4xl">{title}</h1>
+  <span class="font-mono text-xs text-muted">{status}</span>
+  <h1 class="mt-5 text-3xl font-medium tracking-tight text-ink sm:text-4xl">{title}</h1>
   <p class="mt-3 max-w-md text-sm leading-relaxed text-ink-soft">{message}</p>
   <div class="mt-7 flex flex-wrap items-center justify-center gap-3">
     <a href="/" class="btn btn-primary">

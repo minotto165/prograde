@@ -1,11 +1,13 @@
 <script lang="ts">
+  import { untrack } from "svelte";
+
   let {
     path,
     code,
     active,
   }: { path: string; code: string; active: boolean } = $props();
 
-  let text = $state(code);
+  let text = $state(untrack(() => code));
   let textarea = $state<HTMLTextAreaElement | null>(null);
   let gutter = $state<HTMLDivElement | null>(null);
   let line = $state(1);
@@ -79,7 +81,7 @@
     ></textarea>
   </div>
 
-  <div class="flex items-center justify-between gap-3 border-t border-white/10 px-3 py-1.5 text-[11px] text-white/40">
+  <div class="flex items-center justify-between gap-3 border-t border-white/10 px-3 py-1.5 text-xs text-white/60">
     <span class="truncate font-mono">{path}</span>
     <span class="shrink-0 tabular-nums">行 {line}、列 {column}</span>
   </div>

@@ -49,12 +49,8 @@
     @apply rounded-2xl border border-line bg-surface shadow-[0_1px_2px_rgba(28,25,23,0.05)];
   }
 
-  .hero-glow {
-    background: linear-gradient(180deg, #ffffff, var(--color-surface-2));
-  }
-
   .btn {
-    @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-[10px] px-4 py-2 text-sm font-semibold transition-colors disabled:pointer-events-none disabled:opacity-50;
+    @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-[10px] px-4 py-2 text-sm font-medium transition-colors disabled:pointer-events-none disabled:opacity-50;
   }
 
   .btn-primary {
@@ -74,7 +70,7 @@
   }
 
   .chip {
-    @apply inline-flex items-center gap-1 rounded-full border border-line bg-surface-2 px-2.5 py-1 text-xs font-medium text-ink-soft;
+    @apply inline-flex items-center gap-1 rounded-md border border-line bg-surface-2 px-1.5 py-0.5 text-xs font-medium text-ink-soft;
   }
 
   .chip-brand {
@@ -110,8 +106,12 @@
     @apply inline-flex min-w-6 items-center justify-center rounded-md border border-line bg-surface-2 px-1.5 py-0.5 font-mono text-[11px] font-medium text-ink-soft;
   }
 
-  .eyebrow {
-    @apply text-[11px] font-bold uppercase tracking-[0.16em] text-brand;
+  .meta-label {
+    @apply text-xs font-medium text-muted;
+  }
+
+  .evidence {
+    @apply font-mono text-xs tabular-nums text-muted;
   }
 
   .skip-link {
@@ -139,7 +139,7 @@
 .doc h2,
 .doc h3 {
   margin-top: 1.9rem;
-  font-weight: 700;
+  font-weight: 600;
   line-height: 1.45;
   letter-spacing: -0.01em;
   color: var(--color-ink);
@@ -191,7 +191,7 @@
 }
 
 .doc strong {
-  font-weight: 700;
+  font-weight: 600;
   color: var(--color-ink);
 }
 

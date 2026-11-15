@@ -35,27 +35,26 @@
 
 <div class="mt-3 flex flex-wrap items-start justify-between gap-4">
   <div class="min-w-0 max-w-3xl">
-    <p class="eyebrow">LESSON</p>
-    <h1 class="mt-1 text-3xl font-bold tracking-tight text-ink">{data.title}</h1>
+    <h1 class="text-3xl font-medium tracking-tight text-ink">{data.title}</h1>
     {#if data.goal}
       <p class="mt-2 text-sm leading-relaxed text-ink-soft">{data.goal}</p>
     {/if}
   </div>
-  <div class="flex flex-wrap items-center gap-2">
+  <div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted">
     {#if data.estimateMin}
-      <span class="chip">
+      <span class="inline-flex items-center gap-1">
         <Icon name="clock" size={13} />
         約 {data.estimateMin} 分
       </span>
     {/if}
-    <span class="chip">演習 {data.solved} / {data.exercises.length}</span>
+    <span class="tabular-nums">演習 {data.solved} / {data.exercises.length}</span>
   </div>
 </div>
 
 {#if data.skills.length > 0}
   <div class="mt-3 flex flex-wrap gap-1.5">
     {#each data.skills as skill (skill)}
-      <span class="chip">#{skill}</span>
+      <span class="font-mono text-xs text-muted">#{skill}</span>
     {/each}
   </div>
 {/if}
@@ -81,7 +80,7 @@
     </div>
 
     {#if data.slide}
-      <nav class="flex flex-wrap items-center justify-between gap-3 border-t border-line bg-surface-2 px-4 py-3.5 sm:px-6" aria-label="スライドの移動">
+      <nav class="flex flex-wrap items-center justify-between gap-3 border-t border-line bg-surface-2 px-4 py-3 sm:px-6" aria-label="スライドの移動">
         {#if data.slide.index === 1}
           <a href={`/c/${data.courseId}`} class="btn btn-ghost">
             <Icon name="arrow-left" size={16} />
@@ -124,13 +123,12 @@
     <section id="check" class="mt-10 scroll-mt-28">
       <div class="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <p class="eyebrow">CHECK</p>
-          <h2 class="mt-1 text-2xl font-bold tracking-tight text-ink">振り返りクイズ</h2>
+          <h2 class="text-2xl font-medium tracking-tight text-ink">振り返りクイズ</h2>
           <p class="mt-1 text-sm text-muted">選択して「答え合わせ」を押すと、その場で採点されます。</p>
         </div>
         {#if form?.quizResult}
           <span
-            class="chip {form.quizResult.ok ? 'chip-brand' : 'chip-danger'}"
+            class="inline-flex items-center gap-1 text-xs font-medium {form.quizResult.ok ? 'text-brand-strong' : 'text-danger'}"
             aria-live="polite"
           >
             <Icon name={form.quizResult.ok ? "check" : "x"} size={13} />
@@ -145,7 +143,7 @@
           <fieldset
             class="card p-5 {result ? (result.ok ? 'border-brand/40' : 'border-danger/40') : ''}"
           >
-            <legend class="px-1 text-sm font-semibold leading-relaxed text-ink">
+            <legend class="px-1 text-sm font-medium leading-relaxed text-ink">
               Q{index + 1}. {question.prompt}
               {#if question.multiple}
                 <span class="ml-1 text-xs font-normal text-muted">（複数選択）</span>
@@ -173,7 +171,7 @@
             </div>
 
             {#if result}
-              <div class="mt-3 rounded-lg bg-surface-2 px-3.5 py-3 text-xs leading-relaxed text-ink-soft" aria-live="polite">
+              <div class="mt-3 rounded-lg bg-surface-2 px-4 py-3 text-xs leading-relaxed text-ink-soft" aria-live="polite">
                 {#if !result.ok}
                   <p class="font-medium text-danger">
                     答え: {result.answers
@@ -203,8 +201,7 @@
   <section id="exercises" class="mt-10 scroll-mt-28">
     <div class="flex flex-wrap items-end justify-between gap-3">
       <div>
-        <p class="eyebrow">PRACTICE</p>
-        <h2 class="mt-1 text-2xl font-bold tracking-tight text-ink">演習</h2>
+        <h2 class="text-2xl font-medium tracking-tight text-ink">演習</h2>
         <p class="mt-1 text-sm text-muted">終了コード・出力・生成されたファイルで採点します。</p>
       </div>
       <span class="text-xs text-muted">{data.solved} / {data.exercises.length} クリア</span>
@@ -215,7 +212,7 @@
         {#each data.exercises as exercise, index (exercise.id)}
           <li class="card flex flex-wrap items-center gap-4 p-4 sm:p-5">
             <span
-              class="grid size-9 shrink-0 place-items-center rounded-full border text-xs font-bold {exercise.solved
+              class="grid size-9 shrink-0 place-items-center rounded-full border text-xs font-medium {exercise.solved
                 ? 'border-brand bg-brand-soft text-brand-strong'
                 : 'border-line bg-surface-2 text-muted'}"
             >
@@ -229,7 +226,7 @@
             <div class="min-w-0 flex-1">
               <a
                 href={`/c/${data.courseId}/e/${exercise.id}`}
-                class="font-semibold text-ink transition-colors hover:text-brand-strong"
+                class="font-medium text-ink transition-colors hover:text-brand-strong"
               >
                 {exercise.title}
               </a>

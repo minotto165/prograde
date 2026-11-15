@@ -38,14 +38,14 @@
   );
   let statusTone = $derived(
     form?.error
-      ? "chip-danger"
+      ? "text-danger"
       : outcome?.kind === "run"
-        ? ""
+        ? "text-muted"
         : result?.ok
-          ? "chip-brand"
+          ? "text-brand-strong"
           : result
-            ? "chip-danger"
-            : "",
+            ? "text-danger"
+            : "text-muted",
   );
   let passedCount = $derived(result ? result.checks.filter((check) => check.ok).length : 0);
 
@@ -78,23 +78,23 @@
 <div class="mt-3 flex flex-wrap items-start justify-between gap-3">
   <div class="min-w-0">
     <div class="flex flex-wrap items-center gap-2">
-      <p class="eyebrow">EXERCISE {data.position.index} / {data.position.total}</p>
+      <p class="font-mono text-xs text-muted">演習 {data.position.index} / {data.position.total}</p>
       {#if solved}
-        <span class="chip chip-brand">
+        <span class="inline-flex items-center gap-1 text-xs font-medium text-brand-strong">
           <Icon name="check" size={13} />
           合格済み
         </span>
       {/if}
     </div>
-    <h1 class="mt-1 text-2xl font-bold leading-tight tracking-tight text-ink sm:text-3xl">
+    <h1 class="mt-1 text-2xl font-medium leading-tight tracking-tight text-ink sm:text-3xl">
       {data.title}
     </h1>
   </div>
-  <div class="flex flex-wrap items-center gap-2">
-    <span class="chip font-mono">{data.env}</span>
-    <span class="chip">{data.xp} XP</span>
+  <div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted">
+    <span class="font-mono">{data.env}</span>
+    <span>{data.xp} XP</span>
     {#if data.attempts > 0}
-      <span class="chip">{data.attempts} 回挑戦</span>
+      <span>{data.attempts} 回挑戦</span>
     {/if}
   </div>
 </div>
@@ -108,22 +108,16 @@
   >
     <div class="border-b border-line px-5 py-4">
       <div class="flex items-center justify-between gap-2">
-        <p class="eyebrow">手順</p>
+        <p class="meta-label">手順</p>
         <span class="text-xs tabular-nums text-muted">
           {data.lessonProgress.index} / {data.lessonProgress.total}
         </span>
       </div>
       {#if data.objective}
-        <div class="mt-3 rounded-xl bg-brand-soft px-3.5 py-3">
-          <p class="text-[11px] font-bold uppercase tracking-[0.12em] text-brand-strong">目標</p>
+        <div class="mt-3 border-l-2 border-brand pl-3">
+          <p class="text-xs font-medium text-brand-strong">目標</p>
           <p class="mt-1 text-sm leading-relaxed text-ink-soft">{data.objective}</p>
         </div>
-      {/if}
-      {#if solved}
-        <span class="chip chip-brand mt-3">
-          <Icon name="check" size={13} />
-          合格済み
-        </span>
       {/if}
     </div>
 
@@ -137,7 +131,7 @@
 
     {#if data.hints.length > 0}
       <details class="group mx-5 mb-5 rounded-xl border border-accent/20 bg-accent-soft/60 px-4 py-3">
-        <summary class="flex cursor-pointer list-none items-center justify-between gap-2 text-xs font-semibold text-accent">
+        <summary class="flex cursor-pointer list-none items-center justify-between gap-2 text-xs font-medium text-accent">
           ヒント（{data.hints.length} 段）
           <Icon name="chevron-down" size={14} className="shrink-0 transition-transform group-open:rotate-180" />
         </summary>
@@ -151,7 +145,7 @@
 
     {#if data.lessonExercises.length > 1}
       <div class="border-t border-line px-5 py-4">
-        <p class="text-xs font-semibold text-ink">このレッスンの演習</p>
+        <p class="text-xs font-medium text-ink">このレッスンの演習</p>
         <ol class="mt-2 grid gap-1">
           {#each data.lessonExercises as item, index (item.id)}
             <li>
@@ -164,7 +158,7 @@
                   : 'text-ink-soft hover:bg-surface-2'}"
               >
                 <span
-                  class="grid size-5 shrink-0 place-items-center rounded-full border text-[10px] font-bold {item.solved
+                  class="grid size-5 shrink-0 place-items-center rounded-full border text-[11px] font-medium {item.solved
                     ? 'border-brand/30 bg-brand-soft text-brand-strong'
                     : 'border-line bg-surface text-muted'}"
                 >
@@ -218,7 +212,7 @@
               class="shrink-0 rounded-t-lg px-3 py-2 font-mono text-[11px] transition-colors {index ===
               activeIndex
                 ? 'bg-code text-white shadow-[inset_0_-2px_0_var(--color-brand)]'
-                : 'text-white/45 hover:bg-white/5 hover:text-white/80'}"
+                : 'text-white/60 hover:bg-white/5 hover:text-white/80'}"
             >
               {file.path}
             </button>
@@ -226,12 +220,12 @@
         </div>
         <div class="flex shrink-0 items-center gap-2 px-2">
           {#if solved}
-            <span class="hidden text-[11px] font-medium text-brand-soft sm:inline">合格済み</span>
+            <span class="hidden text-xs font-medium text-brand-soft sm:inline">合格済み</span>
           {/if}
           <button
             type="button"
             onclick={() => (resetArmed = true)}
-            class="rounded-lg px-2 py-1.5 text-[11px] text-white/45 transition-colors hover:bg-white/10 hover:text-danger-soft"
+            class="rounded-lg px-2 py-1.5 text-xs text-white/60 transition-colors hover:bg-white/10 hover:text-danger-soft"
           >
             雛形に戻す
           </button>
@@ -250,7 +244,7 @@
           <button
             type="submit"
             formaction="?/reset"
-            class="rounded-md bg-danger px-3 py-1.5 font-semibold text-white hover:bg-danger/90"
+            class="rounded-md bg-danger px-3 py-1.5 font-medium text-white hover:bg-danger/90"
           >
             雛形に戻す
           </button>
@@ -265,7 +259,7 @@
       {/if}
 
       <div class="flex flex-wrap items-center gap-2 border-t border-white/10 bg-white/[0.04] px-3 py-2.5">
-        <span class="hidden items-center gap-1 text-[11px] text-white/40 sm:flex">
+        <span class="hidden items-center gap-1 text-xs text-white/60 sm:flex">
           <span class="rounded border border-white/15 px-1.5 py-0.5 font-mono">⌘/Ctrl</span>
           <span>+</span>
           <span class="rounded border border-white/15 px-1.5 py-0.5 font-mono">Enter</span>
@@ -279,7 +273,7 @@
           >
             実行だけ
           </button>
-          <button type="submit" class="btn bg-brand font-bold text-white hover:bg-brand-strong">
+          <button type="submit" class="btn bg-brand text-white hover:bg-brand-strong">
             採点する
           </button>
         </div>
@@ -292,8 +286,8 @@
       class="card scroll-mt-28 overflow-hidden xl:sticky xl:top-[80px] xl:max-h-[calc(100dvh-6.5rem)] xl:overflow-y-auto"
     >
       <header class="flex flex-wrap items-center justify-between gap-2 border-b border-line px-4 py-3">
-        <h2 class="text-sm font-bold text-ink">結果</h2>
-        <span class="chip {statusTone}">
+        <h2 class="text-sm font-medium text-ink">結果</h2>
+        <span class="inline-flex items-center gap-1 text-xs font-medium {statusTone}">
           {#if status === "合格"}
             <Icon name="check" size={13} />
           {:else if status === "不合格" || status === "エラー"}
@@ -305,26 +299,25 @@
 
       <div class="p-4">
         {#if form?.error}
-          <div class="rounded-xl border border-danger/20 bg-danger-soft p-3.5 text-xs text-danger">
-            <p class="font-semibold">実行できませんでした</p>
+          <div class="rounded-xl border border-danger/20 bg-danger-soft p-4 text-xs text-danger">
+            <p class="font-medium">実行できませんでした</p>
             <pre class="mt-2 whitespace-pre-wrap break-words font-mono text-[11px] leading-relaxed">{form.error}</pre>
             {#if form.remediation}
-              <p class="mt-3 font-semibold">準備手順</p>
+              <p class="mt-3 font-medium">準備手順</p>
               <pre class="mt-1 whitespace-pre-wrap break-words rounded-lg bg-white/70 p-2.5 font-mono text-[11px] leading-relaxed">{form.remediation}</pre>
             {/if}
           </div>
         {:else if outcome?.kind === "reset"}
-          <div class="rounded-xl bg-surface-2 px-3.5 py-3 text-sm text-ink-soft">
+          <div class="rounded-xl bg-surface-2 px-4 py-3 text-sm text-ink-soft">
             雛形に戻しました。もう一度コードを書いて採点してください。
           </div>
         {:else if result}
-          <div class="flex items-baseline justify-between gap-2 text-[11px] text-muted">
-            <span>
-              exit {result.exitCode === null ? "-" : result.exitCode}
-              {#if result.timedOut} ・ 時間切れ{/if}
-            </span>
-            <span class="tabular-nums">{result.durationMs}ms</span>
-          </div>
+          <p class="evidence">
+            exit {result.exitCode === null ? "-" : result.exitCode}
+            {#if result.timedOut} · 時間切れ{/if}
+            · {result.durationMs}ms
+            {#if outcome?.kind !== "run"} · 判定 {passedCount} / {result.checks.length}{/if}
+          </p>
 
           {#if outcome?.kind !== "run"}
             <p class="mt-1 text-sm {result.ok ? 'font-medium text-brand-strong' : 'text-danger'}">
@@ -332,15 +325,9 @@
             </p>
           {/if}
 
-          <div class="mt-3 flex flex-wrap items-center gap-2 text-[11px]">
-            <span class="chip">判定 {passedCount} / {result.checks.length}</span>
-            {#if result.timedOut}<span class="chip chip-danger">時間切れ</span>{/if}
-            {#if result.truncated}<span class="chip">出力を切り詰め</span>{/if}
-          </div>
-
           <ul class="mt-3 divide-y divide-line overflow-hidden rounded-xl border border-line">
             {#each result.checks as check, index (index)}
-              <li class="px-3.5 py-3 {check.ok ? 'bg-surface' : 'bg-danger-soft/40'}">
+              <li class="px-4 py-3 {check.ok ? 'bg-surface' : 'bg-danger-soft/40'}">
                 <div class="flex items-start gap-2">
                   <span
                     class="mt-0.5 grid size-5 shrink-0 place-items-center rounded-full {check.ok
@@ -350,19 +337,19 @@
                     <Icon name={check.ok ? "check" : "x"} size={12} />
                   </span>
                   <div class="min-w-0 flex-1">
-                    <p class="font-mono text-[11px] font-medium text-ink-soft">{check.name}</p>
+                    <p class="font-mono text-xs font-medium text-ink-soft">{check.name}</p>
                     {#if !check.ok}
-                      <dl class="mt-1.5 space-y-1 text-[11px] leading-relaxed">
+                      <dl class="mt-1.5 space-y-1 text-xs leading-relaxed">
                         <div class="flex gap-1.5">
                           <dt class="shrink-0 text-muted">期待</dt>
-                          <dd class="min-w-0 break-all"><code class="rounded bg-surface px-1 py-0.5 font-mono">{check.expected}</code></dd>
+                          <dd class="min-w-0 break-all"><code class="rounded bg-surface px-1 py-0.5 font-mono text-[11px]">{check.expected}</code></dd>
                         </div>
                         <div class="flex gap-1.5">
                           <dt class="shrink-0 text-muted">実際</dt>
-                          <dd class="min-w-0 break-all"><code class="rounded bg-surface px-1 py-0.5 font-mono">{check.actual}</code></dd>
+                          <dd class="min-w-0 break-all"><code class="rounded bg-surface px-1 py-0.5 font-mono text-[11px]">{check.actual}</code></dd>
                         </div>
                       </dl>
-                      {#if check.note}<p class="mt-1 text-[11px] text-accent">（{check.note}）</p>{/if}
+                      {#if check.note}<p class="mt-1 text-xs text-accent">（{check.note}）</p>{/if}
                     {/if}
                   </div>
                 </div>
@@ -372,7 +359,7 @@
 
           {#if result.diagnostics.length > 0}
             <div class="mt-3">
-              <p class="text-[11px] font-semibold text-muted">診断</p>
+              <p class="text-xs font-medium text-muted">診断</p>
               <ul class="mt-1 grid gap-1">
                 {#each result.diagnostics as diagnostic, index (index)}
                   <li class="rounded-lg bg-surface-2 px-2.5 py-2 font-mono text-[11px] leading-relaxed text-ink-soft">
@@ -391,23 +378,23 @@
 
           {#if result.stdout}
             <div class="mt-3">
-              <p class="text-[11px] font-semibold text-muted">標準出力</p>
+              <p class="text-xs font-medium text-muted">標準出力</p>
               <pre class="mt-1 max-h-56 overflow-auto whitespace-pre-wrap break-words rounded-lg bg-code p-3 font-mono text-[11px] leading-5 text-white/90">{line(result.stdout)}</pre>
             </div>
           {/if}
           {#if result.stderr}
             <div class="mt-3">
-              <p class="text-[11px] font-semibold text-muted">標準エラー</p>
+              <p class="text-xs font-medium text-muted">標準エラー</p>
               <pre class="mt-1 max-h-56 overflow-auto whitespace-pre-wrap break-words rounded-lg bg-code p-3 font-mono text-[11px] leading-5 text-danger-soft">{line(result.stderr)}</pre>
             </div>
           {/if}
           {#if result.truncated}
-            <p class="mt-2 text-[11px] text-muted">出力が長いため途中で切り詰めています。</p>
+            <p class="mt-2 text-xs text-muted">出力が長いため途中で切り詰めています。</p>
           {/if}
 
           {#if result.ok && outcome?.kind === "grade"}
-            <div class="mt-4 rounded-xl border border-brand/20 bg-brand-soft p-3.5">
-              <p class="text-xs font-semibold text-brand-strong">合格しました</p>
+            <div class="mt-4 rounded-xl border border-brand/20 bg-brand-soft p-4">
+              <p class="text-xs font-medium text-brand-strong">合格しました</p>
               <p class="mt-0.5 text-xs leading-relaxed text-ink-soft">
                 {#if data.next}次の演習に進みましょう。{:else}このコースの演習はすべて完了です。{/if}
               </p>
@@ -429,7 +416,7 @@
             <span class="grid size-11 place-items-center rounded-xl bg-surface-2 text-muted">
               <Icon name="terminal" size={22} />
             </span>
-            <p class="mt-3 text-sm font-semibold text-ink">まだ採点していません</p>
+            <p class="mt-3 text-sm font-medium text-ink">まだ採点していません</p>
             <p class="mt-1 text-xs leading-relaxed text-muted">
               コードを書いて「採点する」を押すと、<br class="hidden sm:block" />ここに実行結果と判定が出ます。
             </p>
@@ -437,16 +424,16 @@
 
           {#if data.expected.length > 0}
             <details class="group rounded-xl border border-line bg-surface-2">
-              <summary class="flex cursor-pointer list-none items-center justify-between gap-2 px-3.5 py-3 text-xs font-semibold text-ink-soft">
+              <summary class="flex cursor-pointer list-none items-center justify-between gap-2 px-4 py-3 text-xs font-medium text-ink-soft">
                 合格条件（{data.expected.length} 件）
                 <Icon name="chevron-down" size={14} className="shrink-0 text-muted transition-transform group-open:rotate-180" />
               </summary>
-              <ul class="border-t border-line px-3.5 py-3">
+              <ul class="border-t border-line px-4 py-3">
                 {#each data.expected as item, index (index)}
                   <li class="py-1.5">
                     <div class="flex items-baseline justify-between gap-2">
                       <span class="font-mono text-[11px] text-ink-soft">{item.name}</span>
-                      <span class="rounded bg-surface px-1.5 py-0.5 font-mono text-[10px] text-muted">{item.match}</span>
+                      <span class="rounded bg-surface px-1.5 py-0.5 font-mono text-[11px] text-muted">{item.match}</span>
                     </div>
                     <pre class="mt-1 whitespace-pre-wrap break-words font-mono text-[11px] leading-5 text-ink">{item.expected}</pre>
                   </li>
@@ -460,16 +447,16 @@
   </div>
 </div>
 
-<div class="mt-4 flex flex-col gap-3 rounded-2xl border border-line bg-surface px-4 py-3 sm:flex-row sm:items-center sm:gap-4">
+<div class="mt-4 flex flex-wrap items-center gap-x-4 gap-y-3 rounded-2xl border border-line bg-surface px-4 py-3">
   <a href={lessonUrl} class="inline-flex min-h-9 items-center gap-1 text-xs font-medium text-ink-soft hover:text-ink">
     <Icon name="arrow-left" size={14} />
     スライドを見る
   </a>
-  <div class="flex flex-1 items-center gap-3">
+  <a href="/help" class="ml-auto inline-flex min-h-9 items-center text-xs text-muted hover:text-ink sm:order-last sm:ml-0">ヘルプ</a>
+  <div class="flex w-full items-center gap-3 sm:order-2 sm:w-auto sm:flex-1">
     <ProgressBar value={progressPercent} size="sm" />
     <span class="shrink-0 text-xs font-medium text-muted">
       {data.lessonProgress.solved} / {data.lessonProgress.total} クリア
     </span>
   </div>
-  <a href="/help" class="inline-flex min-h-9 items-center text-xs text-muted hover:text-ink">ヘルプ</a>
 </div>

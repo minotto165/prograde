@@ -25,16 +25,15 @@
 
 <div class="mt-3 flex flex-wrap items-end justify-between gap-4">
   <div class="min-w-0">
-    <p class="eyebrow">COURSE</p>
-    <h1 class="mt-1 text-3xl font-bold tracking-tight text-ink">{data.label}</h1>
+    <h1 class="text-3xl font-medium tracking-tight text-ink">{data.label}</h1>
     {#if data.description}
       <p class="mt-2 max-w-2xl text-sm leading-relaxed text-ink-soft">{data.description}</p>
     {/if}
   </div>
-  <div class="flex flex-wrap items-center gap-2">
-    <span class="chip">Lv {data.stats.level}</span>
-    <span class="chip">{data.lessons.length} レッスン</span>
-    <span class="chip">{data.totalExercises} 演習</span>
+  <div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted">
+    <span class="tabular-nums">Lv {data.stats.level}</span>
+    <span>{data.lessons.length} レッスン</span>
+    <span>{data.totalExercises} 演習</span>
   </div>
 </div>
 
@@ -43,13 +42,13 @@
     <div class="p-5 sm:p-6">
       <div class="flex flex-wrap items-end justify-between gap-2">
         <div>
-          <p class="eyebrow">全体の進捗</p>
-          <p class="mt-1 text-3xl font-bold tracking-tight text-ink">
-            {percent}<span class="text-lg font-semibold text-muted">%</span>
+          <p class="meta-label">全体の進捗</p>
+          <p class="mt-1 text-3xl font-medium tracking-tight text-ink tabular-nums">
+            {percent}<span class="text-lg font-medium text-muted">%</span>
           </p>
         </div>
         <p class="text-sm text-muted">
-          <strong class="font-semibold text-ink">{data.stats.solved}</strong> / {data.totalExercises} 演習
+          <strong class="font-medium text-ink tabular-nums">{data.stats.solved}</strong> / {data.totalExercises} 演習
           <span class="mx-1.5 text-line">・</span>
           {completedLessons} / {data.lessons.length} レッスン完了
         </p>
@@ -61,15 +60,15 @@
       <dl class="mt-5 grid grid-cols-3 gap-3 border-t border-line pt-4">
         <div>
           <dt class="text-xs text-muted">レベル</dt>
-          <dd class="mt-0.5 text-lg font-bold text-ink">{data.stats.level}</dd>
+          <dd class="mt-0.5 text-lg font-medium tabular-nums text-ink">{data.stats.level}</dd>
         </div>
         <div>
           <dt class="text-xs text-muted">XP</dt>
-          <dd class="mt-0.5 text-lg font-bold text-ink">{data.stats.xp}</dd>
+          <dd class="mt-0.5 text-lg font-medium tabular-nums text-ink">{data.stats.xp}</dd>
         </div>
         <div>
           <dt class="text-xs text-muted">連続日数</dt>
-          <dd class="mt-0.5 flex items-center gap-1 text-lg font-bold text-ink">
+          <dd class="mt-0.5 flex items-center gap-1 text-lg font-medium tabular-nums text-ink">
             <Icon name="flame" size={16} className="text-accent" />
             {data.stats.streak}<span class="text-xs font-medium text-muted">日</span>
           </dd>
@@ -79,9 +78,9 @@
 
     <div class="border-t border-line bg-surface-2 p-5 sm:p-6 lg:border-l lg:border-t-0">
       {#if data.next}
-        <p class="eyebrow">次に解く演習</p>
+        <p class="meta-label">次に解く演習</p>
         <p class="mt-2 text-xs text-muted">{data.next.lessonTitle}</p>
-        <p class="mt-0.5 text-lg font-semibold leading-snug text-ink">{data.next.title}</p>
+        <p class="mt-0.5 text-lg font-medium leading-snug text-ink">{data.next.title}</p>
         <div class="mt-4 flex flex-col gap-2">
           <a href={`/c/${data.id}/e/${data.next.id}`} class="btn btn-primary w-full">
             <Icon name="play" size={16} />
@@ -97,7 +96,7 @@
           <span class="grid size-11 place-items-center rounded-xl bg-brand-soft text-brand-strong">
             <Icon name="check" size={22} />
           </span>
-          <p class="mt-3 font-semibold text-ink">
+          <p class="mt-3 font-medium text-ink">
             {data.totalExercises === 0 ? "演習はまだありません" : "このコースは完了しています"}
           </p>
           <p class="mt-1 text-sm leading-relaxed text-muted">
@@ -114,7 +113,7 @@
 
 <div class="mt-9 flex flex-wrap items-end justify-between gap-3">
   <div>
-    <h2 class="text-xl font-bold tracking-tight text-ink">レッスン</h2>
+    <h2 class="text-xl font-medium tracking-tight text-ink">レッスン</h2>
     <p class="mt-1 text-sm text-muted">上から順に進めるのがおすすめです。</p>
   </div>
   <span class="text-xs text-muted">{completedLessons} / {data.lessons.length} 完了</span>
@@ -129,7 +128,7 @@
         <span class="absolute bottom-0 left-[17px] top-14 w-px bg-line" aria-hidden="true"></span>
       {/if}
       <span
-        class="absolute left-0 top-5 grid size-9 place-items-center rounded-full border text-xs font-bold {complete
+        class="absolute left-0 top-5 grid size-9 place-items-center rounded-full border text-xs font-medium {complete
           ? 'border-brand bg-brand text-white'
           : started
             ? 'border-accent/30 bg-accent-soft text-accent'
@@ -145,7 +144,7 @@
       <article class="card p-5">
         <div class="flex flex-wrap items-start justify-between gap-3">
           <div class="min-w-0">
-            <h3 class="font-semibold leading-snug text-ink">
+            <h3 class="font-medium leading-snug text-ink">
               <a href={`/c/${data.id}/l/${lesson.id}`} class="transition-colors hover:text-brand-strong">
                 {lesson.title}
               </a>
@@ -194,7 +193,7 @@
                 <a
                   href={`/c/${data.id}/e/${exercise.id}`}
                   title={`${exercise.attempts} 回挑戦`}
-                  class="inline-flex min-h-10 items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium transition-colors {exercise.solved
+                  class="inline-flex min-h-8 items-center gap-1.5 rounded-md border px-2.5 py-1 text-xs font-medium transition-colors {exercise.solved
                     ? 'border-brand/25 bg-brand-soft text-brand-strong hover:border-brand/50'
                     : 'border-line bg-surface text-ink-soft hover:border-brand/40 hover:bg-brand-soft/50'}"
                 >

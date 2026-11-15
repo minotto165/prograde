@@ -26,13 +26,13 @@
     </div>
   {/if}
   <div
-    class="{track} w-full overflow-hidden rounded-full bg-line/60"
+    class="{track} w-full overflow-hidden rounded bg-line/60"
     role="progressbar"
     aria-label={label || "進捗"}
     aria-valuemin={0}
     aria-valuemax={100}
     aria-valuenow={clamped}
   >
-    <div class="{fill} {track} rounded-full transition-[width] duration-300" style={`width: ${clamped}%`}></div>
+    <div class="{fill} {track} rounded" style={`width: ${clamped}%`}></div>
   </div>
 </div>

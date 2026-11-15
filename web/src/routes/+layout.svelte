@@ -23,8 +23,8 @@
   <header class="sticky top-0 z-20 border-b border-line/80 bg-canvas/85 backdrop-blur">
     <div class="mx-auto flex min-h-16 {wide ? 'max-w-[1600px]' : 'max-w-6xl'} flex-wrap items-center gap-x-3 gap-y-2 px-4 py-2.5 sm:px-6">
       <a href="/" class="flex items-center gap-2.5 rounded-lg" aria-label="prograde ホーム">
-        <span class="grid size-8 place-items-center rounded-[9px] bg-brand text-sm font-black text-white shadow-sm">P</span>
-        <span class="text-lg font-bold tracking-tight text-ink">prograde</span>
+        <span class="grid size-8 place-items-center rounded-lg bg-brand text-sm font-semibold text-white shadow-sm">P</span>
+        <span class="text-lg font-semibold tracking-tight text-ink">prograde</span>
       </a>
       <span class="hidden text-xs text-muted md:inline">ローカル完結の練習プラットフォーム</span>
 
@@ -33,11 +33,11 @@
         <a href="/help" class={navClass(helpActive)} aria-current={helpActive ? "page" : undefined}>使い方</a>
       </nav>
 
-      <div class="flex items-center gap-2" aria-label="学習状況">
-        <span class="chip chip-brand">Lv {data.totals.level}</span>
-        <span class="hidden text-xs font-medium tabular-nums text-muted sm:inline">{data.totals.xp} XP</span>
+      <div class="flex items-center gap-2.5 text-xs text-muted" aria-label="学習状況">
+        <span class="tabular-nums">Lv {data.totals.level}</span>
+        <span class="hidden tabular-nums sm:inline">{data.totals.xp} XP</span>
         {#if data.totals.streak > 0}
-          <span class="chip chip-accent" title="連続学習日数">
+          <span class="inline-flex items-center gap-1 tabular-nums text-accent" title="連続学習日数">
             <Icon name="flame" size={13} />
             {data.totals.streak}日
           </span>
