@@ -5,8 +5,10 @@ import pc from "picocolors";
 import { createCtx, type Ctx } from "../core/context.ts";
 import { EnvError, UserError, formatDiagnostics } from "../core/errors.ts";
 import {
+  findChapter,
   findExercise,
   findLesson,
+  findSection,
   listCourses,
   loadCourse,
   resolveCourseId,
@@ -191,7 +193,7 @@ export async function main(argv: string[]): Promise<void> {
 
   program
     .command("list")
-    .description("レッスンと演習の一覧")
+    .description("レッスン・章・セクション・演習の一覧")
     .option("--lesson <id>", "レッスンで絞り込む")
     .action(async (options: { lesson?: string }, command: Command) => {
       const { ctx, course } = await courseOf(command);
@@ -205,13 +207,22 @@ export async function main(argv: string[]): Promise<void> {
           lessons: lessons.map((lesson) => ({
             id: lesson.ref.id,
             title: lesson.ref.title,
-            goal: lesson.ref.goal,
-            exercises: lesson.exercises.map((entry) => ({
-              id: entry.id,
-              title: entry.spec.title,
-              env: entry.spec.env,
-              xp: entry.spec.xp,
-              solved: progress.exercises[entry.id]?.solved ?? false,
+            description: lesson.ref.description,
+            chapters: lesson.chapters.map((chapter) => ({
+              id: chapter.ref.id,
+              title: chapter.ref.title,
+              sections: chapter.sections.map((section) => ({
+                id: section.ref.id,
+                title: section.ref.title,
+                slides: section.slides.length,
+                exercise: {
+                  id: section.exercise.id,
+                  title: section.exercise.spec.title,
+                  env: section.exercise.spec.env,
+                  xp: section.exercise.spec.xp,
+                  solved: progress.exercises[section.exercise.id]?.solved ?? false,
+                },
+              })),
             })),
           })),
         });
@@ -219,13 +230,21 @@ export async function main(argv: string[]): Promise<void> {
 
       for (const lesson of lessons) {
         console.log(pc.bold(lesson.ref.id + "  " + lesson.ref.title));
-        if (lesson.ref.goal) console.log("  " + pc.dim(lesson.ref.goal));
-        for (const entry of lesson.exercises) {
-          const solved = progress.exercises[entry.id]?.solved;
-          console.log(
-            "  " + (solved ? pc.green("✓") : pc.dim("·")) + " " + entry.id + "  " + entry.spec.title +
-              pc.dim("  (" + entry.spec.env + ", " + entry.spec.xp + "xp)"),
-          );
+        if (lesson.ref.description) console.log("  " + pc.dim(lesson.ref.description));
+        for (const chapter of lesson.chapters) {
+          console.log("  " + pc.bold(chapter.ref.title) + pc.dim("  (" + chapter.ref.id + ")"));
+          for (const section of chapter.sections) {
+            const entry = section.exercise;
+            const solved = progress.exercises[entry.id]?.solved;
+            console.log(
+              "    " + (solved ? pc.green("✓") : pc.dim("·")) + " " +
+                section.ref.title + pc.dim("  (" + section.ref.id + ", " + section.slides.length + " スライド)"),
+            );
+            console.log(
+              "      " + entry.id + "  " + entry.spec.title +
+                pc.dim("  (" + entry.spec.env + ", " + entry.spec.xp + "xp)"),
+            );
+          }
         }
       }
     });
@@ -233,69 +252,110 @@ export async function main(argv: string[]): Promise<void> {
   program
     .command("lesson")
     .argument("<lessonId>", "レッスン ID")
-    .description("レッスン本文（スライド）と演習一覧を表示")
-    .option("--slide <n>", "スライド番号（1 始まり）")
-    .action(async (lessonId: string, options: { slide?: string }, command: Command) => {
-      const { course } = await courseOf(command);
-      const globals = command.optsWithGlobals() as GlobalOptions;
-      const lesson = findLesson(course, lessonId);
+    .description("レッスン（章・セクション・スライド・演習）を表示")
+    .option("--chapter <id>", "章で絞り込む")
+    .option("--section <id>", "セクションで絞り込む（--chapter も必要）")
+    .option("--slide <n>", "スライド番号（1 始まり、絞り込んだ範囲内）")
+    .action(
+      async (
+        lessonId: string,
+        options: { chapter?: string; section?: string; slide?: string },
+        command: Command,
+      ) => {
+        const { course } = await courseOf(command);
+        const globals = command.optsWithGlobals() as GlobalOptions;
+        const lesson = findLesson(course, lessonId);
 
-      if (options.slide !== undefined && globals.json) {
-        throw new UserError("--slide と --json は同時に指定できません");
-      }
+        if (options.section !== undefined && options.chapter === undefined) {
+          throw new UserError("--section には --chapter も指定してください");
+        }
+        if (options.slide !== undefined && globals.json) {
+          throw new UserError("--slide と --json は同時に指定できません");
+        }
 
-      if (globals.json) {
-        return printJson({
-          courseId: course.id,
-          lessonId: lesson.ref.id,
-          title: lesson.ref.title,
-          goal: lesson.ref.goal ?? "",
-          slides: lesson.slides.map((slide) => ({
-            index: slide.index,
-            id: slide.id,
-            title: slide.title,
-            body: slide.body,
-          })),
-          exercises: lesson.exercises.map((entry) => ({ id: entry.id, title: entry.spec.title })),
+        const chapter = options.chapter === undefined ? null : findChapter(lesson, options.chapter);
+        const section =
+          options.section === undefined ? null : findSection(chapter ?? lesson.chapters[0], options.section);
+        const chapters = chapter ? [chapter] : lesson.chapters;
+        const sections = section ? [section] : chapters.flatMap((item) => item.sections);
+        const slides = sections.flatMap((item) => item.slides);
+
+        if (globals.json) {
+          return printJson({
+            courseId: course.id,
+            lessonId: lesson.ref.id,
+            title: lesson.ref.title,
+            description: lesson.ref.description ?? "",
+            chapters: chapters.map((item) => ({
+              id: item.ref.id,
+              title: item.ref.title,
+              sections: item.sections
+                .filter((candidate) => !section || candidate.ref.id === section.ref.id)
+                .map((candidate) => ({
+                  id: candidate.ref.id,
+                  title: candidate.ref.title,
+                  slides: candidate.slides.map((slide) => ({
+                    index: slide.index,
+                    id: slide.id,
+                    title: slide.title,
+                    body: slide.body,
+                  })),
+                  exercise: {
+                    id: candidate.exercise.id,
+                    title: candidate.exercise.spec.title,
+                    env: candidate.exercise.spec.env,
+                    xp: candidate.exercise.spec.xp,
+                  },
+                })),
+            })),
         });
-      }
-
-      console.log(pc.bold(lesson.ref.title) + pc.dim("  (" + lessonId + ")"));
-      if (lesson.ref.goal) console.log(pc.dim("目標: " + lesson.ref.goal));
-      console.log("");
-
-      if (options.slide !== undefined) {
-        if (lesson.slides.length === 0) throw new UserError("スライドがありません: " + lessonId);
-        if (!/^\d+$/.test(options.slide)) {
-          throw new UserError(
-            "--slide は 1〜" + lesson.slides.length + " の整数で指定してください: " + options.slide,
-          );
         }
-        const number = Number(options.slide);
-        const slide = lesson.slides[number - 1];
-        if (!slide) {
-          throw new UserError(
-            "--slide は 1〜" + lesson.slides.length + " の整数で指定してください: " + options.slide,
-          );
-        }
-        console.log(slide.body.trim());
-      } else if (lesson.slides.length === 0) {
-        console.log(pc.yellow("（本文がありません）"));
-      } else {
-        for (const slide of lesson.slides) {
-          if (lesson.slides.length > 1) {
-            console.log(pc.dim("スライド " + slide.index + "/" + lesson.slides.length));
+
+        console.log(pc.bold(lesson.ref.title) + pc.dim("  (" + lessonId + ")"));
+        if (lesson.ref.description) console.log(pc.dim("説明: " + lesson.ref.description));
+        console.log("");
+
+        if (options.slide !== undefined) {
+          if (slides.length === 0) throw new UserError("スライドがありません: " + lessonId);
+          if (!/^\d+$/.test(options.slide)) {
+            throw new UserError(
+              "--slide は 1〜" + slides.length + " の整数で指定してください: " + options.slide,
+            );
+          }
+          const number = Number(options.slide);
+          const slide = slides[number - 1];
+          if (!slide) {
+            throw new UserError(
+              "--slide は 1〜" + slides.length + " の整数で指定してください: " + options.slide,
+            );
           }
           console.log(slide.body.trim());
-          console.log("");
+          const owner = sections.find((candidate) => candidate.slides.includes(slide));
+          if (owner) {
+            console.log("");
+            console.log(pc.dim("演習: " + owner.exercise.id + "  " + owner.exercise.spec.title));
+          }
+        } else {
+          for (const item of chapters) {
+            console.log(pc.bold(item.ref.title) + pc.dim("  (" + item.ref.id + ")"));
+            for (const candidate of item.sections) {
+              if (section && candidate.ref.id !== section.ref.id) continue;
+              console.log(pc.dim("  ## " + candidate.ref.title + "  (" + candidate.ref.id + ")"));
+              for (const slide of candidate.slides) {
+                console.log(pc.dim("  --- スライド " + slide.index + " ---"));
+                console.log(slide.body.trim());
+                console.log("");
+              }
+              console.log(
+                "  " + pc.cyan("演習: ") + candidate.exercise.id + "  " + candidate.exercise.spec.title,
+              );
+              console.log("");
+            }
+          }
         }
-      }
 
-      console.log("");
-      for (const entry of lesson.exercises) {
-        console.log("  " + entry.id + "  " + entry.spec.title);
-      }
-    });
+      },
+    );
 
   program
     .command("quiz")

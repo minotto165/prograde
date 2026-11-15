@@ -24,7 +24,7 @@ describe("course: データだけでコースを読む", () => {
 
   test("観測点の別名は既定則に従う", async () => {
     const files = basicCourseFiles("aliases", ["l1-e01"]);
-    files["content/l1/ex/l1-e01/exercise.json"] = exerciseJson({
+    files["content/l1/chapters/c1/sections/s1/ex/l1-e01/exercise.json"] = exerciseJson({
       id: "l1-e01",
       observe: [
         { kind: "exit", as: "exit" },
@@ -51,8 +51,9 @@ describe("course: データだけでコースを読む", () => {
   test("存在しない環境を参照した演習は読み込み時に落ちる", async () => {
     const files = {
       "course.json": courseJson({ id: "bad-env", envs: { sh: { cacheKey: "v1" } }, exercises: ["l1-e01"] }),
-      "content/l1/ex/l1-e01/exercise.json": exerciseJson({ id: "l1-e01", title: "t", env: "nope" }),
-      "content/l1/ex/l1-e01/solution/main.sh": "echo ok\n",
+      "content/l1/chapters/c1/sections/s1/ex/l1-e01/exercise.json": exerciseJson({ id: "l1-e01", title: "t", env: "nope" }),
+      "content/l1/chapters/c1/sections/s1/slides/01.md": "# bad-env\n\n本文です。\n",
+      "content/l1/chapters/c1/sections/s1/ex/l1-e01/solution/main.sh": "echo ok\n",
     };
     await expect(scratchCourse(files, "bad-env")).rejects.toThrow(/nope/);
   });

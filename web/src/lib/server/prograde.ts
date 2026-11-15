@@ -6,10 +6,13 @@ import {
   loadCourse,
   findExercise,
   findLesson,
+  findChapter,
+  findSection,
   type ExerciseEntry,
   type LoadedCourse,
   type LoadedLesson,
-  type LoadedStep,
+  type LoadedSection,
+  type LoadedSlide,
 } from "../../../../src/core/course.ts";
 import { grade, type GradeResult } from "../../../../src/core/grader.ts";
 import { describeJudge } from "../../../../src/core/judge.ts";
@@ -60,46 +63,98 @@ export interface StepLink {
   label: string;
 }
 
-function slideHref(courseId: string, lessonId: string, slideIndex: number): string {
-  return slideIndex <= 1
-    ? `/c/${courseId}/l/${lessonId}`
-    : `/c/${courseId}/l/${lessonId}/${slideIndex}`;
+function sectionHref(
+  courseId: string,
+  lessonId: string,
+  chapterId: string,
+  sectionId: string,
+  slideIndex = 1,
+): string {
+  const base = `/c/${courseId}/l/${lessonId}/ch/${chapterId}/s/${sectionId}`;
+  return slideIndex <= 1 ? base : `${base}/${slideIndex}`;
 }
 
-function stepHref(courseId: string, lessonId: string, step: LoadedStep): string {
-  return step.type === "slide"
-    ? slideHref(courseId, lessonId, step.slide.index)
-    : `/c/${courseId}/e/${step.exercise.id}`;
+function lessonHref(courseId: string, lessonId: string): string {
+  return `/c/${courseId}/l/${lessonId}`;
 }
 
-function stepLink(courseId: string, lessonId: string, step: LoadedStep): StepLink {
-  if (step.type === "slide") {
-    return { kind: "slide", href: slideHref(courseId, lessonId, step.slide.index), label: "次のスライド" };
+type LessonStep =
+  | { kind: "slide"; href: string; section: LoadedSection; slide: LoadedSlide }
+  | { kind: "exercise"; href: string; section: LoadedSection; entry: ExerciseEntry };
+
+/** セクションのスライドを順に並べ、最後にその演習を置いたレッスン全体の並び。 */
+function lessonSteps(courseId: string, lesson: LoadedLesson): LessonStep[] {
+  const out: LessonStep[] = [];
+  for (const chapter of lesson.chapters) {
+    for (const section of chapter.sections) {
+      for (const slide of section.slides) {
+        out.push({
+          kind: "slide",
+          href: sectionHref(courseId, lesson.ref.id, chapter.ref.id, section.ref.id, slide.index),
+          section,
+          slide,
+        });
+      }
+      out.push({
+        kind: "exercise",
+        href: `/c/${courseId}/e/${section.exercise.id}`,
+        section,
+        entry: section.exercise,
+      });
+    }
   }
-  return {
-    kind: "exercise",
-    href: `/c/${courseId}/e/${step.exercise.id}`,
-    label: "演習: " + step.exercise.spec.title,
-  };
+  return out;
+}
+
+function nextStepLink(
+  courseId: string,
+  lesson: LoadedLesson,
+  steps: LessonStep[],
+  index: number,
+  nextLesson: LoadedLesson | null,
+): StepLink | null {
+  const current = steps[index];
+  const next = steps[index + 1];
+  if (next) {
+    if (next.kind === "exercise") {
+      return { kind: "exercise", href: next.href, label: "演習へ進む" };
+    }
+    const differentSection = current.section.ref.id !== next.section.ref.id;
+    return { kind: "slide", href: next.href, label: differentSection ? "次のセクションへ" : "次のスライド" };
+  }
+  if (nextLesson) {
+    return {
+      kind: "lesson",
+      href: lessonHref(courseId, nextLesson.ref.id),
+      label: "次のレッスン: " + nextLesson.ref.title,
+    };
+  }
+  return null;
+}
+
+function prevStepLink(current: LessonStep, prev: LessonStep): StepLink {
+  if (prev.kind === "exercise") {
+    return { kind: "exercise", href: prev.href, label: "前の演習へ" };
+  }
+  const differentSection = current.section.ref.id !== prev.section.ref.id;
+  return { kind: "slide", href: prev.href, label: differentSection ? "前のセクション" : "前のスライド" };
 }
 
 function lessonStart(
   courseId: string,
+  course: LoadedCourse,
   lesson: LoadedLesson,
   progress: CourseProgress,
 ): { href: string; label: string } {
-  const firstOpen = lesson.steps.findIndex(
-    (step) => step.type === "exercise" && !progress.exercises[step.exercise.id]?.solved,
-  );
-  if (firstOpen === -1) {
-    return { href: stepHref(courseId, lesson.ref.id, lesson.steps[0]), label: "復習する" };
+  const firstOpen = lesson.exercises.find((entry) => !progress.exercises[entry.id]?.solved);
+  const target = firstOpen ?? lesson.exercises[0];
+  const section = course.sectionByExercise.get(target.id);
+  if (!section) {
+    return { href: lessonHref(courseId, lesson.ref.id), label: "レッスンをひらく" };
   }
-  let start = firstOpen;
-  while (start > 0 && lesson.steps[start - 1].type === "slide") start -= 1;
-  const step = lesson.steps[start];
   return {
-    href: stepHref(courseId, lesson.ref.id, step),
-    label: step.type === "exercise" ? "演習をはじめる" : "レッスンをはじめる",
+    href: sectionHref(courseId, lesson.ref.id, target.chapterId, target.sectionId, 1),
+    label: firstOpen ? "レッスンをはじめる" : "復習する",
   };
 }
 
@@ -207,69 +262,133 @@ export async function coursePage(courseId: string) {
     progress,
     stats: stats(course, progress),
     next,
-    lessons: course.lessons.map((lesson) => ({
-      id: lesson.ref.id,
-      title: lesson.ref.title,
-      goal: lesson.ref.goal ?? "",
-      solved: progress.lessons[lesson.ref.id]?.solved ?? 0,
-      total: lesson.exercises.length,
-      start: lessonStart(courseId, lesson, progress),
-      exercises: lesson.exercises.map((entry) => ({
-        id: entry.id,
-        title: entry.spec.title,
-        xp: entry.spec.xp,
-        solved: progress.exercises[entry.id]?.solved ?? false,
-        attempts: progress.exercises[entry.id]?.attempts ?? 0,
-      })),
-    })),
+    lessons: course.lessons.map((lesson) => {
+      const solved = lesson.exercises.filter((entry) => progress.exercises[entry.id]?.solved).length;
+      return {
+        id: lesson.ref.id,
+        title: lesson.ref.title,
+        description: lesson.ref.description ?? "",
+        estimateMin: lesson.ref.estimateMin ?? null,
+        chapters: lesson.chapters.length,
+        sections: lesson.exercises.length,
+        solved,
+        total: lesson.exercises.length,
+        complete: lesson.exercises.length > 0 && solved === lesson.exercises.length,
+        start: lessonStart(courseId, course, lesson, progress),
+        isNext: nextEntry ? lesson.exercises.some((entry) => entry.id === nextEntry.id) : false,
+      };
+    }),
   };
 }
 
-export async function lessonPage(courseId: string, lessonId: string, slideParam?: string) {
-  const { course, progress } = await coursePage(courseId);
+export async function lessonPage(courseId: string, lessonId: string) {
+  const ctx = webCtx();
+  const course = await loadCourse(ctx, courseId);
   const lesson = findLesson(course, lessonId);
+  const { progress } = await readProgress(ctx, course);
   const index = course.lessons.findIndex((item) => item.ref.id === lessonId);
-  const total = lesson.slides.length;
+  const nextLesson = index >= 0 && index < course.lessons.length - 1 ? course.lessons[index + 1] : null;
+  const nextEntry = progress.next ? course.byId.get(progress.next.exerciseId) ?? null : null;
+  const solved = lesson.exercises.filter((entry) => progress.exercises[entry.id]?.solved).length;
+  return {
+    courseId: course.id,
+    courseLabel: course.spec.label,
+    lessonId: lesson.ref.id,
+    title: lesson.ref.title,
+    description: lesson.ref.description ?? "",
+    estimateMin: lesson.ref.estimateMin ?? null,
+    progress: { solved, total: lesson.exercises.length },
+    start: lessonStart(courseId, course, lesson, progress),
+    chapters: lesson.chapters.map((chapter) => ({
+      id: chapter.ref.id,
+      title: chapter.ref.title,
+      index: chapter.index,
+      sections: chapter.sections.map((section) => ({
+        id: section.ref.id,
+        title: section.ref.title,
+        index: section.index,
+        slideCount: section.slides.length,
+        href: sectionHref(courseId, lesson.ref.id, chapter.ref.id, section.ref.id, 1),
+        solved: progress.exercises[section.exercise.id]?.solved ?? false,
+        attempts: progress.exercises[section.exercise.id]?.attempts ?? 0,
+        exercise: {
+          id: section.exercise.id,
+          title: section.exercise.spec.title,
+          env: section.exercise.spec.env,
+          xp: section.exercise.spec.xp,
+        },
+        isNext: nextEntry?.id === section.exercise.id,
+      })),
+    })),
+    nextLesson: nextLesson
+      ? { href: lessonHref(courseId, nextLesson.ref.id), title: nextLesson.ref.title }
+      : null,
+    prevLesson: index > 0 ? { href: lessonHref(courseId, course.lessons[index - 1].ref.id), title: course.lessons[index - 1].ref.title } : null,
+  };
+}
+
+export async function sectionPage(
+  courseId: string,
+  lessonId: string,
+  chapterId: string,
+  sectionId: string,
+  slideParam?: string,
+) {
+  const ctx = webCtx();
+  const course = await loadCourse(ctx, courseId);
+  const lesson = findLesson(course, lessonId);
+  const chapter = findChapter(lesson, chapterId);
+  const section = findSection(chapter, sectionId);
+  const { progress } = await readProgress(ctx, course);
+  const total = section.slides.length;
   let slideIndex = 0;
-  if (total > 0 && slideParam !== undefined) {
+  if (slideParam !== undefined) {
     if (!/^\d+$/.test(slideParam)) throw error(404, "スライドが見つかりません");
     const number = Number(slideParam);
     if (number < 1 || number > total) throw error(404, "スライドが見つかりません");
     slideIndex = number - 1;
   }
-  const current = total > 0 ? lesson.slides[slideIndex] : null;
-  const currentStep = current
-    ? lesson.steps.findIndex((step) => step.type === "slide" && step.slide.id === current.id)
-    : -1;
-  const prevStep = currentStep > 0 ? lesson.steps[currentStep - 1] : null;
-  const nextStep = currentStep >= 0 ? lesson.steps[currentStep + 1] ?? null : null;
+  const current = section.slides[slideIndex];
+  if (!current) throw error(404, "スライドが見つかりません");
+  const index = course.lessons.findIndex((item) => item.ref.id === lessonId);
   const nextLesson = index >= 0 && index < course.lessons.length - 1 ? course.lessons[index + 1] : null;
+  const steps = lessonSteps(courseId, lesson);
+  const currentIndex = steps.findIndex(
+    (step) => step.kind === "slide" && step.section.ref.id === section.ref.id && step.slide.id === current.id,
+  );
+  const currentStep = steps[currentIndex];
+  const prev = currentIndex > 0 ? prevStepLink(currentStep, steps[currentIndex - 1]) : null;
+  const next = nextStepLink(courseId, lesson, steps, currentIndex, nextLesson);
+  const lessonSolved = lesson.exercises.filter((entry) => progress.exercises[entry.id]?.solved).length;
   return {
-    course,
-    lesson,
-    progress,
-    slide: current
-      ? {
-          index: current.index,
-          total,
-          id: current.id,
-          title: current.title,
-          stepIndex: currentStep + 1,
-          stepTotal: lesson.steps.length,
-        }
-      : null,
-    slideHtml: current ? renderMarkdown(current.body) : "",
-    prevStep: prevStep ? stepLink(courseId, lessonId, prevStep) : null,
-    nextStep: nextStep ? stepLink(courseId, lessonId, nextStep) : null,
-    hasNextLesson: Boolean(nextLesson),
+    courseId: course.id,
+    courseLabel: course.spec.label,
+    lessonId: lesson.ref.id,
+    lessonTitle: lesson.ref.title,
+    lessonDescription: lesson.ref.description ?? "",
+    chapterId: chapter.ref.id,
+    chapterTitle: chapter.ref.title,
+    chapterIndex: chapter.index,
+    sectionId: section.ref.id,
+    sectionTitle: section.ref.title,
+    sectionIndex: section.index,
+    slide: {
+      index: current.index,
+      total,
+      id: current.id,
+      title: current.title ?? section.ref.title,
+    },
+    slideHtml: renderMarkdown(current.body),
+    sectionSolved: progress.exercises[section.exercise.id]?.solved ?? false,
+    exerciseHref: `/c/${courseId}/e/${section.exercise.id}`,
+    lessonHref: lessonHref(courseId, lesson.ref.id),
+    prev,
+    next,
     nextLesson: nextLesson
-      ? {
-          kind: "lesson" as const,
-          href: `/c/${courseId}/l/${nextLesson.ref.id}`,
-          label: "次のレッスン: " + nextLesson.ref.title,
-        }
+      ? { href: lessonHref(courseId, nextLesson.ref.id), title: nextLesson.ref.title }
       : null,
-    prevLesson: index > 0 ? course.lessons[index - 1].ref : null,
+    prevLesson: index > 0 ? { href: lessonHref(courseId, course.lessons[index - 1].ref.id), title: course.lessons[index - 1].ref.title } : null,
+    lessonProgress: { solved: lessonSolved, total: lesson.exercises.length },
   };
 }
 
@@ -289,31 +408,24 @@ export async function exercisePage(courseId: string, exerciseId: string) {
   const lesson = findLesson(course, entry.lessonId);
   const lessonIds = lesson.exercises.map((item) => item.id);
   const lessonIndex = course.lessons.findIndex((item) => item.ref.id === lesson.ref.id);
-  const stepIndex = lesson.steps.findIndex(
-    (step) => step.type === "exercise" && step.exercise.id === entry.id,
-  );
-  const nextStep = stepIndex >= 0 ? lesson.steps[stepIndex + 1] ?? null : null;
   const nextLesson =
     lessonIndex >= 0 && lessonIndex < course.lessons.length - 1
       ? course.lessons[lessonIndex + 1]
       : null;
-  let previousSlide: Extract<LoadedStep, { type: "slide" }> | null = null;
+  const steps = lessonSteps(courseId, lesson);
+  const stepIndex = steps.findIndex(
+    (step) => step.kind === "exercise" && step.entry.id === entry.id,
+  );
+  const nextStep = stepIndex >= 0 ? nextStepLink(courseId, lesson, steps, stepIndex, nextLesson) : null;
+  let previousSlide: Extract<LessonStep, { kind: "slide" }> | null = null;
   for (let i = stepIndex - 1; i >= 0; i -= 1) {
-    const candidate = lesson.steps[i];
-    if (candidate.type === "slide") {
+    const candidate = steps[i];
+    if (candidate.kind === "slide") {
       previousSlide = candidate;
       break;
     }
   }
-  const nextLink: StepLink | null = nextStep
-    ? stepLink(courseId, lesson.ref.id, nextStep)
-    : nextLesson
-      ? {
-          kind: "lesson",
-          href: `/c/${courseId}/l/${nextLesson.ref.id}`,
-          label: "次のレッスン: " + nextLesson.ref.title,
-        }
-      : null;
+  const section = course.sectionByExercise.get(entry.id)!;
   return {
     course,
     entry,
@@ -325,12 +437,16 @@ export async function exercisePage(courseId: string, exerciseId: string) {
     solved: current?.solved ?? false,
     attempts: current?.attempts ?? 0,
     lesson: entry.lessonTitle,
+    lessonHref: lessonHref(courseId, lesson.ref.id),
+    chapterTitle: entry.chapterTitle,
+    sectionTitle: entry.sectionTitle,
+    sectionHref: sectionHref(courseId, lesson.ref.id, entry.chapterId, entry.sectionId, 1),
     prev: previous ? link(previous) : null,
     next: following ? link(following) : null,
-    nextStep: nextLink,
+    nextStep,
     slideHref: previousSlide
-      ? slideHref(courseId, lesson.ref.id, previousSlide.slide.index)
-      : `/c/${courseId}/l/${lesson.ref.id}`,
+      ? previousSlide.href
+      : sectionHref(courseId, lesson.ref.id, entry.chapterId, entry.sectionId, 1),
     position: { index: index + 1, total: course.exercises.length },
     lessonProgress: {
       index: lessonIds.indexOf(entry.id) + 1,

@@ -17,7 +17,7 @@
   let activeIndex = $derived(
     selectedPath ? Math.max(0, files.findIndex((file) => file.path === selectedPath)) : 0,
   );
-  let lessonUrl = $derived(`/c/${data.courseId}/l/${data.lessonId}`);
+  let lessonUrl = $derived(data.lessonHref);
   let progressPercent = $derived(
     data.lessonProgress.total > 0
       ? Math.round((data.lessonProgress.solved / data.lessonProgress.total) * 100)
@@ -65,6 +65,7 @@
     items={[
       { label: data.courseLabel, href: `/c/${data.courseId}` },
       { label: data.lessonTitle, href: lessonUrl },
+      { label: data.sectionTitle, href: data.sectionHref },
     ]}
   />
   <div class="flex w-full flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted sm:ml-auto sm:w-auto">
@@ -331,11 +332,7 @@
     {#if result?.ok && outcome?.kind === "grade"}
       {#if data.nextStep}
         <a href={data.nextStep.href} class="btn btn-primary w-full shrink-0">
-          {data.nextStep.kind === "slide"
-            ? "次のスライドへ"
-            : data.nextStep.kind === "exercise"
-              ? "次の演習へ"
-              : "次のレッスンへ"}
+          {data.nextStep.label}
           <Icon name="arrow-right" size={16} />
         </a>
       {:else}

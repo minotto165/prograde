@@ -42,24 +42,35 @@ export async function scratchCourse(
 export function courseJson(input: {
   id: string;
   envs: Record<string, unknown>;
+  /** 演習 ID。1 演習 = 1 セクションとして s1, s2, ... に置く。 */
   exercises: string[];
   lessonId?: string;
+  chapterId?: string;
   ext?: string;
-  steps?: { type: "slide" | "exercise"; id: string }[];
 }): string {
+  const lessonId = input.lessonId ?? "l1";
+  const chapterId = input.chapterId ?? "c1";
   return JSON.stringify(
     {
-      schema: 2,
+      schema: 3,
       id: input.id,
       label: input.id,
       ext: input.ext ?? "sh",
       envs: input.envs,
       lessons: [
         {
-          id: input.lessonId ?? "l1",
+          id: lessonId,
           title: "lesson",
-          exercises: input.exercises,
-          ...(input.steps ? { steps: input.steps } : {}),
+          chapters: [
+            {
+              id: chapterId,
+              title: "chapter",
+              sections: input.exercises.map((exerciseId, offset) => ({
+                id: "s" + (offset + 1),
+                title: exerciseId,
+              })),
+            },
+          ],
         },
       ],
     },
@@ -85,27 +96,35 @@ export function exerciseJson(input: Record<string, unknown>): string {
   );
 }
 
-/** レッスンに slides/NN.md を追加する（配列の順に 01, 02, ...）。 */
+/** セクションに slides/NN.md を追加する（配列の順に 01, 02, ...）。 */
 export function withSlides(
   files: Record<string, string>,
   lessonId: string,
   slides: string[],
+  options: { chapterId?: string; sectionId?: string } = {},
 ): Record<string, string> {
   const out = { ...files };
+  const chapterId = options.chapterId ?? "c1";
+  const sectionId = options.sectionId ?? "s1";
   for (const [offset, body] of slides.entries()) {
-    out["content/" + lessonId + "/slides/" + String(offset + 1).padStart(2, "0") + ".md"] = body;
+    out[
+      "content/" + lessonId + "/chapters/" + chapterId + "/sections/" + sectionId + "/slides/" +
+        String(offset + 1).padStart(2, "0") + ".md"
+    ] = body;
   }
   return out;
 }
 
-/** 最小構成のコース（1レッスン、指定した演習、シェル環境）。 */
+/** 最小構成のコース（1レッスン・1章・演習ごとのセクション、シェル環境）。 */
 export function basicCourseFiles(id: string, exerciseIds: string[]): Record<string, string> {
   const files: Record<string, string> = {
     "course.json": courseJson({ id, envs: { sh: {} }, exercises: exerciseIds }),
   };
-  for (const exerciseId of exerciseIds) {
-    files["content/l1/ex/" + exerciseId + "/exercise.json"] = exerciseJson({ id: exerciseId });
-    files["content/l1/ex/" + exerciseId + "/solution/main.sh"] = "echo ok\n";
+  for (const [offset, exerciseId] of exerciseIds.entries()) {
+    const section = "content/l1/chapters/c1/sections/s" + (offset + 1);
+    files[section + "/slides/01.md"] = "# " + exerciseId + "\n\n" + exerciseId + " のセクション本文です。\n";
+    files[section + "/ex/" + exerciseId + "/exercise.json"] = exerciseJson({ id: exerciseId });
+    files[section + "/ex/" + exerciseId + "/solution/main.sh"] = "echo ok\n";
   }
   return files;
 }

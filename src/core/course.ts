@@ -1,5 +1,6 @@
 import { join } from "node:path";
 import { readdir } from "node:fs/promises";
+import type { Dirent } from "node:fs";
 import {
   CourseSchema,
   ExerciseSchema,
@@ -9,7 +10,8 @@ import {
   type Observe,
   type Quiz,
   type LessonRef,
-  type LessonStepSpec,
+  type ChapterRef,
+  type SectionRef,
 } from "../schema/index.ts";
 import { pathExists, readJson, readJsonIfExists, readTextIfExists } from "./fsx.ts";
 import { UserError } from "./errors.ts";
@@ -24,6 +26,14 @@ export interface ExerciseEntry {
   lessonTitle: string;
   /** 1 始まり。 */
   lessonIndex: number;
+  chapterId: string;
+  chapterTitle: string;
+  /** レッスン内の 1 始まり。 */
+  chapterIndex: number;
+  sectionId: string;
+  sectionTitle: string;
+  /** 章内の 1 始まり。 */
+  sectionIndex: number;
   /** レッスン内の 1 始まり。 */
   index: number;
 }
@@ -31,29 +41,41 @@ export interface ExerciseEntry {
 export interface LoadedSlide {
   /** 1 始まり。 */
   index: number;
-  /** ファイル名の番号（lesson.md は "lesson"）。 */
+  /** ファイル名の番号。 */
   id: string;
   file: string;
-  /** レッスンディレクトリからの相対パス。 */
+  /** セクションディレクトリからの相対パス。 */
   relPath: string;
   /** 最初の # 見出し。無ければ null。 */
   title: string | null;
   body: string;
 }
 
-export type LoadedStep =
-  | { index: number; type: "slide"; slide: LoadedSlide }
-  | { index: number; type: "exercise"; exercise: ExerciseEntry };
+export interface LoadedSection {
+  ref: SectionRef;
+  /** 章内の 1 始まり。 */
+  index: number;
+  dir: string;
+  slides: LoadedSlide[];
+  exercise: ExerciseEntry;
+}
+
+export interface LoadedChapter {
+  ref: ChapterRef;
+  /** レッスン内の 1 始まり。 */
+  index: number;
+  dir: string;
+  sections: LoadedSection[];
+  exercises: ExerciseEntry[];
+}
 
 export interface LoadedLesson {
   ref: LessonRef;
   index: number;
   dir: string;
-  slides: LoadedSlide[];
-  quiz: Quiz | null;
+  chapters: LoadedChapter[];
   exercises: ExerciseEntry[];
-  /** スライドと演習を1列に並べた進行順。 */
-  steps: LoadedStep[];
+  quiz: Quiz | null;
 }
 
 export interface LoadedCourse {
@@ -63,6 +85,7 @@ export interface LoadedCourse {
   lessons: LoadedLesson[];
   exercises: ExerciseEntry[];
   byId: Map<string, ExerciseEntry>;
+  sectionByExercise: Map<string, LoadedSection>;
 }
 
 function fail(courseId: string, message: string): never {
@@ -123,7 +146,11 @@ export async function listCourses(ctx: Ctx): Promise<CourseSummary[]> {
       label: spec.label,
       description: spec.description,
       lessons: spec.lessons.length,
-      exercises: spec.lessons.reduce((sum, lesson) => sum + lesson.exercises.length, 0),
+      exercises: spec.lessons.reduce(
+        (sum, lesson) =>
+          sum + lesson.chapters.reduce((chapterSum, chapter) => chapterSum + chapter.sections.length, 0),
+        0,
+      ),
     });
   }
   return out;
@@ -153,55 +180,90 @@ function slideTitle(body: string): string | null {
   return match ? match[1].trim() : null;
 }
 
-/**
- * レッスン本文を読む。
- * - content/<lessonId>/slides/NN.md（NN は 2 桁。NN-名前.md も可）を番号順に並べる。
- * - 旧形式の lesson.md は 1 枚のスライドとして読む。slides/ との併用はエラー。
- */
-async function readSlides(courseId: string, lessonId: string, lessonDir: string): Promise<LoadedSlide[]> {
-  const slidesDir = join(lessonDir, "slides");
-  const relDir = "content/" + lessonId + "/slides";
-  let names: string[] = [];
-  if (await pathExists(slidesDir)) {
-    names = (await readdir(slidesDir)).filter((name) => name.endsWith(".md")).sort();
-    if (names.length === 0) {
-      fail(courseId, "スライドがありません: " + relDir + "（NN.md を置くか、slides/ を削除してください）");
+async function entriesOf(courseId: string, dir: string, rel: string) {
+  try {
+    return await readdir(dir, { withFileTypes: true });
+  } catch {
+    fail(courseId, "ディレクトリがありません: " + rel);
+  }
+}
+
+async function expectOnly(
+  courseId: string,
+  dir: string,
+  rel: string,
+  allowed: { dirs?: string[]; files?: string[] },
+): Promise<void> {
+  const dirs = new Set(allowed.dirs ?? []);
+  const files = new Set(allowed.files ?? []);
+  for (const entry of await entriesOf(courseId, dir, rel)) {
+    if (entry.isDirectory()) {
+      if (!dirs.has(entry.name)) fail(courseId, "余分なディレクトリがあります: " + rel + "/" + entry.name);
+    } else if (entry.isFile()) {
+      if (!files.has(entry.name)) fail(courseId, "余分なファイルがあります: " + rel + "/" + entry.name);
+    } else {
+      fail(courseId, "扱えないファイルがあります: " + rel + "/" + entry.name);
     }
   }
+}
 
-  const legacy = await readTextIfExists(join(lessonDir, "lesson.md"));
-  if (names.length > 0 && legacy !== null) {
-    fail(courseId, "lesson.md と slides/ は同時に使えません: content/" + lessonId);
+async function expectDirs(
+  courseId: string,
+  dir: string,
+  rel: string,
+  expected: string[],
+): Promise<void> {
+  const entries = await entriesOf(courseId, dir, rel);
+  const dirs = entries.filter((entry) => entry.isDirectory()).map((entry) => entry.name).sort();
+  const wanted = [...expected].sort();
+  if (dirs.length !== wanted.length || dirs.some((name, index) => name !== wanted[index])) {
+    fail(
+      courseId,
+      rel + " のディレクトリが course.json と一致しません（期待: " + wanted.join(", ") + " / 実際: " + dirs.join(", ") + "）",
+    );
   }
-  if (names.length === 0) {
-    if (legacy === null) return [];
-    return [
-      {
-        index: 1,
-        id: "lesson",
-        file: "lesson.md",
-        relPath: "lesson.md",
-        title: slideTitle(legacy),
-        body: legacy,
-      },
-    ];
+  for (const entry of entries) {
+    if (!entry.isDirectory()) fail(courseId, "余分なファイルがあります: " + rel + "/" + entry.name);
   }
+}
+
+/**
+ * セクションのスライドを読む。
+ * slides/ の NN.md（NN は 2 桁。NN-名前.md も可）を番号順に並べる。
+ */
+async function readSlides(courseId: string, sectionDir: string, relDir: string): Promise<LoadedSlide[]> {
+  const slidesDir = join(sectionDir, "slides");
+  let entries: Dirent[];
+  try {
+    entries = await readdir(slidesDir, { withFileTypes: true });
+  } catch {
+    fail(courseId, "スライドがありません: " + relDir + "/slides（NN.md を置いてください）");
+  }
+  const names: string[] = [];
+  for (const entry of entries) {
+    if (!entry.isFile() || !entry.name.endsWith(".md")) {
+      fail(courseId, "スライド以外のファイルがあります: " + relDir + "/slides/" + entry.name);
+    }
+    names.push(entry.name);
+  }
+  if (names.length === 0) fail(courseId, "スライドがありません: " + relDir + "/slides（NN.md を置いてください）");
+  names.sort();
 
   const seen = new Map<string, string>();
   const slides: LoadedSlide[] = [];
   for (const name of names) {
     const match = SLIDE_FILE.exec(name);
     if (!match) {
-      fail(courseId, "スライドのファイル名が不正です: " + relDir + "/" + name + "（NN.md か NN-名前.md）");
+      fail(courseId, "スライドのファイル名が不正です: " + relDir + "/slides/" + name + "（NN.md か NN-名前.md）");
     }
     const number = match[1];
     const previous = seen.get(number);
     if (previous !== undefined) {
-      fail(courseId, "スライド番号が重複しています: " + relDir + "/" + previous + " と " + name);
+      fail(courseId, "スライド番号が重複しています: " + relDir + "/slides/" + previous + " と " + name);
     }
     seen.set(number, name);
     const body = await readTextIfExists(join(slidesDir, name));
-    if (body === null) fail(courseId, "スライドが読めません: " + relDir + "/" + name);
+    if (body === null) fail(courseId, "スライドが読めません: " + relDir + "/slides/" + name);
     slides.push({
       index: 0,
       id: number,
@@ -217,67 +279,18 @@ async function readSlides(courseId: string, lessonId: string, lessonDir: string)
   return slides;
 }
 
-/**
- * レッスンの進行順を決める。
- * steps があればその順に解決し、無ければ従来どおり全スライド→全演習。
- * steps を書いたときは、全スライド・全演習を過不足なく含めることを要求する。
- */
-function resolveSteps(
-  courseId: string,
-  lessonId: string,
-  ref: LessonRef,
-  slides: LoadedSlide[],
-  exercises: ExerciseEntry[],
-): LoadedStep[] {
-  const slideById = new Map(slides.map((slide) => [slide.id, slide]));
-  const exerciseById = new Map(exercises.map((exercise) => [exercise.id, exercise]));
-
-  let steps: LoadedStep[];
-  if (ref.steps) {
-    const usedSlides = new Set<string>();
-    const usedExercises = new Set<string>();
-    steps = ref.steps.map((step: LessonStepSpec) => {
-      if (step.type === "slide") {
-        const slide = slideById.get(step.id);
-        if (!slide) {
-          fail(courseId, "レッスン " + lessonId + " の steps に無いスライドがあります: " + step.id);
-        }
-        if (usedSlides.has(step.id)) {
-          fail(courseId, "レッスン " + lessonId + " の steps でスライドが重複しています: " + step.id);
-        }
-        usedSlides.add(step.id);
-        return { index: 0, type: "slide" as const, slide };
-      }
-      const exercise = exerciseById.get(step.id);
-      if (!exercise) {
-        fail(courseId, "レッスン " + lessonId + " の steps に無い演習があります: " + step.id);
-      }
-      if (usedExercises.has(step.id)) {
-        fail(courseId, "レッスン " + lessonId + " の steps で演習が重複しています: " + step.id);
-      }
-      usedExercises.add(step.id);
-      return { index: 0, type: "exercise" as const, exercise };
-    });
-
-    for (const slide of slides) {
-      if (!usedSlides.has(slide.id)) {
-        fail(courseId, "レッスン " + lessonId + " の steps にスライドが含まれていません: " + slide.id);
-      }
-    }
-    for (const exercise of exercises) {
-      if (!usedExercises.has(exercise.id)) {
-        fail(courseId, "レッスン " + lessonId + " の steps に演習が含まれていません: " + exercise.id);
-      }
-    }
-  } else {
-    steps = [
-      ...slides.map((slide) => ({ index: 0, type: "slide" as const, slide })),
-      ...exercises.map((exercise) => ({ index: 0, type: "exercise" as const, exercise })),
-    ];
+/** セクション直下の ex/ から、ただ1つの演習ディレクトリ名を返す。 */
+async function readExerciseDirName(courseId: string, sectionDir: string, relDir: string): Promise<string> {
+  const exDir = join(sectionDir, "ex");
+  const entries = await entriesOf(courseId, exDir, relDir + "/ex");
+  const dirs = entries.filter((entry) => entry.isDirectory());
+  for (const entry of entries) {
+    if (!entry.isDirectory()) fail(courseId, "余分なファイルがあります: " + relDir + "/ex/" + entry.name);
   }
-
-  for (const [offset, step] of steps.entries()) step.index = offset + 1;
-  return steps;
+  if (dirs.length !== 1) {
+    fail(courseId, relDir + "/ex には演習ディレクトリがちょうど1つ必要です（実際: " + dirs.length + "）");
+  }
+  return dirs[0].name;
 }
 
 export async function loadCourse(ctx: Ctx, id: string): Promise<LoadedCourse> {
@@ -288,53 +301,101 @@ export async function loadCourse(ctx: Ctx, id: string): Promise<LoadedCourse> {
   const lessons: LoadedLesson[] = [];
   const exercises: ExerciseEntry[] = [];
   const byId = new Map<string, ExerciseEntry>();
+  const sectionByExercise = new Map<string, LoadedSection>();
 
   for (const [lessonOffset, ref] of spec.lessons.entries()) {
     const lessonIndex = lessonOffset + 1;
     const lessonDir = join(dir, "content", ref.id);
-    if (!(await pathExists(lessonDir))) fail(id, "レッスンのディレクトリがありません: content/" + ref.id);
-    const slides = await readSlides(id, ref.id, lessonDir);
+    const lessonRel = "content/" + ref.id;
+    if (!(await pathExists(lessonDir))) fail(id, "レッスンのディレクトリがありません: " + lessonRel);
+    await expectOnly(id, lessonDir, lessonRel, { dirs: ["chapters"], files: ["quiz.json"] });
+
+    const chaptersDir = join(lessonDir, "chapters");
+    await expectDirs(id, chaptersDir, lessonRel + "/chapters", ref.chapters.map((chapter) => chapter.id));
     const quiz = await readJsonIfExists(join(lessonDir, "quiz.json"), QuizSchema);
+    const chapters: LoadedChapter[] = [];
     const lessonExercises: ExerciseEntry[] = [];
 
-    for (const [offset, exerciseId] of ref.exercises.entries()) {
-      const exerciseDir = join(lessonDir, "ex", exerciseId);
-      const exercisePath = join(exerciseDir, "exercise.json");
-      if (!(await pathExists(exercisePath))) fail(id, "演習がありません: content/" + ref.id + "/ex/" + exerciseId);
-      const exercise = await readJson(exercisePath, ExerciseSchema);
-      if (exercise.id !== exerciseId) {
-        fail(id, "exercise.json の id (" + exercise.id + ") がディレクトリ名と違います: " + exerciseId);
+    for (const [chapterOffset, chapterRef] of ref.chapters.entries()) {
+      const chapterRel = lessonRel + "/chapters/" + chapterRef.id;
+      const chapterDir = join(chaptersDir, chapterRef.id);
+      await expectOnly(id, chapterDir, chapterRel, { dirs: ["sections"] });
+      const sectionsDir = join(chapterDir, "sections");
+      await expectDirs(
+        id,
+        sectionsDir,
+        chapterRel + "/sections",
+        chapterRef.sections.map((section) => section.id),
+      );
+
+      const sections: LoadedSection[] = [];
+      const chapterExercises: ExerciseEntry[] = [];
+      for (const [sectionOffset, sectionRef] of chapterRef.sections.entries()) {
+        const sectionRel = chapterRel + "/sections/" + sectionRef.id;
+        const sectionDir = join(sectionsDir, sectionRef.id);
+        await expectOnly(id, sectionDir, sectionRel, { dirs: ["slides", "ex"] });
+        const slides = await readSlides(id, sectionDir, sectionRel);
+        const exerciseId = await readExerciseDirName(id, sectionDir, sectionRel);
+        const exerciseDir = join(sectionDir, "ex", exerciseId);
+        const exercisePath = join(exerciseDir, "exercise.json");
+        if (!(await pathExists(exercisePath))) fail(id, "演習がありません: " + sectionRel + "/ex/" + exerciseId);
+        const exercise = await readJson(exercisePath, ExerciseSchema);
+        if (exercise.id !== exerciseId) {
+          fail(id, "exercise.json の id (" + exercise.id + ") がディレクトリ名と違います: " + exerciseId);
+        }
+        const entry: ExerciseEntry = {
+          id: exerciseId,
+          courseId: id,
+          dir: exerciseDir,
+          spec: exercise,
+          lessonId: ref.id,
+          lessonTitle: ref.title,
+          lessonIndex,
+          chapterId: chapterRef.id,
+          chapterTitle: chapterRef.title,
+          chapterIndex: chapterOffset + 1,
+          sectionId: sectionRef.id,
+          sectionTitle: sectionRef.title,
+          sectionIndex: sectionOffset + 1,
+          index: lessonExercises.length + 1,
+        };
+        await validateExercise(spec, entry);
+        const section: LoadedSection = {
+          ref: sectionRef,
+          index: sectionOffset + 1,
+          dir: sectionDir,
+          slides,
+          exercise: entry,
+        };
+        sections.push(section);
+        chapterExercises.push(entry);
+        lessonExercises.push(entry);
+        exercises.push(entry);
+        if (byId.has(exerciseId)) fail(id, "演習 ID が重複しています: " + exerciseId);
+        byId.set(exerciseId, entry);
+        sectionByExercise.set(exerciseId, section);
       }
-      const entry: ExerciseEntry = {
-        id: exerciseId,
-        courseId: id,
-        dir: exerciseDir,
-        spec: exercise,
-        lessonId: ref.id,
-        lessonTitle: ref.title,
-        lessonIndex,
-        index: offset + 1,
-      };
-      await validateExercise(spec, entry);
-      lessonExercises.push(entry);
-      exercises.push(entry);
-      if (byId.has(exerciseId)) fail(id, "演習 ID が重複しています: " + exerciseId);
-      byId.set(exerciseId, entry);
+
+      chapters.push({
+        ref: chapterRef,
+        index: chapterOffset + 1,
+        dir: chapterDir,
+        sections,
+        exercises: chapterExercises,
+      });
     }
 
-    const steps = resolveSteps(id, ref.id, ref, slides, lessonExercises);
     lessons.push({
       ref,
       index: lessonIndex,
       dir: lessonDir,
-      slides,
-      quiz,
+      chapters,
       exercises: lessonExercises,
-      steps,
+      quiz,
     });
   }
 
-  return { id, dir, spec, lessons, exercises, byId };
+  return { id, dir, spec, lessons, exercises, byId, sectionByExercise };
 }
 
 async function validateExercise(course: Course, entry: ExerciseEntry): Promise<void> {
@@ -416,4 +477,16 @@ export function findLesson(course: LoadedCourse, id: string): LoadedLesson {
   const lesson = course.lessons.find((candidate) => candidate.ref.id === id);
   if (!lesson) throw new UserError("レッスンが見つかりません: " + id);
   return lesson;
+}
+
+export function findChapter(lesson: LoadedLesson, id: string): LoadedChapter {
+  const chapter = lesson.chapters.find((candidate) => candidate.ref.id === id);
+  if (!chapter) throw new UserError("章が見つかりません: " + id + "（レッスン " + lesson.ref.id + "）");
+  return chapter;
+}
+
+export function findSection(chapter: LoadedChapter, id: string): LoadedSection {
+  const section = chapter.sections.find((candidate) => candidate.ref.id === id);
+  if (!section) throw new UserError("セクションが見つかりません: " + id + "（章 " + chapter.ref.id + "）");
+  return section;
 }

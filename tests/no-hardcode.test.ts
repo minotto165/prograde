@@ -47,8 +47,9 @@ describe("no-hardcode: エンジンは言語を知らない", () => {
           envs: { shell: { cacheKey: "v1", probe: ["bash", "-c", "exit 0"], remediation: "SETUP.md" } },
           exercises: ["l1-e01"],
         }),
-        "content/l1/ex/l1-e01/exercise.json": exerciseJson({ id: "l1-e01", env: "shell" }),
-        "content/l1/ex/l1-e01/solution/main.sh": "echo ok\n",
+        "content/l1/chapters/c1/sections/s1/ex/l1-e01/exercise.json": exerciseJson({ id: "l1-e01", env: "shell" }),
+        "content/l1/chapters/c1/sections/s1/slides/01.md": "# env-data\n\n本文です。\n",
+        "content/l1/chapters/c1/sections/s1/ex/l1-e01/solution/main.sh": "echo ok\n",
       },
       "env-data",
     );

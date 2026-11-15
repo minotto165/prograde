@@ -27,21 +27,25 @@ export async function lint(
   const dynamic = options.dynamic ?? true;
 
   for (const lesson of course.lessons) {
-    const bodies = lesson.slides.map((slide) => slide.body.trim());
-    const doc = bodies.join("\n\n").trim();
-    if (lesson.slides.length === 0) {
-      errors.push(
-        "レッスン本文が空です: " + lesson.ref.id + "（content/" + lesson.ref.id + "/lesson.md か slides/01.md）",
-      );
-    } else {
-      for (const slide of lesson.slides) {
-        if (slide.body.trim().length === 0) {
-          errors.push("スライドが空です: " + lesson.ref.id + "（content/" + lesson.ref.id + "/" + slide.relPath + "）");
+    const bodies: string[] = [];
+    for (const chapter of lesson.chapters) {
+      for (const section of chapter.sections) {
+        const rel = "content/" + lesson.ref.id + "/chapters/" + chapter.ref.id + "/sections/" + section.ref.id;
+        if (section.slides.length === 0) {
+          errors.push("セクションにスライドがありません: " + rel + "/slides");
+        }
+        for (const slide of section.slides) {
+          const body = slide.body.trim();
+          bodies.push(body);
+          if (body.length === 0) {
+            errors.push("スライドが空です: " + rel + "/" + slide.relPath);
+          }
         }
       }
-      if (doc.length > 0 && doc.length < 80) {
-        warnings.push("レッスン本文が短すぎます: " + lesson.ref.id + "（" + doc.length + " 文字）");
-      }
+    }
+    const doc = bodies.join("\n\n").trim();
+    if (doc.length > 0 && doc.length < 80) {
+      warnings.push("レッスン本文が短すぎます: " + lesson.ref.id + "（" + doc.length + " 文字）");
     }
     if (lesson.exercises.length === 0) errors.push("演習がありません: " + lesson.ref.id);
   }

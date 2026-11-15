@@ -14,7 +14,7 @@
   <article class="card p-5 sm:p-6">
     <h2 class="font-medium text-ink">解説と演習を交互に進める</h2>
     <p class="mt-2 text-sm leading-relaxed text-muted">
-      コースからレッスンを開くと、ページ送りの解説が始まります。何枚か読むと演習が挟まり、解き終えるとまた次の解説へ進みます。
+      コースからレッスンを開くと、章とセクションが並びます。セクションを開くとページ送りの解説が始まり、読み終えるとそのセクションの演習に進みます。
     </p>
   </article>
 

@@ -7,9 +7,7 @@
   let { data } = $props();
 
   let percent = $derived(
-    data.totalExercises === 0
-      ? 0
-      : Math.round((data.stats.solved / data.totalExercises) * 100),
+    data.stats.total === 0 ? 0 : Math.round((data.stats.solved / data.stats.total) * 100),
   );
 </script>
 
@@ -30,7 +28,7 @@
 <div class="mt-5 flex max-w-md items-center gap-3">
   <ProgressBar value={percent} size="sm" />
   <p class="shrink-0 text-xs tabular-nums text-muted">
-    <strong class="font-medium text-ink">{data.stats.solved}</strong> / {data.totalExercises} 演習
+    <strong class="font-medium text-ink">{data.stats.solved}</strong> / {data.stats.total} 演習
   </p>
 </div>
 
@@ -42,21 +40,18 @@
 
   <ol class="mt-4 grid gap-3">
     {#each data.lessons as lesson, index (lesson.id)}
-      {@const complete = lesson.total > 0 && lesson.solved === lesson.total}
-      {@const started = lesson.solved > 0 && !complete}
-      {@const isNext = lesson.id === data.nextLesson}
       <li class="card p-5">
         <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-x-4">
           <div class="min-w-0 flex-1">
             <div class="flex flex-wrap items-center gap-x-2 gap-y-1">
               <span
-                class="grid size-7 shrink-0 place-items-center rounded-full border text-xs font-medium {complete
+                class="grid size-7 shrink-0 place-items-center rounded-full border text-xs font-medium {lesson.complete
                   ? 'border-brand bg-brand text-white'
-                  : started
+                  : lesson.solved > 0
                     ? 'border-accent/30 bg-accent-soft text-accent'
                     : 'border-line bg-surface-2 text-muted'}"
               >
-                {#if complete}
+                {#if lesson.complete}
                   <Icon name="check" size={16} />
                   <span class="sr-only">完了</span>
                 {:else}
@@ -66,62 +61,33 @@
               <h3 class="font-medium leading-snug text-ink">{lesson.title}</h3>
             </div>
 
-            {#if lesson.goal}
-              <p class="mt-2 text-sm leading-relaxed text-muted">{lesson.goal}</p>
+            {#if lesson.description}
+              <p class="mt-2 text-sm leading-relaxed text-muted">{lesson.description}</p>
             {/if}
 
-            <div class="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted">
-              <span class="tabular-nums">{lesson.solved} / {lesson.total} 演習</span>
-              {#if lesson.total > 0}
-                <span class="h-1 w-24 overflow-hidden rounded-full bg-line">
-                  <span
-                    class="block h-full rounded-full bg-brand"
-                    style={`width: ${Math.round((lesson.solved / lesson.total) * 100)}%`}
-                  ></span>
-                </span>
+            <div class="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted">
+              <span class="tabular-nums">{lesson.chapters} 章・{lesson.sections} セクション</span>
+              {#if lesson.estimateMin}
+                <span class="tabular-nums">約 {lesson.estimateMin} 分</span>
               {/if}
+              <span class="tabular-nums">{lesson.solved} / {lesson.total} 演習</span>
             </div>
+
+            {#if lesson.total > 0}
+              <div class="mt-3 max-w-xs">
+                <ProgressBar value={Math.round((lesson.solved / lesson.total) * 100)} ariaLabel={`${lesson.title} の進捗`} size="sm" />
+              </div>
+            {/if}
           </div>
 
           <a
             href={lesson.start.href}
-            class="btn {isNext ? 'btn-primary' : 'btn-secondary'} w-full shrink-0 sm:w-auto"
+            class="btn {lesson.isNext ? 'btn-primary' : 'btn-secondary'} w-full shrink-0 sm:w-auto"
           >
             {lesson.start.label}
             <Icon name="arrow-right" size={16} />
           </a>
         </div>
-
-        {#if lesson.exercises.length > 0}
-          <details class="group mt-4 border-t border-line pt-2">
-            <summary class="flex cursor-pointer list-none items-center gap-2 py-1 text-xs text-muted hover:text-ink">
-              内容を見る
-              <Icon
-                name="chevron-down"
-                size={16}
-                className="ml-auto shrink-0 transition-transform group-open:rotate-180"
-              />
-            </summary>
-            <ul class="mt-2 grid gap-1">
-              {#each lesson.exercises as exercise (exercise.id)}
-                <li>
-                  <a
-                    href={`/c/${data.id}/e/${exercise.id}`}
-                    class="flex items-center justify-between gap-3 rounded-lg px-2 py-1.5 text-sm text-ink-soft transition-colors hover:bg-surface-2 hover:text-ink"
-                  >
-                    <span class="min-w-0 truncate">{exercise.title}</span>
-                    {#if exercise.solved}
-                      <span class="flex shrink-0 items-center text-brand-strong">
-                        <Icon name="check" size={16} />
-                        <span class="sr-only">合格済み</span>
-                      </span>
-                    {/if}
-                  </a>
-                </li>
-              {/each}
-            </ul>
-          </details>
-        {/if}
       </li>
     {/each}
   </ol>

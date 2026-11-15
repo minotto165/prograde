@@ -10,7 +10,7 @@ async function workspaceCourse(id: string) {
 
 const multiCourse = (): Record<string, string> => ({
   "course.json": courseJson({ id: "multi", envs: { shell: {} }, exercises: ["m-01-e01"], ext: "sh" }),
-  "content/l1/ex/m-01-e01/exercise.json": exerciseJson({
+  "content/l1/chapters/c1/sections/s1/ex/m-01-e01/exercise.json": exerciseJson({
     id: "m-01-e01",
     env: "shell",
     files: [
@@ -27,8 +27,9 @@ const multiCourse = (): Record<string, string> => ({
       { on: "out", match: "exact", value: "hi\n" },
     ],
   }),
-  "content/l1/ex/m-01-e01/solution/main.sh": "source ./lib.sh\n",
-  "content/l1/ex/m-01-e01/solution/lib.sh": "echo hi\n",
+  "content/l1/chapters/c1/sections/s1/ex/m-01-e01/solution/main.sh": "source ./lib.sh\n",
+  "content/l1/chapters/c1/sections/s1/ex/m-01-e01/solution/lib.sh": "echo hi\n",
+  "content/l1/chapters/c1/sections/s1/slides/01.md": "# multi\n\n本文です。\n",
 });
 
 describe("workspace: 作業コピーに保存して続きから", () => {

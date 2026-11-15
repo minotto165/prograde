@@ -5,7 +5,7 @@ import { basicCourseFiles, courseJson, exerciseJson, scratchCourse } from "./hel
 
 const stdoutCourse = (id: string): Record<string, string> => {
   const files = basicCourseFiles(id, ["l1-e01"]);
-  files["content/l1/ex/l1-e01/exercise.json"] = exerciseJson({
+  files["content/l1/chapters/c1/sections/s1/ex/l1-e01/exercise.json"] = exerciseJson({
     id: "l1-e01",
     observe: [
       { kind: "exit", as: "exit" },
@@ -16,13 +16,13 @@ const stdoutCourse = (id: string): Record<string, string> => {
       { on: "out", match: "exact", value: "hi\n" },
     ],
   });
-  files["content/l1/ex/l1-e01/solution/main.sh"] = "echo hi\n";
+  files["content/l1/chapters/c1/sections/s1/ex/l1-e01/solution/main.sh"] = "echo hi\n";
   return files;
 };
 
 const stdinCourse = (): Record<string, string> => {
   const files = basicCourseFiles("stdin", ["l1-e01"]);
-  files["content/l1/ex/l1-e01/exercise.json"] = exerciseJson({
+  files["content/l1/chapters/c1/sections/s1/ex/l1-e01/exercise.json"] = exerciseJson({
     id: "l1-e01",
     stdin: "world\n",
     observe: [
@@ -34,13 +34,13 @@ const stdinCourse = (): Record<string, string> => {
       { on: "out", match: "contains", value: "Hello, world" },
     ],
   });
-  files["content/l1/ex/l1-e01/solution/main.sh"] = "read -r name\necho \"Hello, $name\"\n";
+  files["content/l1/chapters/c1/sections/s1/ex/l1-e01/solution/main.sh"] = "read -r name\necho \"Hello, $name\"\n";
   return files;
 };
 
 const buildFailCourse = (): Record<string, string> => {
   const files = basicCourseFiles("buildfail", ["l1-e01"]);
-  files["content/l1/ex/l1-e01/exercise.json"] = exerciseJson({
+  files["content/l1/chapters/c1/sections/s1/ex/l1-e01/exercise.json"] = exerciseJson({
     id: "l1-e01",
     files: [
       { path: "main.sh", text: "echo hi\n", editable: true },
@@ -64,7 +64,7 @@ const buildFailCourse = (): Record<string, string> => {
       },
     ],
   });
-  files["content/l1/ex/l1-e01/solution/main.sh"] = "echo hi\n";
+  files["content/l1/chapters/c1/sections/s1/ex/l1-e01/solution/main.sh"] = "echo hi\n";
   return files;
 };
 
@@ -75,7 +75,7 @@ const pythonArtifactCourse = (): Record<string, string> => ({
     envs: { python: { cacheKey: "py-v1", probe: ["python3", "--version"], network: "off" } },
     exercises: ["l1-e01"],
   }),
-  "content/l1/ex/l1-e01/exercise.json": exerciseJson({
+  "content/l1/chapters/c1/sections/s1/ex/l1-e01/exercise.json": exerciseJson({
     id: "l1-e01",
     env: "python",
     files: [{ path: "main.py", text: "print('todo')\n", editable: true }],
@@ -91,7 +91,8 @@ const pythonArtifactCourse = (): Record<string, string> => ({
       { on: "result", match: "contains", value: "sum=12" },
     ],
   }),
-  "content/l1/ex/l1-e01/solution/main.py": "open('result.txt', 'w').write('sum=12\\n')\n",
+  "content/l1/chapters/c1/sections/s1/ex/l1-e01/solution/main.py": "open('result.txt', 'w').write('sum=12\\n')\n",
+  "content/l1/chapters/c1/sections/s1/slides/01.md": "# pyartifact\n\n本文です。\n",
 });
 
 const hasPython = Bun.spawnSync(["python3", "--version"]).exitCode === 0;

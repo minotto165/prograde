@@ -10,6 +10,5 @@ export async function load({ params }) {
     next,
     nextLesson: progress.next?.lessonId ?? lessons[0]?.id ?? null,
     lessons,
-    totalExercises: course.exercises.length,
   };
 }
