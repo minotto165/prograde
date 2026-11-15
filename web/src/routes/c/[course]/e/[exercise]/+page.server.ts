@@ -20,6 +20,7 @@ export async function load({ params }) {
     next: page.next,
     position: page.position,
     lessonProgress: page.lessonProgress,
+    lessonExercises: page.lessonExercises,
     expected: page.expected,
     env: page.entry.spec.env,
     xp: page.entry.spec.xp,

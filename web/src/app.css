@@ -1,78 +1,272 @@
 @import "tailwindcss";
 
-/* 教材 Markdown（brief.md / lesson.md）の最小限の整形。prose プラグインは使わない。 */
-.doc h1,
-.doc h2,
-.doc h3 {
-  margin-top: 1.1rem;
-  font-weight: 700;
-  line-height: 1.4;
-  color: #0f172a;
+@theme {
+  --color-canvas: #f6f4ef;
+  --color-surface: #ffffff;
+  --color-surface-2: #fbfaf7;
+  --color-ink: #1c1917;
+  --color-ink-soft: #44403c;
+  --color-muted: #6b6560;
+  --color-line: #e5dfd5;
+  --color-brand: #047857;
+  --color-brand-strong: #065f46;
+  --color-brand-soft: #ecfdf5;
+  --color-accent: #b45309;
+  --color-accent-soft: #fffbeb;
+  --color-danger: #be123c;
+  --color-danger-soft: #fff1f2;
+  --color-code: #1c1917;
+  --font-sans: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Noto Sans JP", "Yu Gothic", sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 }
-.doc h1 {
-  font-size: 1rem;
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-canvas text-ink antialiased;
+  }
+
+  ::selection {
+    background: var(--color-brand-soft);
+    color: var(--color-brand-strong);
+  }
+
+  :where(a, button, input, textarea, select, summary, [tabindex]):focus-visible {
+    outline: 2px solid var(--color-brand);
+    outline-offset: 2px;
+  }
+
+  summary::-webkit-details-marker {
+    display: none;
+  }
 }
-.doc h2 {
-  font-size: 0.9rem;
+
+@layer components {
+  .card {
+    @apply rounded-2xl border border-line bg-surface shadow-[0_1px_2px_rgba(28,25,23,0.05)];
+  }
+
+  .hero-glow {
+    background: linear-gradient(180deg, #ffffff, var(--color-surface-2));
+  }
+
+  .btn {
+    @apply inline-flex min-h-11 items-center justify-center gap-2 rounded-[10px] px-4 py-2 text-sm font-semibold transition-colors disabled:pointer-events-none disabled:opacity-50;
+  }
+
+  .btn-primary {
+    @apply bg-brand text-white hover:bg-brand-strong;
+  }
+
+  .btn-secondary {
+    @apply border border-line bg-surface text-ink hover:bg-surface-2;
+  }
+
+  .btn-ghost {
+    @apply text-ink-soft hover:bg-surface-2 hover:text-ink;
+  }
+
+  .btn-sm {
+    @apply min-h-9 px-3 py-1.5 text-xs;
+  }
+
+  .chip {
+    @apply inline-flex items-center gap-1 rounded-full border border-line bg-surface-2 px-2.5 py-1 text-xs font-medium text-ink-soft;
+  }
+
+  .chip-brand {
+    @apply border-brand/20 bg-brand-soft text-brand-strong;
+  }
+
+  .chip-accent {
+    @apply border-accent/20 bg-accent-soft text-accent;
+  }
+
+  .chip-danger {
+    @apply border-danger/20 bg-danger-soft text-danger;
+  }
+
+  .field {
+    @apply w-full rounded-[10px] border border-line bg-surface px-3 py-2 text-sm text-ink placeholder:text-muted focus:border-brand focus:outline-none;
+  }
+
+  .option {
+    @apply flex cursor-pointer items-start gap-3 rounded-xl border border-line bg-surface px-4 py-3 text-sm transition-colors hover:border-brand/40 hover:bg-brand-soft/40;
+  }
+
+  .option:has(input:checked) {
+    @apply border-brand bg-brand-soft text-ink;
+    box-shadow: inset 0 0 0 1px var(--color-brand);
+  }
+
+  .option input {
+    @apply mt-0.5 size-4 shrink-0 accent-brand;
+  }
+
+  .kbd {
+    @apply inline-flex min-w-6 items-center justify-center rounded-md border border-line bg-surface-2 px-1.5 py-0.5 font-mono text-[11px] font-medium text-ink-soft;
+  }
+
+  .eyebrow {
+    @apply text-[11px] font-bold uppercase tracking-[0.16em] text-brand;
+  }
+
+  .skip-link {
+    @apply fixed left-4 top-4 z-50 -translate-y-24 rounded-lg bg-ink px-4 py-2 text-sm font-semibold text-white transition-transform focus:translate-y-0;
+  }
 }
-.doc h3 {
-  font-size: 0.85rem;
+
+/* 教材 Markdown（brief.md / lesson.md）の整形。prose プラグインは使わない。 */
+.doc {
+  color: var(--color-ink-soft);
+  font-size: 0.9375rem;
+  line-height: 1.9;
+  overflow-wrap: anywhere;
 }
+
 .doc > :first-child {
   margin-top: 0;
 }
-.doc p {
-  margin-top: 0.6rem;
-  line-height: 1.75;
+
+.doc > :last-child {
+  margin-bottom: 0;
 }
+
+.doc h1,
+.doc h2,
+.doc h3 {
+  margin-top: 1.9rem;
+  font-weight: 700;
+  line-height: 1.45;
+  letter-spacing: -0.01em;
+  color: var(--color-ink);
+}
+
+.doc h1 {
+  margin-top: 0;
+  font-size: 1.5rem;
+}
+
+.doc h2 {
+  font-size: 1.15rem;
+}
+
+.doc h3 {
+  font-size: 1rem;
+}
+
+.doc p {
+  margin-top: 0.85rem;
+}
+
 .doc ul,
 .doc ol {
-  margin-top: 0.5rem;
-  padding-left: 1.15rem;
-  line-height: 1.75;
+  margin-top: 0.75rem;
+  padding-left: 1.35rem;
 }
+
 .doc ul {
   list-style: disc;
 }
+
 .doc ol {
   list-style: decimal;
 }
+
 .doc li + li {
-  margin-top: 0.15rem;
+  margin-top: 0.35rem;
 }
+
+.doc li::marker {
+  color: var(--color-brand);
+}
+
+.doc a {
+  color: var(--color-brand);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.doc strong {
+  font-weight: 700;
+  color: var(--color-ink);
+}
+
 .doc code {
-  border-radius: 0.25rem;
-  background: #f1f5f9;
-  padding: 0.1rem 0.3rem;
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-size: 0.8em;
+  border: 1px solid var(--color-line);
+  border-radius: 0.35rem;
+  background: var(--color-surface-2);
+  padding: 0.1rem 0.32rem;
+  font-family: var(--font-mono);
+  font-size: 0.85em;
+  color: var(--color-ink);
 }
+
 .doc pre {
-  margin-top: 0.6rem;
+  margin-top: 0.85rem;
   overflow-x: auto;
-  border-radius: 0.5rem;
-  background: #0f172a;
-  padding: 0.75rem;
-  color: #e2e8f0;
-  font-size: 0.72rem;
-  line-height: 1.6;
+  border-radius: 0.75rem;
+  background: var(--color-code);
+  padding: 1rem 1.1rem;
+  color: #f5f5f4;
+  font-size: 0.8rem;
+  line-height: 1.75;
 }
+
 .doc pre code {
+  border: 0;
   background: transparent;
   padding: 0;
   font-size: inherit;
   color: inherit;
 }
+
 .doc blockquote {
-  margin-top: 0.6rem;
-  border-left: 3px solid #a7f3d0;
-  padding-left: 0.75rem;
-  color: #475569;
+  margin-top: 0.9rem;
+  border-left: 3px solid var(--color-brand);
+  border-radius: 0 0.5rem 0.5rem 0;
+  background: var(--color-brand-soft);
+  padding: 0.7rem 0.95rem;
+  color: var(--color-ink-soft);
 }
-.doc strong {
-  color: #0f172a;
-}
+
 .doc hr {
-  margin: 1rem 0;
-  border-color: #e2e8f0;
+  margin: 1.5rem 0;
+  border-color: var(--color-line);
+}
+
+.doc table {
+  width: 100%;
+  margin-top: 0.9rem;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+.doc th,
+.doc td {
+  border: 1px solid var(--color-line);
+  padding: 0.45rem 0.6rem;
+  text-align: left;
+}
+
+.doc th {
+  background: var(--color-surface-2);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

@@ -13,6 +13,7 @@ import { grade, type GradeResult } from "../../../../src/core/grader.ts";
 import { describeJudge } from "../../../../src/core/judge.ts";
 import { readProgress, recordAttempt, recordReset, XP_PER_LEVEL, type CourseProgress } from "../../../../src/core/progress.ts";
 import { editableFiles, ensureWorkspace, resetWorkspace, writeWorkspace } from "../../../../src/core/attempt.ts";
+import { normalizeNewlines } from "../../../../src/core/text.ts";
 import { renderMarkdown } from "../markdown.ts";
 
 /** Web も CLI と同じ core を使う。ここだけがファイルシステムに触る。 */
@@ -208,6 +209,12 @@ export async function exercisePage(courseId: string, exerciseId: string) {
       total: lessonIds.length,
       solved: lessonIds.filter((id) => progress.exercises[id]?.solved).length,
     },
+    lessonExercises: lesson.exercises.map((item) => ({
+      id: item.id,
+      title: item.spec.title,
+      solved: progress.exercises[item.id]?.solved ?? false,
+      attempts: progress.exercises[item.id]?.attempts ?? 0,
+    })),
     /** 見本。判定ルールをそのまま表示用にしたもの（本体は言語を知らない）。 */
     expected: entry.spec.judge.map(describeJudge),
   };
@@ -217,7 +224,8 @@ function collectFiles(form: FormData, entry: ExerciseEntry): Record<string, stri
   const files: Record<string, string> = {};
   for (const file of editableFiles(entry.spec)) {
     const value = form.get("file:" + file.path);
-    if (value !== null) files[file.path] = String(value);
+    // HTML の textarea は送信時に改行を CRLF にする。シェルスクリプトが壊れるので LF に戻す。
+    if (value !== null) files[file.path] = normalizeNewlines(String(value));
   }
   return files;
 }
