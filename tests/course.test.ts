@@ -48,6 +48,67 @@ describe("course: データだけでコースを読む", () => {
     expect(await resolveCourseId(ctx, "alpha")).toBe("alpha");
   });
 
+  test("教材のファイルパスが外へ出る指定は読み込み時に落ちる", async () => {
+    const files = basicCourseFiles("escape", ["l1-e01"]);
+    files["content/l1/chapters/c1/sections/s1/ex/l1-e01/exercise.json"] = exerciseJson({
+      id: "l1-e01",
+      files: [{ path: "../escape.sh", text: "echo bad\n", editable: true }],
+    });
+    await expect(scratchCourse(files, "escape")).rejects.toThrow(/files\.0\.path/);
+  });
+
+  test("レッスン・章・セクションをまたいで演習の順序を保つ", async () => {
+    const manifest = {
+      schema: 3,
+      id: "multi",
+      label: "multi",
+      ext: "sh",
+      envs: { sh: {} },
+      lessons: [
+        {
+          id: "l1",
+          title: "lesson 1",
+          chapters: [
+            {
+              id: "c1",
+              title: "chapter 1",
+              sections: [
+                { id: "s1", title: "s1" },
+                { id: "s2", title: "s2" },
+              ],
+            },
+            {
+              id: "c2",
+              title: "chapter 2",
+              sections: [{ id: "s1", title: "s1" }],
+            },
+          ],
+        },
+        {
+          id: "l2",
+          title: "lesson 2",
+          chapters: [{ id: "c1", title: "chapter 1", sections: [{ id: "s1", title: "s1" }] }],
+        },
+      ],
+    };
+    const files: Record<string, string> = { "course.json": JSON.stringify(manifest) };
+    const placements = [
+      ["l1", "c1", "s1", "l1-c1-s1-e01"],
+      ["l1", "c1", "s2", "l1-c1-s2-e01"],
+      ["l1", "c2", "s1", "l1-c2-s1-e01"],
+      ["l2", "c1", "s1", "l2-c1-s1-e01"],
+    ] as const;
+    for (const [lesson, chapter, section, exercise] of placements) {
+      const base = "content/" + lesson + "/chapters/" + chapter + "/sections/" + section;
+      files[base + "/slides/01.md"] = "# " + exercise + "\n\n本文です。\n";
+      files[base + "/ex/" + exercise + "/exercise.json"] = exerciseJson({ id: exercise });
+      files[base + "/ex/" + exercise + "/solution/main.sh"] = "echo ok\n";
+    }
+    const { course } = await scratchCourse(files, "multi");
+    expect(course.exercises.map((entry) => entry.id)).toEqual(placements.map((item) => item[3]));
+    expect(course.sectionByExercise.get("l1-c2-s1-e01")?.ref.id).toBe("s1");
+  });
+
   test("存在しない環境を参照した演習は読み込み時に落ちる", async () => {
     const files = {
       "course.json": courseJson({ id: "bad-env", envs: { sh: { cacheKey: "v1" } }, exercises: ["l1-e01"] }),

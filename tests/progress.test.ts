@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { appendFile, readFile, writeFile } from "node:fs/promises";
+import { appendFile, mkdir, readFile, writeFile } from "node:fs/promises";
 import { findExercise } from "../src/core/course.ts";
 import {
   historyPath,
@@ -58,6 +58,36 @@ describe("progress: 追記ログが真実、progress.json は投影", () => {
     await appendFile(historyPath(ctx), "{broken json\n", "utf8");
     const { broken } = await readHistory(ctx);
     expect(broken).toBe(1);
+    const { progress } = await readProgress(ctx, course);
+    expect(progress.xp).toBe(10);
+  });
+
+  test("構造は正しいが at を欠いた行も無視する", async () => {
+    const { ctx, course } = await progressCourse();
+    await mkdir(ctx.stateDir, { recursive: true });
+    await appendFile(
+      historyPath(ctx),
+      JSON.stringify({ t: "attempt", course: "prog", exercise: "l1-e01", ok: true, ms: 1, xp: 10 }) + "\n",
+      "utf8",
+    );
+    const { events, broken } = await readHistory(ctx);
+    expect(events).toHaveLength(0);
+    expect(broken).toBe(1);
+    const { progress } = await readProgress(ctx, course);
+    expect(progress.xp).toBe(0);
+  });
+
+  test("readProgress は progress.json を書き出さない", async () => {
+    const { ctx, course } = await progressCourse();
+    await readProgress(ctx, course);
+    expect(await Bun.file(ctx.stateDir + "/progress.json").exists()).toBe(false);
+  });
+
+  test("壊れた progress.json は履歴から読み直す", async () => {
+    const { ctx, course } = await progressCourse();
+    const entry = findExercise(course, "l1-e01");
+    await recordAttempt(ctx, course, entry, { ok: true, durationMs: 10 });
+    await writeFile(ctx.stateDir + "/progress.json", "{broken", "utf8");
     const { progress } = await readProgress(ctx, course);
     expect(progress.xp).toBe(10);
   });

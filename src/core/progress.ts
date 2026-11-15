@@ -18,6 +18,27 @@ export type HistoryEvent =
     }
   | { t: "reset"; at: string; course: string; exercise: string };
 
+const IsoDate = z.string().refine((value) => !Number.isNaN(Date.parse(value)), {
+  message: "ISO 日時として読めません",
+});
+const HistoryEventSchema = z.discriminatedUnion("t", [
+  z.object({
+    t: z.literal("attempt"),
+    at: IsoDate,
+    course: z.string().regex(/^[a-z0-9][a-z0-9_-]*$/),
+    exercise: z.string().regex(/^[a-z0-9][a-z0-9_-]*$/),
+    ok: z.boolean(),
+    ms: z.number().finite().nonnegative(),
+    xp: z.number().int().nonnegative(),
+  }),
+  z.object({
+    t: z.literal("reset"),
+    at: IsoDate,
+    course: z.string().regex(/^[a-z0-9][a-z0-9_-]*$/),
+    exercise: z.string().regex(/^[a-z0-9][a-z0-9_-]*$/),
+  }),
+]);
+
 export interface ExerciseProgress {
   solved: boolean;
   attempts: number;
@@ -69,12 +90,9 @@ export async function readHistory(ctx: Ctx): Promise<{ events: HistoryEvent[]; b
     const trimmed = line.trim();
     if (!trimmed) continue;
     try {
-      const parsed = JSON.parse(trimmed) as HistoryEvent;
-      if (parsed && typeof parsed === "object" && typeof (parsed as { t?: unknown }).t === "string") {
-        events.push(parsed);
-      } else {
-        broken += 1;
-      }
+      const parsed = HistoryEventSchema.safeParse(JSON.parse(trimmed));
+      if (parsed.success) events.push(parsed.data);
+      else broken += 1;
     } catch {
       broken += 1;
     }
@@ -88,9 +106,14 @@ const ProgressFileSchema = z.object({
 });
 
 async function readProgressFile(ctx: Ctx): Promise<ProgressFile> {
-  const parsed = await readJsonIfExists(progressPath(ctx), ProgressFileSchema);
-  if (!parsed) return { schema: 1, courses: {} };
-  return parsed as ProgressFile;
+  try {
+    const parsed = await readJsonIfExists(progressPath(ctx), ProgressFileSchema);
+    if (!parsed) return { schema: 1, courses: {} };
+    return parsed as ProgressFile;
+  } catch {
+    // 投影が壊れていても履歴から作り直せる。読むだけで失敗させない。
+    return { schema: 1, courses: {} };
+  }
 }
 
 export async function recordAttempt(
@@ -144,14 +167,10 @@ async function recomputeAndWrite(ctx: Ctx, course: LoadedCourse): Promise<Course
 }
 
 export async function readProgress(ctx: Ctx, course: LoadedCourse): Promise<{ progress: CourseProgress; broken: number }> {
-  // 投影はいつでも履歴から作り直せるので、読むたびに作り直して照合する。
-  // これで progress.json が手で壊されても、古くても、常に正しい値が返る。
+  // 読み取りは履歴から投影するだけで、ファイルには書かない。
+  // 書くと read-only の画面表示がロックや書き込み失敗に巻き込まれる。
   const { events, broken } = await readHistory(ctx);
   const progress = replay(course, events);
-  const file = await readProgressFile(ctx);
-  file.schema = 1;
-  file.courses[course.id] = progress;
-  await writeJsonAtomic(progressPath(ctx), file);
   return { progress, broken };
 }
 
@@ -188,7 +207,7 @@ export function replay(course: LoadedCourse, events: HistoryEvent[]): CourseProg
       } else {
         current.failed += 1;
       }
-      days.add(event.at.slice(0, 10));
+      days.add(localDay(new Date(event.at)));
     } else if (event.t === "reset") {
       // reset は作業コピーの話で、達成状態は消さない（履歴には残す）。
     }

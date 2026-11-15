@@ -14,7 +14,7 @@ import {
   type SectionRef,
 } from "../schema/index.ts";
 import { pathExists, readJson, readJsonIfExists, readTextIfExists } from "./fsx.ts";
-import { UserError } from "./errors.ts";
+import { DataError, NotFoundError, UserError } from "./errors.ts";
 import type { Ctx } from "./context.ts";
 
 export interface ExerciseEntry {
@@ -88,8 +88,16 @@ export interface LoadedCourse {
   sectionByExercise: Map<string, LoadedSection>;
 }
 
+const COURSE_ID = /^[a-z0-9][a-z0-9_-]*$/;
+const ENV_NAME = /^[a-z0-9][a-z0-9_-]*$/;
+
 function fail(courseId: string, message: string): never {
-  throw new UserError("course " + courseId + ": " + message);
+  throw new DataError("course " + courseId + ": " + message);
+}
+
+/** macOS の .DS_Store など、教材の一部ではないファイルは無視する。 */
+function ignoredEntry(name: string): boolean {
+  return name === ".DS_Store" || name === "Thumbs.db" || name.startsWith("._");
 }
 
 /** 観測点の別名。judge.on はこの名前を指す。 */
@@ -141,6 +149,9 @@ export async function listCourses(ctx: Ctx): Promise<CourseSummary[]> {
     const dir = join(ctx.coursesDir, name);
     if (!(await pathExists(join(dir, "course.json")))) continue;
     const spec = await readJson(join(dir, "course.json"), CourseSchema);
+    if (spec.id !== name) {
+      throw new DataError("course " + name + ": course.json の id (" + spec.id + ") がディレクトリ名と違います");
+    }
     out.push({
       id: spec.id,
       label: spec.label,
@@ -160,8 +171,8 @@ export async function listCourses(ctx: Ctx): Promise<CourseSummary[]> {
 export async function resolveCourseId(ctx: Ctx, requested?: string): Promise<string> {
   const explicit = requested ?? process.env.PROGRADE_COURSE;
   if (explicit) {
-    if (!(await pathExists(join(ctx.coursesDir, explicit, "course.json")))) {
-      throw new UserError("コースが見つかりません: " + explicit + " (" + ctx.coursesDir + ")");
+    if (!COURSE_ID.test(explicit) || !(await pathExists(join(ctx.coursesDir, explicit, "course.json")))) {
+      throw new NotFoundError("コースが見つかりません: " + explicit + " (" + ctx.coursesDir + ")");
     }
     return explicit;
   }
@@ -182,7 +193,7 @@ function slideTitle(body: string): string | null {
 
 async function entriesOf(courseId: string, dir: string, rel: string) {
   try {
-    return await readdir(dir, { withFileTypes: true });
+    return (await readdir(dir, { withFileTypes: true })).filter((entry) => !ignoredEntry(entry.name));
   } catch {
     fail(courseId, "ディレクトリがありません: " + rel);
   }
@@ -241,6 +252,7 @@ async function readSlides(courseId: string, sectionDir: string, relDir: string):
   }
   const names: string[] = [];
   for (const entry of entries) {
+    if (ignoredEntry(entry.name)) continue;
     if (!entry.isFile() || !entry.name.endsWith(".md")) {
       fail(courseId, "スライド以外のファイルがあります: " + relDir + "/slides/" + entry.name);
     }
@@ -294,9 +306,16 @@ async function readExerciseDirName(courseId: string, sectionDir: string, relDir:
 }
 
 export async function loadCourse(ctx: Ctx, id: string): Promise<LoadedCourse> {
+  if (!COURSE_ID.test(id)) throw new NotFoundError("コースが見つかりません: " + id);
   const dir = join(ctx.coursesDir, id);
+  if (!(await pathExists(join(dir, "course.json")))) {
+    throw new NotFoundError("コースが見つかりません: " + id);
+  }
   const spec = await readJson(join(dir, "course.json"), CourseSchema);
   if (spec.id !== id) fail(id, "course.json の id (" + spec.id + ") がディレクトリ名と違います");
+  for (const name of Object.keys(spec.envs)) {
+    if (!ENV_NAME.test(name)) fail(id, "envs の名前が不正です: " + name);
+  }
 
   const lessons: LoadedLesson[] = [];
   const exercises: ExerciseEntry[] = [];
@@ -313,6 +332,7 @@ export async function loadCourse(ctx: Ctx, id: string): Promise<LoadedCourse> {
     const chaptersDir = join(lessonDir, "chapters");
     await expectDirs(id, chaptersDir, lessonRel + "/chapters", ref.chapters.map((chapter) => chapter.id));
     const quiz = await readJsonIfExists(join(lessonDir, "quiz.json"), QuizSchema);
+    if (quiz) validateQuiz(id, ref.id, quiz);
     const chapters: LoadedChapter[] = [];
     const lessonExercises: ExerciseEntry[] = [];
 
@@ -398,6 +418,23 @@ export async function loadCourse(ctx: Ctx, id: string): Promise<LoadedCourse> {
   return { id, dir, spec, lessons, exercises, byId, sectionByExercise };
 }
 
+function validateQuiz(courseId: string, lessonId: string, quiz: Quiz): void {
+  const ids = new Set<string>();
+  for (const question of quiz.questions) {
+    if (ids.has(question.id)) fail(courseId, "レッスン " + lessonId + " の quiz.json で問題 ID が重複しています: " + question.id);
+    ids.add(question.id);
+    const options = new Set(question.options.map((option) => option.id));
+    for (const answer of question.answers) {
+      if (!options.has(answer)) {
+        fail(courseId, "レッスン " + lessonId + " の quiz.json の答えが選択肢にありません: " + question.id + " -> " + answer);
+      }
+    }
+    if (!question.multiple && question.answers.length > 1) {
+      fail(courseId, "レッスン " + lessonId + " の quiz.json が単一選択なのに答えが複数あります: " + question.id);
+    }
+  }
+}
+
 async function validateExercise(course: Course, entry: ExerciseEntry): Promise<void> {
   const spec = entry.spec;
   const prefix = entry.id + ": ";
@@ -466,7 +503,7 @@ async function validateExercise(course: Course, entry: ExerciseEntry): Promise<v
 export function findExercise(course: LoadedCourse, id: string): ExerciseEntry {
   const entry = course.byId.get(id);
   if (!entry) {
-    throw new UserError(
+    throw new NotFoundError(
       "演習が見つかりません: " + id + "（" + course.id + " の演習数: " + course.exercises.length + "）",
     );
   }
@@ -475,18 +512,18 @@ export function findExercise(course: LoadedCourse, id: string): ExerciseEntry {
 
 export function findLesson(course: LoadedCourse, id: string): LoadedLesson {
   const lesson = course.lessons.find((candidate) => candidate.ref.id === id);
-  if (!lesson) throw new UserError("レッスンが見つかりません: " + id);
+  if (!lesson) throw new NotFoundError("レッスンが見つかりません: " + id);
   return lesson;
 }
 
 export function findChapter(lesson: LoadedLesson, id: string): LoadedChapter {
   const chapter = lesson.chapters.find((candidate) => candidate.ref.id === id);
-  if (!chapter) throw new UserError("章が見つかりません: " + id + "（レッスン " + lesson.ref.id + "）");
+  if (!chapter) throw new NotFoundError("章が見つかりません: " + id + "（レッスン " + lesson.ref.id + "）");
   return chapter;
 }
 
 export function findSection(chapter: LoadedChapter, id: string): LoadedSection {
   const section = chapter.sections.find((candidate) => candidate.ref.id === id);
-  if (!section) throw new UserError("セクションが見つかりません: " + id + "（章 " + chapter.ref.id + "）");
+  if (!section) throw new NotFoundError("セクションが見つかりません: " + id + "（章 " + chapter.ref.id + "）");
   return section;
 }

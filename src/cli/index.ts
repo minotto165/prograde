@@ -1,5 +1,6 @@
 import { Command, CommanderError } from "commander";
-import { join } from "node:path";
+import pkg from "../../package.json";
+import { basename, join } from "node:path";
 import { readdir } from "node:fs/promises";
 import pc from "picocolors";
 import { createCtx, type Ctx } from "../core/context.ts";
@@ -52,17 +53,45 @@ async function courseOf(command: Command): Promise<{ ctx: Ctx; course: LoadedCou
 
 async function readSource(
   command: Command,
-  options: { code?: string; file?: string },
+  options: { code?: string; file?: string; files?: string[] },
 ): Promise<string | undefined> {
   if (options.code !== undefined) {
+    if (options.file || options.files?.length) {
+      throw new UserError("--code と --file/--files は同時に使えません");
+    }
     return options.code === "-" ? await Bun.stdin.text() : options.code;
   }
   if (options.file) {
+    if (options.files?.length) throw new UserError("--file と --files は同時に使えません");
     const file = Bun.file(options.file);
     if (!(await file.exists())) throw new UserError(options.file + ": ファイルがありません");
     return file.text();
   }
   return undefined;
+}
+
+/** --files のパスを演習の編集ファイルへ対応づける。 */
+async function readFiles(entry: ExerciseEntry, paths: string[]): Promise<Record<string, string>> {
+  const editable = editableFiles(entry.spec);
+  const result: Record<string, string> = {};
+  for (const path of paths) {
+    const file = Bun.file(path);
+    if (!(await file.exists())) throw new UserError(path + ": ファイルがありません");
+    const direct = editable.find((item) => item.path === path);
+    const named = editable.filter((item) => basename(item.path) === basename(path));
+    const target = direct?.path ?? (named.length === 1 ? named[0].path : undefined);
+    if (!target) {
+      throw new UserError(
+        path +
+          ": どの編集ファイルか判別できません。指定できるのは " +
+          editable.map((item) => item.path).join(", ") +
+          " です",
+      );
+    }
+    if (result[target] !== undefined) throw new UserError(target + ": 同じファイルを複数指定しています");
+    result[target] = await file.text();
+  }
+  return result;
 }
 
 function printResult(result: GradeResult, options: { verbose?: boolean } = {}): void {
@@ -110,7 +139,7 @@ export async function main(argv: string[]): Promise<void> {
   program
     .name("prograde")
     .description("ローカル完結のプログラミング練習プラットフォーム")
-    .version("0.2.0", "-v, --version", "バージョンを表示")
+    .version(pkg.version, "-v, --version", "バージョンを表示")
     .option("--root <dir>", "データルート（既定: $PROGRADE_ROOT か ~/.prograde）")
     .option("-c, --course <id>", "コース ID（省略時は唯一のコース）")
     .option("--json", "1行の JSON で出力")
@@ -463,20 +492,22 @@ export async function main(argv: string[]): Promise<void> {
     .argument("<exId>", "演習 ID")
     .description("採点する（未指定なら作業コピーを採点）")
     .option("--file <path>", "採点するファイル")
+    .option("--files <path...>", "複数の編集ファイルをまとめて指定")
     .option("--code <text>", "ソースを直接指定（- で標準入力）")
     .option("--keep", "試行ディレクトリを残す")
     .option("--no-record", "履歴に記録しない")
     .action(
       async (
         exId: string,
-        options: { file?: string; code?: string; keep?: boolean; record: boolean },
+        options: { file?: string; files?: string[]; code?: string; keep?: boolean; record: boolean },
         command: Command,
       ) => {
         const { ctx, course } = await courseOf(command);
         const globals = command.optsWithGlobals() as GlobalOptions;
         const entry = findExercise(course, exId);
         const code = await readSource(command, options);
-        const result = await grade(ctx, course, entry, { code, keep: options.keep });
+        const files = options.files?.length ? await readFiles(entry, options.files) : undefined;
+        const result = await grade(ctx, course, entry, { code, files, keep: options.keep });
         if (options.record) await recordAttempt(ctx, course, entry, result);
 
         if (globals.json) {
@@ -493,18 +524,22 @@ export async function main(argv: string[]): Promise<void> {
     .argument("<exId>", "演習 ID")
     .description("採点せずに実行して出力を見る")
     .option("--file <path>", "実行するファイル")
+    .option("--files <path...>", "複数の編集ファイルをまとめて指定")
     .option("--code <text>", "ソースを直接指定（- で標準入力）")
-    .action(async (exId: string, options: { file?: string; code?: string }, command: Command) => {
-      const { ctx, course } = await courseOf(command);
-      const entry = findExercise(course, exId);
-      const code = await readSource(command, options);
-      const result = await grade(ctx, course, entry, { code, keep: false });
-      const ok = result.exitCode === 0 && !result.timedOut;
-      console.log(pc.dim("exit " + (result.exitCode === null ? "null" : String(result.exitCode)) + "  " + result.durationMs + "ms" + (result.timedOut ? "  timeout" : "")));
-      if (result.stdout) console.log(result.stdout.replace(/\n$/, ""));
-      if (result.stderr) console.error(pc.dim(result.stderr.replace(/\n$/, "")));
-      if (!ok) process.exitCode = 1;
-    });
+    .action(
+      async (exId: string, options: { file?: string; files?: string[]; code?: string }, command: Command) => {
+        const { ctx, course } = await courseOf(command);
+        const entry = findExercise(course, exId);
+        const code = await readSource(command, options);
+        const files = options.files?.length ? await readFiles(entry, options.files) : undefined;
+        const result = await grade(ctx, course, entry, { code, files, keep: false });
+        const ok = result.exitCode === 0 && !result.timedOut;
+        console.log(pc.dim("exit " + (result.exitCode === null ? "null" : String(result.exitCode)) + "  " + result.durationMs + "ms" + (result.timedOut ? "  timeout" : "")));
+        if (result.stdout) console.log(result.stdout.replace(/\n$/, ""));
+        if (result.stderr) console.error(pc.dim(result.stderr.replace(/\n$/, "")));
+        if (!ok) process.exitCode = 1;
+      },
+    );
 
   program
     .command("selftest")

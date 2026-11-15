@@ -259,7 +259,7 @@
               <p class="mt-3 font-mono text-[11px] text-white/30">出力が長いため途中で切り詰めています。</p>
             {/if}
           {:else}
-            <p class="font-mono text-[11px] text-white/30">お手本の出力を取得できませんでした。</p>
+            <p class="font-mono text-[11px] text-white/30">再生ボタンでお手本を実行します。</p>
           {/if}
         </div>
       </section>

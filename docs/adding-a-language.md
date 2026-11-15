@@ -4,7 +4,7 @@
 
 1. `tracks/<course>/course.json` の `envs` に、その言語の道具の用意の仕方を書く。
 2. `exercise.json` の `recipe` に実行コマンドを書く。
-3. `content/<lesson>/ex/<exId>/` に本文・雛形・解答・fixtures を置く。
+3. `content/<lesson>/chapters/<chapter>/sections/<section>/ex/<exId>/` に本文・雛形・解答・fixtures を置く。
 
 ## 例: Rust
 
@@ -49,6 +49,6 @@
 
 ## 実証
 
-開発時はローカルの `tracks/` に example-echo（シェル）と example-python（Python）を置き、
-本体を1行も変えずに2言語目を足せたことを確認した。コースはリポジトリに含めない（`.gitignore`）。
+開発時はローカルの `tracks/` にシェルと Python のコースを置き、本体を1行も変えずに
+2言語目を足せたことを確認した。コースはリポジトリに含めない（`.gitignore`）。
 `tests/no-hardcode.test.ts` が本体に言語固有の語が入らないことを検証する。

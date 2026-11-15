@@ -160,11 +160,20 @@ function lessonStart(
 
 async function readEditable(workspace: string, entry: ExerciseEntry): Promise<FileView[]> {
   return await Promise.all(
-    editableFiles(entry.spec).map(async (file) => ({
-      path: file.path,
-      code: await Bun.file(join(workspace, file.path)).text(),
-      language: file.path.split(".").pop() ?? "text",
-    })),
+    editableFiles(entry.spec).map(async (file) => {
+      const target = join(workspace, file.path);
+      const exists = await Bun.file(target).exists();
+      const code = exists
+        ? await Bun.file(target).text()
+        : file.from
+          ? await Bun.file(join(entry.dir, file.from)).text()
+          : (file.text ?? "");
+      return {
+        path: file.path,
+        code,
+        language: file.path.split(".").pop() ?? "text",
+      };
+    }),
   );
 }
 
@@ -195,7 +204,8 @@ async function referenceRun(ctx: Ctx, course: LoadedCourse, entry: ExerciseEntry
     stderr: result.stderr,
     truncated: result.truncated,
   };
-  referenceCache.set(key, reference);
+  // 失敗した実行を覚えると、直したあとも古い失敗を出し続ける。成功だけキャッシュする。
+  if (reference.exitCode === 0 && !reference.timedOut) referenceCache.set(key, reference);
   return reference;
 }
 
@@ -398,9 +408,10 @@ export async function exercisePage(courseId: string, exerciseId: string) {
   const course = await loadCourse(ctx, courseId);
   const entry = findExercise(course, exerciseId);
   const { progress } = await readProgress(ctx, course);
-  const workspace = await ensureWorkspace(ctx, entry);
+  // GET では作業ディレクトリを作らず、お手本も実行しない。表示だけなら雛形を読めば足りる。
+  const workspace = join(ctx.workDir, entry.courseId, entry.id);
   const files = await readEditable(workspace, entry);
-  const reference = await referenceRun(ctx, course, entry).catch(() => null);
+  const reference: ReferenceRun | null = null;
   const brief = (await Bun.file(join(entry.dir, "brief.md")).text().catch(() => "")) || "";
   const index = course.exercises.findIndex((item) => item.id === exerciseId);
   const previous = index > 0 ? course.exercises[index - 1] : null;

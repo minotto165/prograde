@@ -31,6 +31,22 @@ export class UserError extends Error {
   }
 }
 
+/** 教材データが壊れている（exit 2。Web では 500）。 */
+export class DataError extends UserError {
+  constructor(message: string) {
+    super(message, 2);
+    this.name = "DataError";
+  }
+}
+
+/** コース・レッスン・演習などが見つからない（exit 2。Web では 404）。 */
+export class NotFoundError extends UserError {
+  constructor(message: string) {
+    super(message, 2);
+    this.name = "NotFoundError";
+  }
+}
+
 /** 環境が用意できなかった（exit 3）。 */
 export class EnvError extends UserError {
   constructor(

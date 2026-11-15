@@ -14,20 +14,21 @@
 
 ```bash
 bun bin/prograde.ts courses
-bun bin/prograde.ts -c example-echo list
-bun bin/prograde.ts -c example-echo lesson echo-01
-bun bin/prograde.ts -c example-echo lesson echo-01 --slide 1
-bun bin/prograde.ts -c example-echo lesson echo-01 --json
-bun bin/prograde.ts -c example-echo quiz echo-01 --answer q1=a
-bun bin/prograde.ts -c example-echo open echo-01-e01
-bun bin/prograde.ts -c example-echo check echo-01-e01
-bun bin/prograde.ts -c example-echo hint echo-01-e01 --all
-bun bin/prograde.ts -c example-echo status
-bun bin/prograde.ts -c example-echo selftest
-bun bin/prograde.ts -c example-echo lint
+bun bin/prograde.ts -c python-basics list
+bun bin/prograde.ts -c python-basics lesson basics
+bun bin/prograde.ts -c python-basics lesson basics --chapter pyb-01 --section greeting --slide 1
+bun bin/prograde.ts -c python-basics lesson basics --json
+bun bin/prograde.ts -c python-basics quiz basics --answer q1=a
+bun bin/prograde.ts -c python-basics open pyb-01-e01
+bun bin/prograde.ts -c python-basics check pyb-01-e01
+bun bin/prograde.ts -c python-basics check pyb-01-e01 --files main.py helper.py
+bun bin/prograde.ts -c python-basics hint pyb-01-e01 --all
+bun bin/prograde.ts -c python-basics status
+bun bin/prograde.ts -c python-basics selftest
+bun bin/prograde.ts -c python-basics lint
 ```
 
-上の例は、`~/.prograde/tracks/example-echo` を置いている場合（`--root` で別の場所も指定できる）。
+上の例は、`~/.prograde/tracks/python-basics` を置いている場合（`--root` で別の場所も指定できる）。
 
 終了コード: 0 合格 / 1 不合格 / 2 データ・使い方の誤り / 3 環境が用意できない / 4 内部エラー。
 timeout は不合格扱い。
@@ -38,18 +39,22 @@ timeout は不合格扱い。
 
 ```
 tracks/<courseId>/
-  course.json                 # id, label, ext, envs, lessons
+  course.json                 # id, label, ext, envs, lessons[].chapters[].sections[]
   content/<lessonId>/
-    slides/NN.md              # ページ送り教材（1枚=1ファイル）
-    lesson.md                 # 旧形式の1枚教材（slides/ とは併用不可）
     quiz.json                 # 振り返りクイズ（任意）
-    ex/<exId>/
-      exercise.json           # 環境・ファイル・実行・観測・判定
-      brief.md                # 課題文
-      starter.<ext>           # 雛形（files[].from）
-      solution/<path>         # 模範解答（selftest が使う）
-      fixtures/               # 擬似ツールなど（任意）
+    chapters/<chapterId>/
+      sections/<sectionId>/
+        slides/NN.md          # ページ送り教材（1枚=1ファイル、番号順）
+        ex/<exId>/            # セクションにちょうど1つ
+          exercise.json       # 環境・ファイル・実行・観測・判定
+          brief.md            # 課題文
+          starter.<ext>       # 雛形（files[].from）
+          solution/<path>     # 模範解答（selftest が使う）
+          fixtures/           # 擬似ツールなど（任意）
 ```
+
+コース > レッスン > 章 > セクション > スライド / 演習 の5階層。`course.json` が唯一の索引で、
+ディレクトリの過不足は読み込み時にエラーになる。セクションは1枚以上のスライドと1つの演習を持つ。
 
 `exercise.json` の骨格:
 
@@ -125,7 +130,7 @@ ORIGIN=http://127.0.0.1:4173 PORT=4173 bun build/index.js
 
 | パス | 内容 |
 | --- | --- |
-| `/` | 学習状況（Lv / XP / 解いた数 / 連続日数）とコース一覧、続きから解く導線 |
+| `/` | コース一覧と全体進捗、続きから解く導線 |
 | `/help` | 使い方と採点の仕組み |
 | `/c/<course>` | レッスン一覧と進捗 |
 | `/c/<course>/l/<lesson>` | 章とセクションの一覧、レッスン全体の進捗 |
@@ -145,7 +150,7 @@ ORIGIN=http://127.0.0.1:4173 PORT=4173 bun build/index.js
 
 ```bash
 bun test          # エンジン（一時ディレクトリに生成したコースで検証）
-bun run typecheck # tsc --noEmit
+bun run typecheck # エンジンと web/ の TypeScript を型検査
 ```
 
 `tests/no-hardcode.test.ts` が `src/core` と `src/cli` に言語固有の語（rustc, npm, docker など）が入っていないことを検証する。

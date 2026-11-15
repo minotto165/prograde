@@ -9,7 +9,8 @@
   "scripts": {
     "prograde": "bun bin/prograde.ts",
     "test": "bun test tests",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "tsc --noEmit && bun run typecheck:web",
+    "typecheck:web": "cd web && bunx svelte-kit sync && bunx tsc --noEmit -p .",
     "selftest": "bun bin/prograde.ts selftest"
   },
   "dependencies": {

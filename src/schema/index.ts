@@ -1,7 +1,8 @@
 import { z } from "zod";
+import { isSafeRelativePath } from "./paths.ts";
 
 /**
- * v2 スキーマ。
+ * v3 スキーマ。
  *
  * 方針: 本体は言語・環境を知らない。ここに現れるのは
  * 「コマンド列」「観測点」「判定」「診断の読み方」という汎用の語彙だけ。
@@ -26,6 +27,12 @@ export const LimitsSchema = z.object({
   memoryMb: z.number().int().positive().optional(),
 });
 
+/** コース内の相対パス（絶対パス・..・空セグメントを拒否）。 */
+export const RelativePathSchema = z
+  .string()
+  .min(1)
+  .refine(isSafeRelativePath, { message: "相対パスで、.. を含まない必要があります" });
+
 export const EnvSchema = z.object({
   /** 一度だけ実行する用意（rustup / npm ci / docker build など中身は問わない）。 */
   provision: CommandsSchema.optional(),
@@ -41,7 +48,7 @@ export const EnvSchema = z.object({
   network: z.enum(["on", "off"]).default("off"),
   limits: LimitsSchema.default({}),
   /** 不足時に案内するコース内のファイル（例 "env/README.md"）。 */
-  remediation: z.string().optional(),
+  remediation: RelativePathSchema.optional(),
 });
 
 // ---------------------------------------------------------------------------
@@ -50,9 +57,9 @@ export const EnvSchema = z.object({
 
 export const FileSpecSchema = z.object({
   /** 作業ディレクトリ内の相対パス。 */
-  path: z.string().min(1),
+  path: RelativePathSchema,
   /** 雛形のコピー元（演習ディレクトリ相対）。省略時は text を使う。 */
-  from: z.string().optional(),
+  from: RelativePathSchema.optional(),
   /** インラインの雛形。 */
   text: z.string().optional(),
   /** 学習者が編集するファイルか。 */
@@ -78,11 +85,11 @@ export const ObserveSchema = z.discriminatedUnion("kind", [
   }),
   z.object({
     kind: z.literal("file"),
-    path: z.string().min(1),
+    path: RelativePathSchema,
     as: z.string().optional(),
     maxBytes: z.number().int().positive().optional(),
   }),
-  z.object({ kind: z.literal("exists"), path: z.string().min(1), as: z.string().optional() }),
+  z.object({ kind: z.literal("exists"), path: RelativePathSchema, as: z.string().optional() }),
 ]);
 
 export const JudgeSchema = z.discriminatedUnion("match", [
@@ -158,7 +165,7 @@ export const ExerciseSchema = z.object({
   files: z.array(FileSpecSchema).min(1),
   recipe: RecipeSchema,
   stdin: z.string().optional(),
-  stdinFile: z.string().optional(),
+  stdinFile: RelativePathSchema.optional(),
   observe: z.array(ObserveSchema).min(1),
   judge: z.array(JudgeSchema).min(1),
   diagnostics: z.array(DiagnosticSpecSchema).default([]),

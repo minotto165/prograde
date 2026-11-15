@@ -5,7 +5,7 @@ import type { Ctx } from "./context.ts";
 import type { Env, Limits } from "../schema/index.ts";
 import { exec, type ExecResult } from "./runner.ts";
 import { expand, type PlanVars } from "./plan.ts";
-import { pathExists, readJsonIfExists, readTextIfExists, withLock, writeJsonAtomic } from "./fsx.ts";
+import { pathExists, readJsonIfExists, readTextIfExists, safeJoin, withLock, writeJsonAtomic } from "./fsx.ts";
 import { EnvError } from "./errors.ts";
 
 const MarkerSchema = z.object({
@@ -52,7 +52,7 @@ export async function ensureEnv(
   envName: string,
   env: Env,
 ): Promise<ResolvedEnv> {
-  const envDir = join(ctx.cacheDir, courseId, envName);
+  const envDir = safeJoin(join(ctx.cacheDir, courseId), envName, "env 名");
   const markerPath = join(envDir, ".prograde-env.json");
   const vars = baseVars(ctx, courseId, courseDir, envDir, envName);
   const extraVars: Record<string, string> = {
@@ -83,7 +83,7 @@ export async function ensureEnv(
 
   const timeoutMs = env.limits.timeoutMs ?? DEFAULT_RUN_TIMEOUT;
 
-  const cached = await readJsonIfExists(markerPath, MarkerSchema);
+  const cached = await readJsonIfExists(markerPath, MarkerSchema).catch(() => null);
   if (cached && cached.cacheKey === env.cacheKey) {
     if (env.probe) {
       const probe = await exec(env.probe, {
@@ -104,8 +104,10 @@ export async function ensureEnv(
   }
   await mkdir(envDir, { recursive: true });
 
-  await withLock(join(ctx.lockDir, "env-" + courseId + "-" + envName + ".lock"), async () => {
-    const again = await readJsonIfExists(markerPath, MarkerSchema);
+  await withLock(
+    join(ctx.lockDir, "env-" + courseId + "-" + envName + ".lock"),
+    async () => {
+    const again = await readJsonIfExists(markerPath, MarkerSchema).catch(() => null);
     if (again && again.cacheKey === env.cacheKey) return;
 
     if (env.provision && env.provision.length > 0) {
@@ -141,7 +143,9 @@ export async function ensureEnv(
       at: new Date().toISOString(),
       ok: true,
     });
-  });
+    },
+    { timeoutMs: 10 * 60_000, staleMs: 10 * 60_000 },
+  );
 
   return resolved;
 }
@@ -158,7 +162,7 @@ async function envFailure(
   const head = (result.stdout + result.stderr).trim().split(/\r?\n/).slice(-20).join("\n");
   let remediation: string | undefined;
   if (env.remediation) {
-    const path = join(courseDir, env.remediation);
+    const path = safeJoin(courseDir, env.remediation, "remediation");
     if (await pathExists(path)) remediation = (await readTextIfExists(path)) ?? undefined;
   }
   const lines = [

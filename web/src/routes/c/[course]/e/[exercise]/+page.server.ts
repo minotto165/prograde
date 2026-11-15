@@ -1,8 +1,15 @@
 import { fail } from "@sveltejs/kit";
 import { EnvError, exercisePage, reset, run, submit, type SubmitOutcome } from "$lib/server/prograde";
+import { httpError } from "$lib/server/errors";
+import { DataError, NotFoundError } from "../../../../../../../src/core/errors.ts";
 
-export async function load({ params }) {
-  const page = await exercisePage(params.course, params.exercise);
+export async function load({ params }: { params: { course: string; exercise: string } }) {
+  let page: Awaited<ReturnType<typeof exercisePage>>;
+  try {
+    page = await exercisePage(params.course, params.exercise);
+  } catch (cause) {
+    httpError(cause, "演習を読み込めませんでした");
+  }
   return {
     courseId: page.course.id,
     courseLabel: page.course.spec.label,
@@ -37,17 +44,26 @@ export async function load({ params }) {
 async function handle(work: () => Promise<SubmitOutcome>) {
   try {
     return { outcome: await work() };
-  } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    const remediation = error instanceof EnvError ? error.remediation ?? null : null;
+  } catch (cause) {
+    if (cause instanceof NotFoundError) {
+      return fail(404, { outcome: null, error: "見つかりません", remediation: null });
+    }
+    if (cause instanceof DataError) {
+      console.error(cause);
+      return fail(500, { outcome: null, error: "教材データを読み込めませんでした", remediation: null });
+    }
+    const message = cause instanceof Error ? cause.message : String(cause);
+    const remediation = cause instanceof EnvError ? cause.remediation ?? null : null;
     return fail(400, { outcome: null, error: message, remediation });
   }
 }
 
+type ActionEvent = { request: Request; params: { course: string; exercise: string } };
+
 export const actions = {
-  grade: async ({ request, params }) =>
+  grade: async ({ request, params }: ActionEvent) =>
     handle(async () => submit(params.course, params.exercise, await request.formData())),
-  run: async ({ request, params }) =>
+  run: async ({ request, params }: ActionEvent) =>
     handle(async () => run(params.course, params.exercise, await request.formData())),
-  reset: async ({ params }) => handle(async () => reset(params.course, params.exercise)),
+  reset: async ({ params }: ActionEvent) => handle(async () => reset(params.course, params.exercise)),
 };
