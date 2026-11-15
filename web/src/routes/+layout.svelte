@@ -7,7 +7,7 @@
 
   let scroller = $state<HTMLDivElement | null>(null);
   let path = $derived($page.url.pathname);
-  let wide = $derived(path.includes("/e/"));
+  let wide = $derived(path.includes("/e/") || path.includes("/l/"));
   let coursesActive = $derived(path === "/" || path.startsWith("/c/"));
   let helpActive = $derived(path.startsWith("/help"));
 
