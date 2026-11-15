@@ -283,9 +283,9 @@
     <section
       id="result"
       aria-live="polite"
-      class="card scroll-mt-28 overflow-hidden xl:h-full xl:overflow-y-auto"
+      class="card scroll-mt-28 flex flex-col overflow-hidden xl:h-full xl:min-h-0"
     >
-      <header class="flex flex-wrap items-center justify-between gap-2 border-b border-line px-4 py-3">
+      <header class="flex shrink-0 flex-wrap items-center justify-between gap-2 border-b border-line px-4 py-3">
         <h2 class="text-sm font-medium text-ink">結果</h2>
         <span class="inline-flex items-center gap-1 text-xs font-medium {statusTone}">
           {#if status === "合格"}
@@ -297,7 +297,12 @@
         </span>
       </header>
 
-      <div class="p-4">
+      <div class="flex min-h-0 flex-1 flex-col divide-y divide-line">
+        <section class="flex min-h-0 flex-col xl:flex-1" aria-label="あなたの実行結果">
+          <div class="flex shrink-0 items-center justify-between gap-2 border-b border-line bg-surface-2/40 px-4 py-2">
+            <h3 class="text-xs font-medium text-ink-soft">あなたの実行結果</h3>
+          </div>
+          <div class="p-4 xl:min-h-0 xl:flex-1 xl:overflow-y-auto">
         {#if form?.error}
           <div class="rounded-xl border border-danger/20 bg-danger-soft p-4 text-xs text-danger">
             <p class="font-medium">実行できませんでした</p>
@@ -442,6 +447,43 @@
             </details>
           {/if}
         {/if}
+          </div>
+        </section>
+
+        <section class="flex min-h-0 flex-col xl:flex-1" aria-label="お手本の実行結果">
+          <div class="flex shrink-0 items-center justify-between gap-2 border-b border-line bg-surface-2/40 px-4 py-2">
+            <h3 class="text-xs font-medium text-ink-soft">お手本の実行結果</h3>
+            {#if data.reference}
+              <span class="font-mono text-[11px] text-muted">
+                exit {data.reference.exitCode === null ? "-" : data.reference.exitCode}
+                {#if data.reference.timedOut} · 時間切れ{/if}
+                · {data.reference.durationMs}ms
+              </span>
+            {/if}
+          </div>
+          <div class="p-4 xl:min-h-0 xl:flex-1 xl:overflow-y-auto">
+            {#if data.reference}
+              {#if data.reference.stdout}
+                <p class="text-xs font-medium text-muted">標準出力</p>
+                <pre class="mt-1 max-h-56 overflow-auto whitespace-pre-wrap break-words rounded-lg bg-code p-3 font-mono text-[11px] leading-5 text-white/90">{line(data.reference.stdout)}</pre>
+              {/if}
+              {#if data.reference.stderr}
+                <div class="mt-3">
+                  <p class="text-xs font-medium text-muted">標準エラー</p>
+                  <pre class="mt-1 max-h-56 overflow-auto whitespace-pre-wrap break-words rounded-lg bg-code p-3 font-mono text-[11px] leading-5 text-danger-soft">{line(data.reference.stderr)}</pre>
+                </div>
+              {/if}
+              {#if !data.reference.stdout && !data.reference.stderr}
+                <p class="text-xs text-muted">出力はありません。</p>
+              {/if}
+              {#if data.reference.truncated}
+                <p class="mt-2 text-xs text-muted">出力が長いため途中で切り詰めています。</p>
+              {/if}
+            {:else}
+              <p class="text-xs leading-relaxed text-muted">お手本の出力を取得できませんでした。</p>
+            {/if}
+          </div>
+        </section>
       </div>
     </section>
   </div>

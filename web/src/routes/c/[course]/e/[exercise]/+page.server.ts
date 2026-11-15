@@ -13,6 +13,7 @@ export async function load({ params }) {
     objective: page.objective,
     briefHtml: page.briefHtml,
     files: page.files,
+    reference: page.reference,
     hints: page.hints,
     solved: page.solved,
     attempts: page.attempts,

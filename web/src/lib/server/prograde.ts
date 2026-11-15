@@ -62,6 +62,35 @@ async function readEditable(workspace: string, entry: ExerciseEntry): Promise<Fi
   );
 }
 
+export interface ReferenceRun {
+  exitCode: number | null;
+  timedOut: boolean;
+  durationMs: number;
+  stdout: string;
+  stderr: string;
+  truncated: boolean;
+}
+
+/** 解答例を実行した結果。ページを開くたびに走らせないよう、成功したものだけ覚えておく。 */
+const referenceCache = new Map<string, ReferenceRun>();
+
+async function referenceRun(ctx: Ctx, course: LoadedCourse, entry: ExerciseEntry): Promise<ReferenceRun> {
+  const key = `${course.id}/${entry.id}`;
+  const cached = referenceCache.get(key);
+  if (cached) return cached;
+  const result = await grade(ctx, course, entry, { solution: true, fresh: true });
+  const reference: ReferenceRun = {
+    exitCode: result.exitCode,
+    timedOut: result.timedOut,
+    durationMs: result.durationMs,
+    stdout: result.stdout,
+    stderr: result.stderr,
+    truncated: result.truncated,
+  };
+  referenceCache.set(key, reference);
+  return reference;
+}
+
 export async function dashboard() {
   const ctx = webCtx();
   const summaries = await listCourses(ctx);
@@ -184,6 +213,7 @@ export async function exercisePage(courseId: string, exerciseId: string) {
   const { progress } = await readProgress(ctx, course);
   const workspace = await ensureWorkspace(ctx, entry);
   const files = await readEditable(workspace, entry);
+  const reference = await referenceRun(ctx, course, entry).catch(() => null);
   const brief = (await Bun.file(join(entry.dir, "brief.md")).text().catch(() => "")) || "";
   const index = course.exercises.findIndex((item) => item.id === exerciseId);
   const previous = index > 0 ? course.exercises[index - 1] : null;
@@ -195,6 +225,7 @@ export async function exercisePage(courseId: string, exerciseId: string) {
     course,
     entry,
     files,
+    reference,
     briefHtml: renderMarkdown(brief),
     objective: entry.spec.objective ?? "",
     hints: entry.spec.hints,
