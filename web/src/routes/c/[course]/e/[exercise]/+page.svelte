@@ -60,40 +60,31 @@
 />
 
 <div class="xl:flex xl:h-full xl:min-h-0 xl:flex-col">
-<Breadcrumb
-  items={[
-    { label: "コース", href: "/" },
-    { label: data.courseLabel, href: `/c/${data.courseId}` },
-    { label: data.lessonTitle, href: lessonUrl },
-    { label: data.title },
-  ]}
-/>
-
-<div class="mt-3 flex flex-wrap items-start justify-between gap-3">
-  <div class="min-w-0">
-    <div class="flex flex-wrap items-center gap-2">
-      <p class="font-mono text-xs text-muted">演習 {data.position.index} / {data.position.total}</p>
-      {#if solved}
-        <span class="inline-flex items-center gap-1 text-xs font-medium text-brand-strong">
-          <Icon name="check" size={13} />
-          合格済み
-        </span>
-      {/if}
-    </div>
-    <h1 class="mt-1 text-2xl font-medium leading-tight tracking-tight text-ink sm:text-3xl">
-      {data.title}
-    </h1>
-  </div>
-  <div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted">
+<div class="flex flex-wrap items-center gap-x-4 gap-y-1">
+  <Breadcrumb
+    items={[
+      { label: data.courseLabel, href: `/c/${data.courseId}` },
+      { label: data.lessonTitle, href: lessonUrl },
+    ]}
+  />
+  <div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted sm:ml-auto">
+    <span class="font-mono">演習 {data.position.index} / {data.position.total}</span>
     <span class="font-mono">{data.env}</span>
-    {#if data.attempts > 0}
-      <span>{data.attempts} 回挑戦</span>
+    {#if solved}
+      <span class="inline-flex items-center gap-1 font-medium text-brand-strong">
+        <Icon name="check" size={13} />
+        合格済み
+      </span>
     {/if}
   </div>
 </div>
 
+<h1 class="mt-2 text-xl font-medium leading-tight tracking-tight text-ink sm:text-2xl">
+  {data.title}
+</h1>
+
 <div
-  class="mt-5 grid items-start gap-4 lg:grid-cols-[minmax(280px,340px)_minmax(0,1fr)] xl:min-h-0 xl:flex-1 xl:grid-cols-[minmax(270px,310px)_minmax(0,1fr)_minmax(320px,370px)] xl:items-stretch"
+  class="mt-3 grid items-start gap-4 lg:grid-cols-[minmax(280px,340px)_minmax(0,1fr)] xl:min-h-0 xl:flex-1 xl:grid-cols-[minmax(270px,310px)_minmax(0,1fr)_minmax(320px,370px)] xl:items-stretch"
 >
   <aside
     class="card overflow-hidden xl:h-full xl:overflow-y-auto"
@@ -162,9 +153,6 @@
           {/each}
         </div>
         <div class="flex shrink-0 items-center gap-2 px-2">
-          {#if solved}
-            <span class="hidden text-xs font-medium text-brand-soft sm:inline">合格済み</span>
-          {/if}
           <button
             type="button"
             onclick={() => (resetArmed = true)}
