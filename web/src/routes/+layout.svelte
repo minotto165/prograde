@@ -28,6 +28,10 @@
 <div class="flex min-h-screen flex-col lg:h-dvh lg:overflow-hidden">
   <header class="sticky top-0 z-20 shrink-0 border-b border-line/80 bg-canvas/85 backdrop-blur">
     <div class="flex min-h-16 w-full flex-wrap items-center gap-x-3 gap-y-2 px-4 py-2.5 sm:px-6 lg:px-8">
+      <a href="/" class="rounded-lg text-lg font-semibold tracking-tight text-ink" aria-label="prograde ホーム">
+        prograde
+      </a>
+
       <nav class="ml-auto flex items-center gap-1" aria-label="メイン">
         <a href="/" class={navClass(coursesActive)} aria-current={coursesActive ? "page" : undefined}>コース</a>
         <a href="/help" class={navClass(helpActive)} aria-current={helpActive ? "page" : undefined}>使い方</a>
