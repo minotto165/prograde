@@ -28,7 +28,7 @@
     {/if}
   </div>
   <p class="shrink-0 text-xs text-muted">
-    {data.lessons.length} レッスン・{data.totalExercises} 演習
+    {data.lessons.length} レッスン
   </p>
 </header>
 
