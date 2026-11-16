@@ -361,11 +361,11 @@
                       <dl class="mt-1.5 space-y-1 text-xs leading-relaxed">
                         <div class="flex gap-1.5">
                           <dt class="shrink-0 text-muted">期待</dt>
-                          <dd class="min-w-0 break-all"><code class="rounded bg-surface px-1 py-0.5 font-mono text-[11px]">{check.expected}</code></dd>
+                          <dd class="min-w-0 break-all"><code class="whitespace-pre-wrap rounded bg-surface px-1 py-0.5 font-mono text-[11px]">{check.expected}</code></dd>
                         </div>
                         <div class="flex gap-1.5">
                           <dt class="shrink-0 text-muted">実際</dt>
-                          <dd class="min-w-0 break-all"><code class="rounded bg-surface px-1 py-0.5 font-mono text-[11px]">{check.actual}</code></dd>
+                          <dd class="min-w-0 break-all"><code class="whitespace-pre-wrap rounded bg-surface px-1 py-0.5 font-mono text-[11px]">{check.actual}</code></dd>
                         </div>
                       </dl>
                       {#if check.note}<p class="mt-1 text-xs text-accent">（{check.note}）</p>{/if}

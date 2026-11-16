@@ -72,7 +72,9 @@ export function judgeOne(rule: Judge, observed: ObservedValue | undefined): Chec
           ? "改行コードだけが違います"
           : asString.trim() === rule.value.trim()
             ? "末尾の空白・改行だけが違います"
-            : undefined
+            : asString.replace(/[ \t]+/g, " ") === rule.value.replace(/[ \t]+/g, " ")
+              ? "空白の数が違います"
+              : undefined
         : undefined;
       return { name, ok, expected: text(rule.value), actual: text(asString), note };
     }

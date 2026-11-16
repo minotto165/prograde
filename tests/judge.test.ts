@@ -19,6 +19,9 @@ describe("judge: 判定は観測値だけを見る", () => {
     expect(trailing.note).toContain("空白");
     const crlf = judgeOne(rule({}), { observe: out, value: "hi\r\n" });
     expect(crlf.note).toContain("改行コード");
+    const spaces = judgeOne(rule({ value: "a b\n" }), { observe: out, value: "a  b\n" });
+    expect(spaces.ok).toBe(false);
+    expect(spaces.note).toContain("空白");
   });
 
   test("contains は部分一致", () => {
