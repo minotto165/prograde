@@ -8,6 +8,7 @@
   "workspaces": ["web"],
   "scripts": {
     "prograde": "bun bin/prograde.ts",
+    "web": "bun bin/prograde.ts web",
     "test": "bun test tests",
     "typecheck": "tsc --noEmit && bun run typecheck:web",
     "typecheck:web": "cd web && bunx svelte-kit sync && bunx tsc --noEmit -p .",

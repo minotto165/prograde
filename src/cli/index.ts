@@ -23,6 +23,7 @@ import { selftest } from "../core/selftest.ts";
 import { lint } from "../core/lint.ts";
 import { gradeQuiz } from "../core/quiz.ts";
 import { pathExists } from "../core/fsx.ts";
+import { runWeb } from "./web.ts";
 
 interface GlobalOptions {
   root?: string;
@@ -606,6 +607,29 @@ export async function main(argv: string[]): Promise<void> {
       const ctx = createCtx({ root: options.root });
       printJson({ root: ctx.root, courses: ctx.coursesDir, state: ctx.stateDir, work: ctx.workDir, cache: ctx.cacheDir });
     });
+
+  program
+    .command("web")
+    .description("Web UI を起動する")
+    .option("--port <n>", "待ち受けポート（既定 4173）", "4173")
+    .option("--host <addr>", "待ち受けるアドレス（既定 127.0.0.1）", "127.0.0.1")
+    .option("--origin <url>", "公開 URL（未指定なら host から決める）")
+    .option("--open", "起動後にブラウザで開く")
+    .action(
+      async (
+        options: { port: string; host: string; origin?: string; open?: boolean },
+        command: Command,
+      ) => {
+        const globals = command.optsWithGlobals() as GlobalOptions;
+        process.exitCode = await runWeb({
+          host: options.host,
+          port: Number(options.port),
+          origin: options.origin,
+          root: globals.root,
+          open: options.open,
+        });
+      },
+    );
 
   try {
     await program.parseAsync(["bun", "prograde", ...argv]);

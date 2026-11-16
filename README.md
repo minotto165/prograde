@@ -26,6 +26,7 @@ bun bin/prograde.ts -c python-basics hint pyb-01-e01 --all
 bun bin/prograde.ts -c python-basics status
 bun bin/prograde.ts -c python-basics selftest
 bun bin/prograde.ts -c python-basics lint
+bun bin/prograde.ts web
 ```
 
 上の例は、`~/.prograde/tracks/python-basics` を置いている場合（`--root` で別の場所も指定できる）。
@@ -120,11 +121,25 @@ Web だけで学習を完結できる（CLI は不要）。
 
 ```bash
 cd web && bun run build
-ORIGIN=http://127.0.0.1:4173 PORT=4173 bun build/index.js
+bun bin/prograde.ts web
 ```
 
-- `ORIGIN` は必須。無いとフォームの POST が 403 になる。
-- データは既定で `~/.prograde/`。`PROGRADE_ROOT` で別の場所を指せる。
+既定は `http://127.0.0.1:4173`。`--port` で変えられる。`ORIGIN` は起動時に決まり、
+`--origin` で上書きできる。
+
+LAN に公開するとき:
+
+```bash
+bun bin/prograde.ts web --host 0.0.0.0
+```
+
+起動時に LAN の IPv4 を検出し、`ORIGIN=http://<LAN IP>:<port>` を静的に設定して
+その URL を表示する。認証はないので、信頼できるネットワークだけで使う。
+`localhost` と LAN IP の両方からはフォームを送信できない（ORIGIN が1つだけのため）。
+
+- ビルドが無いとエラーになる（`cd web && bun run build`）。
+- データは既定で `~/.prograde/`。`--root` か `PROGRADE_ROOT` で別の場所を指せる。
+- `--open` で起動後にブラウザを開く。
 
 画面と操作:
 
