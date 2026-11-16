@@ -159,12 +159,12 @@
 
   </aside>
 
-  <div class="flex min-w-0 flex-col gap-4 xl:contents">
+  <div class="flex min-w-0 flex-col gap-4 xl:h-full xl:min-h-0">
     <form
       id="exercise-form"
       method="POST"
       action="?/grade"
-      class="flex min-h-[440px] flex-col overflow-hidden rounded-2xl border border-white/10 bg-code shadow-sm sm:min-h-[520px] xl:h-full xl:min-h-0"
+      class="flex min-h-[440px] flex-col overflow-hidden rounded-2xl border border-white/10 bg-code shadow-sm sm:min-h-[520px] xl:min-h-0 xl:flex-1"
     >
       <div class="flex items-stretch border-b border-white/10 bg-white/[0.04]">
         <div class="flex min-w-0 flex-1 items-center gap-1 overflow-x-auto px-2 pt-2" role="group" aria-label="編集するファイル">
@@ -228,163 +228,210 @@
 
     </form>
 
-    <div id="result" class="flex min-h-0 scroll-mt-28 flex-col gap-4 xl:h-full xl:overflow-y-auto">
+    {#if result || form?.error}
       <section
-        class="flex min-h-[192px] max-h-[256px] flex-col overflow-hidden rounded-2xl border border-white/10 bg-code shadow-sm xl:min-h-0 xl:max-h-none xl:flex-1"
-        aria-label="あなたの標準出力"
+        id="result"
+        class="result-drawer scroll-mt-28 shrink-0 overflow-hidden rounded-2xl border border-line bg-surface shadow-sm"
         aria-live="polite"
       >
-        <header class="flex shrink-0 items-center justify-between gap-2 px-4 py-2.5">
-          <h3 class="font-mono text-[11px] text-white/45">あなた</h3>
-          <button
-            type="submit"
-            form="exercise-form"
-            formaction="?/run"
-            class="grid size-8 shrink-0 place-items-center rounded-lg text-white/55 transition-colors hover:bg-white/10 hover:text-white"
-            aria-label="コードを実行"
-            title="コードを実行"
-          >
-            <Icon name="play" size={16} />
-          </button>
-        </header>
-        <div class="min-h-0 flex-1 overflow-y-auto px-4 pb-4">
-          {#if form?.error}
-            <p class="font-mono text-xs text-danger-soft">実行できませんでした</p>
-            <pre class="mt-2 whitespace-pre-wrap break-words font-mono text-[11px] leading-relaxed text-white/80">{form.error}</pre>
+        {#if form?.error}
+          <header class="flex items-center gap-2 border-b border-line px-4 py-2.5">
+            <span class="grid size-6 shrink-0 place-items-center rounded-full bg-danger-soft text-danger">
+              <Icon name="x" size={16} />
+            </span>
+            <h2 class="text-sm font-medium text-ink">実行できませんでした</h2>
+          </header>
+          <div class="px-4 py-4">
+            <pre class="whitespace-pre-wrap break-words font-mono text-[11px] leading-relaxed text-ink-soft">{form.error}</pre>
             {#if form.remediation}
-              <p class="mt-3 font-mono text-[11px] text-white/45">準備手順</p>
-              <pre class="mt-1 whitespace-pre-wrap break-words font-mono text-[11px] leading-relaxed text-white/60">{form.remediation}</pre>
+              <p class="mt-3 font-mono text-[11px] text-muted">準備手順</p>
+              <pre class="mt-1 whitespace-pre-wrap break-words font-mono text-[11px] leading-relaxed text-muted">{form.remediation}</pre>
             {/if}
-          {:else if outcome?.kind === "reset"}
-            <p class="font-mono text-xs text-white/45">雛形に戻しました。</p>
-          {:else if result}
-            {#if result.stdout}
-              <pre class="whitespace-pre-wrap break-words font-mono text-[12px] leading-6 text-white/90">{line(result.stdout)}</pre>
-            {:else}
-              <p class="font-mono text-[11px] text-white/30">出力はありません。</p>
+          </div>
+        {:else if result}
+          <header class="flex flex-wrap items-center gap-x-2 gap-y-1 border-b border-line px-4 py-2.5">
+            <span class="grid size-6 shrink-0 place-items-center rounded-full {result.ok ? 'bg-brand-soft text-brand-strong' : 'bg-danger-soft text-danger'}">
+              <Icon name={result.ok ? "check" : "x"} size={16} />
+            </span>
+            <h2 class="text-sm font-medium text-ink">{outcome?.kind === "grade" ? "判定" : "実行結果"}</h2>
+            {#if outcome?.kind === "grade"}
+              <span class="text-xs font-medium {result.ok ? 'text-brand-strong' : 'text-danger'}">{result.ok ? "合格" : "不合格"}</span>
+              <span class="font-mono text-xs text-muted">{passedCount} / {result.checks.length}</span>
             {/if}
-            {#if result.truncated}
-              <p class="mt-3 font-mono text-[11px] text-white/30">出力が長いため途中で切り詰めています。</p>
-            {/if}
-          {:else}
-            <p class="font-mono text-[11px] text-white/30">まだ実行していません。</p>
-          {/if}
-        </div>
-      </section>
+            <span class="ml-auto font-mono text-[11px] text-muted">
+              exit {result.exitCode ?? "—"} · {result.durationMs}ms{#if result.timedOut} · 時間切れ{/if}
+            </span>
+          </header>
 
-      <section
-        class="flex min-h-[192px] max-h-[256px] flex-col overflow-hidden rounded-2xl border border-white/10 bg-code shadow-sm xl:min-h-0 xl:max-h-none xl:flex-1"
-        aria-label="お手本の標準出力"
-      >
-        <header class="flex shrink-0 items-center justify-between gap-2 px-4 py-2.5">
-          <h3 class="font-mono text-[11px] text-white/45">お手本</h3>
-          <button
-            type="button"
-            onclick={rerunReference}
-            disabled={referenceBusy}
-            class="grid size-8 shrink-0 place-items-center rounded-lg text-white/55 transition-colors hover:bg-white/10 hover:text-white disabled:opacity-50"
-            aria-label="お手本を実行"
-            title="お手本を実行"
-          >
-            <Icon name="play" size={16} />
-          </button>
-        </header>
-        <div class="min-h-0 flex-1 overflow-y-auto px-4 pb-4">
-          {#if reference}
-            {#if reference.stdout}
-              <pre class="whitespace-pre-wrap break-words font-mono text-[12px] leading-6 text-white/90">{line(reference.stdout)}</pre>
-            {:else}
-              <p class="font-mono text-[11px] text-white/30">出力はありません。</p>
-            {/if}
-            {#if reference.truncated}
-              <p class="mt-3 font-mono text-[11px] text-white/30">出力が長いため途中で切り詰めています。</p>
-            {/if}
-          {:else}
-            <p class="font-mono text-[11px] text-white/30">再生ボタンでお手本を実行します。</p>
-          {/if}
-        </div>
-      </section>
-
-    {#if result && outcome?.kind !== "run"}
-      <details class="group shrink-0">
-        <summary class="flex cursor-pointer list-none items-center justify-between gap-2 border-t border-line px-1 py-2.5 text-xs">
-          <span class="font-medium text-ink">判定</span>
-          <span class="flex items-center gap-1 font-medium {result.ok ? 'text-brand-strong' : 'text-danger'}">
-            <Icon name={result.ok ? "check" : "x"} size={16} />
-            {result.ok ? "合格" : "不合格"} · {passedCount} / {result.checks.length}
-            <Icon name="chevron-down" size={16} className="ml-1 shrink-0 text-muted transition-transform group-open:rotate-180" />
-          </span>
-        </summary>
-        <div class="mt-2 max-h-56 overflow-y-auto rounded-xl border border-line bg-surface px-4 py-3">
-          <p class="text-sm leading-relaxed {result.ok ? 'font-medium text-brand-strong' : 'text-danger'}">{result.message}</p>
-          <ul class="mt-2 divide-y divide-line overflow-hidden rounded-xl border border-line">
-            {#each result.checks as check, index (index)}
-              <li class="px-4 py-3 {check.ok ? 'bg-surface' : 'bg-danger-soft/40'}">
-                <div class="flex items-start gap-2">
-                  <span
-                    class="mt-0.5 grid size-5 shrink-0 place-items-center rounded-full {check.ok
-                      ? 'bg-brand-soft text-brand-strong'
-                      : 'bg-danger-soft text-danger'}"
-                  >
-                    <Icon name={check.ok ? "check" : "x"} size={16} />
-                  </span>
-                  <div class="min-w-0 flex-1">
-                    <p class="font-mono text-xs font-medium text-ink-soft">{check.name}</p>
-                    {#if !check.ok}
-                      <dl class="mt-1.5 space-y-1 text-xs leading-relaxed">
-                        <div class="flex gap-1.5">
-                          <dt class="shrink-0 text-muted">期待</dt>
-                          <dd class="min-w-0 break-all"><code class="whitespace-pre-wrap rounded bg-surface px-1 py-0.5 font-mono text-[11px]">{check.expected}</code></dd>
-                        </div>
-                        <div class="flex gap-1.5">
-                          <dt class="shrink-0 text-muted">実際</dt>
-                          <dd class="min-w-0 break-all"><code class="whitespace-pre-wrap rounded bg-surface px-1 py-0.5 font-mono text-[11px]">{check.actual}</code></dd>
-                        </div>
-                      </dl>
-                      {#if check.note}<p class="mt-1 text-xs text-accent">（{check.note}）</p>{/if}
-                    {/if}
+          <div class="max-h-[min(22rem,45vh)] overflow-y-auto px-4 py-4">
+            <div class="grid gap-4 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
+              <div class="min-w-0">
+                {#if outcome?.kind === "grade"}
+                  <p class="text-sm leading-relaxed {result.ok ? 'font-medium text-brand-strong' : 'text-danger'}">{result.message}</p>
+                {:else if result.ok}
+                  <p class="text-sm text-ink-soft">実行しました。</p>
+                {:else}
+                  <p class="text-sm text-danger">実行に失敗しました。</p>
+                {/if}
+                {#if result.stderr}
+                  <div class="mt-3">
+                    <p class="meta-label">エラー出力</p>
+                    <pre class="mt-1 whitespace-pre-wrap break-words rounded-xl border border-danger/20 bg-danger-soft/40 px-3 py-2.5 font-mono text-[11px] leading-relaxed text-danger">{line(result.stderr)}</pre>
                   </div>
-                </div>
-              </li>
-            {/each}
-          </ul>
-          {#if result.diagnostics.length > 0}
-            <div class="mt-3">
-              <p class="text-xs font-medium text-muted">診断</p>
-              <ul class="mt-1 grid gap-1">
-                {#each result.diagnostics as diagnostic, index (index)}
-                  <li class="rounded-lg bg-surface-2 px-2.5 py-2 font-mono text-[11px] leading-relaxed text-ink-soft">
-                    {#if diagnostic.file ?? diagnostic.line}
-                      <span class="text-muted">{diagnostic.file ?? ""}{#if diagnostic.line}:{diagnostic.line}{/if} </span>
-                    {/if}
-                    <span class={diagnostic.severity === "error" ? "text-danger" : diagnostic.severity === "warning" ? "text-accent" : "text-muted"}>
-                      {diagnostic.severity}
-                    </span>
-                    {diagnostic.message}
-                  </li>
-                {/each}
-              </ul>
-            </div>
-          {/if}
-        </div>
-      </details>
-    {/if}
+                {/if}
+                {#if result.truncated}
+                  <p class="mt-3 font-mono text-[11px] text-muted">出力が長いため途中で切り詰めています。</p>
+                {/if}
+              </div>
 
-    {#if result?.ok && outcome?.kind === "grade"}
-      {#if data.nextStep}
-        <a href={data.nextStep.href} class="btn btn-primary w-full shrink-0">
-          {data.nextStep.label}
-          <Icon name="arrow-right" size={16} />
-        </a>
-      {:else}
-        <a href={'/c/' + data.courseId} class="btn btn-primary w-full shrink-0">
-          コースへ戻る
-          <Icon name="arrow-right" size={16} />
-        </a>
-      {/if}
+              <div class="min-w-0">
+                {#if outcome?.kind === "grade"}
+                  <ul class="divide-y divide-line overflow-hidden rounded-xl border border-line">
+                    {#each result.checks as check, index (index)}
+                      <li class="px-4 py-3 {check.ok ? 'bg-surface' : 'bg-danger-soft/40'}">
+                        <div class="flex items-start gap-2">
+                          <span
+                            class="mt-0.5 grid size-5 shrink-0 place-items-center rounded-full {check.ok
+                              ? 'bg-brand-soft text-brand-strong'
+                              : 'bg-danger-soft text-danger'}"
+                          >
+                            <Icon name={check.ok ? "check" : "x"} size={16} />
+                          </span>
+                          <div class="min-w-0 flex-1">
+                            <p class="font-mono text-xs font-medium text-ink-soft">{check.name}</p>
+                            {#if !check.ok}
+                              <dl class="mt-1.5 space-y-1 text-xs leading-relaxed">
+                                <div class="flex gap-1.5">
+                                  <dt class="shrink-0 text-muted">期待</dt>
+                                  <dd class="min-w-0 break-all"><code class="whitespace-pre-wrap rounded bg-surface px-1 py-0.5 font-mono text-[11px]">{check.expected}</code></dd>
+                                </div>
+                                <div class="flex gap-1.5">
+                                  <dt class="shrink-0 text-muted">実際</dt>
+                                  <dd class="min-w-0 break-all"><code class="whitespace-pre-wrap rounded bg-surface px-1 py-0.5 font-mono text-[11px]">{check.actual}</code></dd>
+                                </div>
+                              </dl>
+                              {#if check.note}<p class="mt-1 text-xs text-accent">（{check.note}）</p>{/if}
+                            {/if}
+                          </div>
+                        </div>
+                      </li>
+                    {/each}
+                  </ul>
+                {/if}
+
+                {#if result.diagnostics.length > 0}
+                  <div class="mt-3">
+                    <p class="text-xs font-medium text-muted">診断</p>
+                    <ul class="mt-1 grid gap-1">
+                      {#each result.diagnostics as diagnostic, index (index)}
+                        <li class="rounded-lg bg-surface-2 px-2.5 py-2 font-mono text-[11px] leading-relaxed text-ink-soft">
+                          {#if diagnostic.file ?? diagnostic.line}
+                            <span class="text-muted">{diagnostic.file ?? ""}{#if diagnostic.line}:{diagnostic.line}{/if} </span>
+                          {/if}
+                          <span class={diagnostic.severity === "error" ? "text-danger" : diagnostic.severity === "warning" ? "text-accent" : "text-muted"}>
+                            {diagnostic.severity}
+                          </span>
+                          {diagnostic.message}
+                        </li>
+                      {/each}
+                    </ul>
+                  </div>
+                {/if}
+              </div>
+            </div>
+          </div>
+
+          {#if result.ok && outcome?.kind === "grade"}
+            <footer class="border-t border-line px-4 py-3">
+              {#if data.nextStep}
+                <a href={data.nextStep.href} class="btn btn-primary w-full sm:w-auto">
+                  {data.nextStep.label}
+                  <Icon name="arrow-right" size={16} />
+                </a>
+              {:else}
+                <a href={'/c/' + data.courseId} class="btn btn-primary w-full sm:w-auto">
+                  コースへ戻る
+                  <Icon name="arrow-right" size={16} />
+                </a>
+              {/if}
+            </footer>
+          {/if}
+        {/if}
+      </section>
     {/if}
-    </div>
   </div>
+
+  <div class="flex min-h-0 flex-col gap-4 lg:col-start-2 lg:row-start-2 xl:col-start-3 xl:row-start-1 xl:h-full xl:overflow-y-auto">
+    <section
+      class="flex min-h-[192px] max-h-[256px] flex-col overflow-hidden rounded-2xl border border-white/10 bg-code shadow-sm xl:min-h-0 xl:max-h-none xl:flex-1"
+      aria-label="あなたの標準出力"
+      aria-live="polite"
+    >
+      <header class="flex shrink-0 items-center justify-between gap-2 px-4 py-2.5">
+        <h3 class="font-mono text-[11px] text-white/45">あなた</h3>
+        <button
+          type="submit"
+          form="exercise-form"
+          formaction="?/run"
+          class="grid size-8 shrink-0 place-items-center rounded-lg text-white/55 transition-colors hover:bg-white/10 hover:text-white"
+          aria-label="コードを実行"
+          title="コードを実行"
+        >
+          <Icon name="play" size={16} />
+        </button>
+      </header>
+      <div class="min-h-0 flex-1 overflow-y-auto px-4 pb-4">
+        {#if outcome?.kind === "reset"}
+          <p class="font-mono text-xs text-white/45">雛形に戻しました。</p>
+        {:else if result}
+          {#if result.stdout}
+            <pre class="whitespace-pre-wrap break-words font-mono text-[12px] leading-6 text-white/90">{line(result.stdout)}</pre>
+          {:else}
+            <p class="font-mono text-[11px] text-white/30">出力はありません。</p>
+          {/if}
+          {#if result.truncated}
+            <p class="mt-3 font-mono text-[11px] text-white/30">出力が長いため途中で切り詰めています。</p>
+          {/if}
+        {:else}
+          <p class="font-mono text-[11px] text-white/30">まだ実行していません。</p>
+        {/if}
+      </div>
+    </section>
+
+    <section
+      class="flex min-h-[192px] max-h-[256px] flex-col overflow-hidden rounded-2xl border border-white/10 bg-code shadow-sm xl:min-h-0 xl:max-h-none xl:flex-1"
+      aria-label="お手本の標準出力"
+    >
+      <header class="flex shrink-0 items-center justify-between gap-2 px-4 py-2.5">
+        <h3 class="font-mono text-[11px] text-white/45">お手本</h3>
+        <button
+          type="button"
+          onclick={rerunReference}
+          disabled={referenceBusy}
+          class="grid size-8 shrink-0 place-items-center rounded-lg text-white/55 transition-colors hover:bg-white/10 hover:text-white disabled:opacity-50"
+          aria-label="お手本を実行"
+          title="お手本を実行"
+        >
+          <Icon name="play" size={16} />
+        </button>
+      </header>
+      <div class="min-h-0 flex-1 overflow-y-auto px-4 pb-4">
+        {#if reference}
+          {#if reference.stdout}
+            <pre class="whitespace-pre-wrap break-words font-mono text-[12px] leading-6 text-white/90">{line(reference.stdout)}</pre>
+          {:else}
+            <p class="font-mono text-[11px] text-white/30">出力はありません。</p>
+          {/if}
+          {#if reference.truncated}
+            <p class="mt-3 font-mono text-[11px] text-white/30">出力が長いため途中で切り詰めています。</p>
+          {/if}
+        {:else}
+          <p class="font-mono text-[11px] text-white/30">再生ボタンでお手本を実行します。</p>
+        {/if}
+      </div>
+    </section>
+  </div>
+
 </div>
 
 <div class="mt-6 flex flex-wrap items-center gap-x-4 gap-y-3 xl:shrink-0">
@@ -409,3 +456,28 @@
   </button>
 </div>
 </div>
+<style>
+  .result-drawer {
+    animation: result-drawer-in 240ms cubic-bezier(0.2, 0.8, 0.2, 1);
+    transform-origin: top;
+  }
+
+  @keyframes result-drawer-in {
+    from {
+      opacity: 0;
+      transform: translateY(-10px) scaleY(0.96);
+      clip-path: inset(0 0 100% 0);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+      clip-path: inset(0);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .result-drawer {
+      animation: none;
+    }
+  }
+</style>
