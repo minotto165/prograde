@@ -1,5 +1,6 @@
 import { networkInterfaces } from "node:os";
 import { isIP } from "node:net";
+import { randomBytes, randomInt } from "node:crypto";
 import { join } from "node:path";
 import pc from "picocolors";
 import { createCtx } from "../core/context.ts";
@@ -111,11 +112,12 @@ export function parsePort(value: string | number): number {
 export function resolveWebOrigin(input: WebOriginInput): WebOrigin {
   const host = input.host.trim();
   const port = parsePort(input.port);
-  if (input.origin) return { origin: normalizeOrigin(input.origin), lan: false, host };
+  const lan = !isLoopbackHost(host);
+  if (input.origin) return { origin: normalizeOrigin(input.origin), lan, host };
 
   if (!isWildcardHost(host)) {
     const origin = "http://" + urlHost(host) + ":" + port;
-    return { origin: normalizeOrigin(origin), lan: !isLoopbackHost(host), host };
+    return { origin: normalizeOrigin(origin), lan, host };
   }
 
   const candidates = detectLanIpv4(input.interfaces);
@@ -126,6 +128,11 @@ export function resolveWebOrigin(input: WebOriginInput): WebOrigin {
   }
   const address = candidates[0];
   return { origin: "http://" + address + ":" + port, lan: true, host };
+}
+
+/** 6桁の PIN。先頭の 0 を落とさない。 */
+export function generatePin(): string {
+  return String(randomInt(0, 1_000_000)).padStart(6, "0");
 }
 
 /** ブラウザを開くコマンド。テストできるように純粋関数にしている。 */
@@ -169,26 +176,41 @@ export async function runWeb(options: WebOptions): Promise<number> {
 
   const resolved = resolveWebOrigin({ host: options.host, port: options.port, origin: options.origin });
   const port = String(parsePort(options.port));
+  const pin = resolved.lan ? generatePin() : undefined;
+  const sessionSecret = pin ? randomBytes(32).toString("hex") : undefined;
   console.log(pc.dim("prograde web"));
   console.log("  " + pc.cyan(resolved.origin));
+  if (pin) {
+    console.log("  " + pc.bold(pc.yellow("PIN: " + pin)));
+    console.log("  " + pc.dim("ブラウザで最初にこの PIN を入力します（12時間有効）。"));
+  }
   console.log("  " + pc.dim("データ: " + ctx.root));
-  if (resolved.lan && !options.origin) {
-    console.log("  " + pc.yellow("LAN に公開しています。認証はないので、信頼できるネットワークだけで使ってください。"));
+  if (resolved.lan) {
+    console.log("  " + pc.yellow("LAN に公開しています。信頼できるネットワークだけで使ってください。"));
     console.log("  " + pc.dim("localhost からはフォームを送信できません（ORIGIN が LAN のアドレスのため）。"));
   }
   console.log("  " + pc.dim("停止: Ctrl+C"));
+
+  const childEnv: Record<string, string | undefined> = {
+    ...process.env,
+    HOST: resolved.host,
+    PORT: port,
+    ORIGIN: resolved.origin,
+    PROGRADE_ROOT: ctx.root,
+  };
+  if (pin && sessionSecret) {
+    childEnv.PROGRADE_PIN = pin;
+    childEnv.PROGRADE_SESSION_SECRET = sessionSecret;
+  } else {
+    delete childEnv.PROGRADE_PIN;
+    delete childEnv.PROGRADE_SESSION_SECRET;
+  }
 
   let child: Bun.Subprocess<"inherit", "inherit", "inherit">;
   try {
     child = Bun.spawn([process.execPath, entry], {
       cwd: webDir,
-      env: {
-        ...process.env,
-        HOST: resolved.host,
-        PORT: port,
-        ORIGIN: resolved.origin,
-        PROGRADE_ROOT: ctx.root,
-      },
+      env: childEnv,
       stdin: "inherit",
       stdout: "inherit",
       stderr: "inherit",

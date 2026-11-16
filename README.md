@@ -134,8 +134,11 @@ bun bin/prograde.ts web --host 0.0.0.0
 ```
 
 起動時に LAN の IPv4 を検出し、`ORIGIN=http://<LAN IP>:<port>` を静的に設定して
-その URL を表示する。認証はないので、信頼できるネットワークだけで使う。
+その URL を表示する。あわせて6桁の PIN を生成して表示し、ブラウザの最初のアクセスで入力を求める。
+PIN は起動のたびに変わり、同じブラウザなら12時間は再入力なしで使える。
 `localhost` と LAN IP の両方からはフォームを送信できない（ORIGIN が1つだけのため）。
+
+PIN は簡易な入口で、通信は暗号化されない。信頼できるネットワークだけで使う。
 
 - ビルドが無いとエラーになる（`cd web && bun run build`）。
 - データは既定で `~/.prograde/`。`--root` か `PROGRADE_ROOT` で別の場所を指せる。
@@ -147,6 +150,7 @@ bun bin/prograde.ts web --host 0.0.0.0
 | --- | --- |
 | `/` | コース一覧と全体進捗、続きから解く導線 |
 | `/help` | 使い方と採点の仕組み |
+| `/unlock` | PIN の入力（LAN 公開時のみ） |
 | `/c/<course>` | レッスン一覧と進捗 |
 | `/c/<course>/l/<lesson>` | 章とセクションの一覧、レッスン全体の進捗 |
 | `/c/<course>/l/<lesson>/ch/<chapter>/s/<section>` | セクションのスライド。`/<n>` でページ送り |

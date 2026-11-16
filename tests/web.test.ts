@@ -57,9 +57,14 @@ describe("web: ORIGIN の決定", () => {
   });
 
   test("--origin は host より優先する（末尾スラッシュは落とす）", () => {
-    expect(resolveWebOrigin({ host: "0.0.0.0", port: 4173, origin: "https://example.com/" }).origin).toBe(
-      "https://example.com",
-    );
+    const resolved = resolveWebOrigin({ host: "0.0.0.0", port: 4173, origin: "https://example.com/" });
+    expect(resolved.origin).toBe("https://example.com");
+    expect(resolved.lan).toBe(true);
+  });
+
+  test("--origin でもループバックなら LAN ではない", () => {
+    const resolved = resolveWebOrigin({ host: "127.0.0.1", port: 4173, origin: "https://example.com" });
+    expect(resolved.lan).toBe(false);
   });
 
   test("LAN の候補が無ければ --origin を促す", () => {
