@@ -25,7 +25,8 @@
       class="field mt-2 h-12 text-center font-mono text-xl tracking-[0.45em]"
       inputmode="numeric"
       autocomplete="one-time-code"
-      pattern="[0-9]{6}"
+      pattern={"[0-9]{6}"}
+      title="6桁の数字"
       maxlength="6"
       required
     />
