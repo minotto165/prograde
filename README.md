@@ -164,11 +164,18 @@ PIN は簡易な入口で、通信は暗号化されない。信頼できるネ�
 だけを持つ。シェルやファイルの書き換えは渡していない。
 
 OpenAI 互換のエンドポイントを環境変数で指定して起動する。未設定でも画面は動き、
-パネルには設定方法が出る。
+パネルには設定方法が出る。リポジトリ直下に `.env` を置けば、`bun bin/prograde.ts web` が
+起動時に自動で読み込む（Bun の機能）。シェルで明示した環境変数のほうが優先される。
 
 ```bash
-PROGRADE_AGENT_BASE_URL=http://127.0.0.1:3000/v1 \
-PROGRADE_AGENT_MODEL=<モデル名> \
+# .env（リポジトリ直下。.gitignore 済み）
+PROGRADE_AGENT_BASE_URL=http://127.0.0.1:3000/v1
+PROGRADE_AGENT_MODEL=<モデル名>
+# 必要なら
+# PROGRADE_AGENT_API_KEY=<キー>
+```
+
+```bash
 bun bin/prograde.ts web
 ```
 

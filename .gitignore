@@ -7,3 +7,8 @@ web/.svelte-kit/
 web/build/
 *.log
 .DS_Store
+
+# ローカルの設定（API キーなどをコミットしない）
+.env
+.env.*
+!.env.example
