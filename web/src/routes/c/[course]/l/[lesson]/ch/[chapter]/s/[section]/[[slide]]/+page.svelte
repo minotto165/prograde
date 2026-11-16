@@ -70,15 +70,15 @@
   {/if}
 </div>
 
-<article class="card mt-4 overflow-hidden">
-  <div class="px-5 py-7 sm:px-10 sm:py-10">
+<article class="bento mt-4 overflow-hidden">
+  <div class="bento-cell px-5 py-7 sm:px-10 sm:py-10">
     <div class="doc">
       {@html data.slideHtml}
     </div>
   </div>
 
   <nav
-    class="flex flex-wrap items-center justify-between gap-3 border-t border-line bg-surface-2 px-4 py-3 sm:px-8"
+    class="bento-cell flex flex-wrap items-center justify-between gap-3 bg-surface-2 px-4 py-3 sm:px-8"
     aria-label="セクションの移動"
   >
     {#if data.prev}

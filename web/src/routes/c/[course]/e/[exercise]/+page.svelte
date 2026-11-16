@@ -154,12 +154,9 @@
   description={`${data.lessonTitle} の演習。${data.objective || "コードを書いて実行結果で確かめます。"}`}
 />
 
-<div class="xl:flex xl:h-full xl:min-h-0 xl:flex-col">
-<div
-  class="mt-4 grid items-start gap-4 lg:grid-cols-[minmax(240px,280px)_minmax(0,1fr)] xl:mt-0 xl:min-h-0 xl:flex-1 xl:grid-cols-[minmax(240px,280px)_minmax(0,1fr)_minmax(280px,300px)] xl:items-stretch xl:gap-0"
->
+<div class="bento bento-dark bento-exercise mt-4 xl:mt-0 xl:h-full xl:min-h-0">
   <aside
-    class="overflow-hidden border border-line bg-surface xl:h-full xl:min-h-0 xl:overflow-y-auto xl:border-y-0 xl:border-l-0 xl:border-r xl:pl-4"
+    class="bento-cell bento-area-guide xl:min-h-0 xl:overflow-y-auto"
     aria-label="この演習の手順"
   >
     <div class="border-b border-line px-4 py-4">
@@ -196,12 +193,12 @@
 
   </aside>
 
-  <div class="relative flex min-w-0 flex-col gap-4 xl:h-full xl:min-h-0 xl:border-r xl:border-line">
+  <div class="bento-cell-code bento-area-code relative flex min-w-0 flex-col overflow-hidden xl:min-h-0">
     <form
       id="exercise-form"
       method="POST"
       action="?/grade"
-      class="flex min-h-[440px] flex-col overflow-hidden rounded-2xl border border-white/10 bg-code shadow-sm sm:min-h-[520px] xl:min-h-0 xl:flex-1 xl:rounded-none xl:border-0 xl:shadow-none"
+      class="flex min-h-[440px] flex-col overflow-hidden bg-code sm:min-h-[520px] xl:min-h-0 xl:flex-1"
     >
       <div class="flex items-stretch border-b border-white/10 bg-white/[0.04]">
         <div class="flex min-w-0 flex-1 items-center gap-1 overflow-x-auto px-2 pt-2" role="group" aria-label="編集するファイル">
@@ -277,10 +274,10 @@
     </form>
 
     {#if resultOpen}
-      <div class="absolute inset-0 z-20 overflow-hidden rounded-2xl xl:rounded-none">
+      <div class="absolute inset-0 z-20 overflow-hidden">
         <button
           type="button"
-          class="result-backdrop absolute inset-0 cursor-default rounded-2xl bg-black/45 backdrop-blur-[2px] xl:rounded-none"
+          class="result-backdrop absolute inset-0 cursor-default bg-black/45 backdrop-blur-[2px]"
           aria-label="結果を閉じる"
           onclick={() => (resultDismissed = true)}
         ></button>
@@ -438,9 +435,8 @@
     {/if}
   </div>
 
-  <div class="flex min-h-0 flex-col overflow-hidden rounded-2xl border border-white/10 bg-code shadow-sm lg:col-start-2 lg:row-start-2 xl:col-start-3 xl:row-start-1 xl:h-full xl:rounded-none xl:border-0 xl:shadow-none">
     <section
-      class="flex min-h-[192px] max-h-[256px] flex-col overflow-hidden border-b border-white/10 xl:min-h-0 xl:max-h-none xl:flex-1"
+      class="bento-cell-code bento-area-your flex min-h-[192px] max-h-[256px] flex-col overflow-hidden xl:min-h-0 xl:max-h-none"
       aria-label="あなたの標準出力"
       aria-live="polite"
     >
@@ -476,7 +472,7 @@
     </section>
 
     <section
-      class="flex min-h-[192px] max-h-[256px] flex-col overflow-hidden xl:min-h-0 xl:max-h-none xl:flex-1"
+      class="bento-cell-code bento-area-ref flex min-h-[192px] max-h-[256px] flex-col overflow-hidden xl:min-h-0 xl:max-h-none"
       aria-label="お手本の標準出力"
     >
       <header class="flex shrink-0 items-center justify-between gap-2 px-4 py-2.5">
@@ -507,36 +503,33 @@
         {/if}
       </div>
     </section>
-  </div>
 
-</div>
-
-<div class="mt-6 flex flex-wrap items-center gap-x-4 gap-y-3 xl:mt-0 xl:shrink-0 xl:border-t xl:border-line xl:px-8 xl:py-3">
-  <a href={data.slideHref} class="order-1 inline-flex min-h-9 items-center gap-1 text-xs font-medium text-ink-soft hover:text-ink">
+  <div class="bento-cell bento-area-footer grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-3 px-4 py-3 sm:flex sm:flex-wrap xl:px-8">
+  <a href={data.slideHref} class="inline-flex min-h-9 items-center gap-1 text-xs font-medium text-ink-soft hover:text-ink">
     <Icon name="arrow-left" size={16} />
     スライドを見る
   </a>
-  <div class="order-3 flex w-full items-center gap-3 sm:order-2 sm:ml-auto sm:w-56">
-    <ProgressBar value={progressPercent} size="sm" />
-    <span class="shrink-0 text-xs font-medium text-muted">
-      {data.lessonProgress.solved} / {data.lessonProgress.total} クリア
-    </span>
-  </div>
   <button
     type="button"
     onclick={() => (agentOpen = true)}
-    class="order-2 ml-auto inline-flex min-h-9 shrink-0 items-center gap-1.5 rounded-lg border border-line bg-surface px-3 text-xs font-medium text-ink-soft transition-colors hover:bg-surface-2 hover:text-ink sm:order-3"
+    class="inline-flex min-h-9 shrink-0 items-center justify-self-end gap-1.5 rounded-lg border border-line bg-surface px-3 text-xs font-medium text-ink-soft transition-colors hover:bg-surface-2 hover:text-ink sm:order-3"
     aria-expanded={agentOpen}
     aria-controls="agent-panel"
   >
     <Icon name="sparkles" size={16} />
     AI に聞く
   </button>
+  <div class="flex min-w-0 items-center gap-3 sm:order-2 sm:ml-auto sm:w-56">
+    <ProgressBar value={progressPercent} size="sm" />
+    <span class="shrink-0 text-xs font-medium text-muted">
+      {data.lessonProgress.solved} / {data.lessonProgress.total} クリア
+    </span>
+  </div>
   <button
     type="submit"
     form="exercise-form"
     formaction="?/grade"
-    class="btn btn-primary order-2 ml-2 shrink-0 sm:order-4 sm:ml-3 sm:min-h-9"
+    class="btn btn-primary shrink-0 justify-self-end sm:order-4 sm:ml-3 sm:min-h-9"
     title="採点する（⌘/Ctrl + Enter）"
   >
     できた！

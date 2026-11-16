@@ -57,9 +57,9 @@
       <span class="shrink-0 text-xs tabular-nums text-muted">{chapter.sections.length} セクション</span>
     </div>
 
-    <ol class="card mt-3 divide-y divide-line overflow-hidden">
+    <ol class="bento mt-3">
       {#each chapter.sections as section (section.id)}
-        <li>
+        <li class="bento-cell">
           <a
             href={section.href}
             class="group flex items-start gap-3 px-4 py-4 transition-colors hover:bg-surface-2 sm:px-5 {section.isNext

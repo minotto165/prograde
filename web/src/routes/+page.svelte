@@ -25,10 +25,10 @@
   </div>
 </div>
 
-<ul class="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+<ul class="bento bento-cards mt-8">
   {#each data.courses as course (course.id)}
     {@const percent = course.exercises === 0 ? 0 : Math.round((course.solved / course.exercises) * 100)}
-    <li class="card flex h-full flex-col p-5 sm:p-6">
+    <li class="bento-cell flex h-full flex-col p-5 sm:p-6">
       <div class="flex flex-wrap items-start justify-between gap-x-3 gap-y-1">
         <h3 class="text-lg font-medium tracking-tight text-ink">
           <a href={`/c/${course.id}`} class="transition-colors hover:text-brand-strong">{course.label}</a>
@@ -60,7 +60,7 @@
       </div>
     </li>
   {:else}
-    <li class="rounded-2xl border border-dashed border-line bg-surface-2 p-10 text-center md:col-span-2 xl:col-span-3">
+    <li class="bento-cell bg-surface-2 p-10 text-center col-span-full">
       <span class="mx-auto grid size-11 place-items-center rounded-xl bg-surface text-muted">
         <Icon name="book" size={20} />
       </span>

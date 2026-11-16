@@ -10,29 +10,29 @@
 
 <h1 class="text-3xl font-medium tracking-tight text-ink">使い方</h1>
 
-<section class="mt-8 grid gap-4 sm:grid-cols-2">
-  <article class="card p-5 sm:p-6">
+<section class="bento mt-8 sm:grid-cols-2">
+  <article class="bento-cell p-5 sm:p-6">
     <h2 class="font-medium text-ink">解説と演習を交互に進める</h2>
     <p class="mt-2 text-sm leading-relaxed text-muted">
       コースからレッスンを開くと、章とセクションが並びます。セクションを開くとページ送りの解説が始まり、読み終えるとそのセクションの演習に進みます。
     </p>
   </article>
 
-  <article class="card p-5 sm:p-6">
+  <article class="bento-cell p-5 sm:p-6">
     <h2 class="font-medium text-ink">演習を解く</h2>
     <p class="mt-2 text-sm leading-relaxed text-muted">
       エディタにコードを書いて「できた！」を押します。ビルド・実行・結果の比較まで自動で走ります。途中経過は右上の実行ボタンで確認できます。書いたコードは「できた！」「実行」のほか、⌘/Ctrl + S でも保存できます。入力中はキーワード・組み込み関数・同じファイルの変数が補完候補に出ます。
     </p>
   </article>
 
-  <article class="card p-5 sm:p-6">
+  <article class="bento-cell p-5 sm:p-6">
     <h2 class="font-medium text-ink">結果を読む</h2>
     <p class="mt-2 text-sm leading-relaxed text-muted">
       合否・判定項目・コンパイラの診断・標準出力が並びます。失敗した理由がそのまま次の一手になります。判定はコードの書き方ではなく、実行結果だけを見ます。
     </p>
   </article>
 
-  <article class="card p-5 sm:p-6">
+  <article class="bento-cell p-5 sm:p-6">
     <h2 class="font-medium text-ink">進捗は自動で残る</h2>
     <p class="mt-2 text-sm leading-relaxed text-muted">
       合格すると進捗が残り、次に解く演習が示されます。閉じても続きから編集できます。「雛形に戻す」で初期状態に戻せます。
@@ -40,74 +40,72 @@
   </article>
 </section>
 
-<section id="data" class="card mt-8 overflow-hidden scroll-mt-28">
-  <div class="grid md:grid-cols-[minmax(0,1fr)_320px]">
-    <div class="p-6">
-      <h2 class="text-xl font-medium tracking-tight text-ink">採点の仕組み</h2>
-      <ul class="mt-5 space-y-3">
-        <li class="flex gap-3">
-          <span class="mt-2 size-1.5 shrink-0 rounded-full bg-brand" aria-hidden="true"></span>
-          <p class="text-sm leading-relaxed text-ink-soft">
-            判定は「終了コード・標準出力・標準エラー・生成されたファイル」だけを見ます。書き方は採点しません。
-          </p>
-        </li>
-        <li class="flex gap-3">
-          <span class="mt-2 size-1.5 shrink-0 rounded-full bg-brand" aria-hidden="true"></span>
-          <p class="text-sm leading-relaxed text-ink-soft">
-            演習ごとに環境（言語の道具）が決まっていて、初回だけ用意されます。失敗したときは準備手順が表示されます。
-          </p>
-        </li>
-        <li class="flex gap-3">
-          <span class="mt-2 size-1.5 shrink-0 rounded-full bg-brand" aria-hidden="true"></span>
-          <p class="text-sm leading-relaxed text-ink-soft">
-            制限時間を超えた実行は不合格です。無限ループしてしまったときは、時間切れを待つか「雛形に戻す」で立て直してください。
-          </p>
-        </li>
-      </ul>
-    </div>
+<section id="data" class="bento mt-8 scroll-mt-28 md:grid-cols-[minmax(0,1fr)_320px]">
+  <div class="bento-cell p-6">
+    <h2 class="text-xl font-medium tracking-tight text-ink">採点の仕組み</h2>
+    <ul class="mt-5 space-y-3">
+      <li class="flex gap-3">
+        <span class="mt-2 size-1.5 shrink-0 rounded-full bg-brand" aria-hidden="true"></span>
+        <p class="text-sm leading-relaxed text-ink-soft">
+          判定は「終了コード・標準出力・標準エラー・生成されたファイル」だけを見ます。書き方は採点しません。
+        </p>
+      </li>
+      <li class="flex gap-3">
+        <span class="mt-2 size-1.5 shrink-0 rounded-full bg-brand" aria-hidden="true"></span>
+        <p class="text-sm leading-relaxed text-ink-soft">
+          演習ごとに環境（言語の道具）が決まっていて、初回だけ用意されます。失敗したときは準備手順が表示されます。
+        </p>
+      </li>
+      <li class="flex gap-3">
+        <span class="mt-2 size-1.5 shrink-0 rounded-full bg-brand" aria-hidden="true"></span>
+        <p class="text-sm leading-relaxed text-ink-soft">
+          制限時間を超えた実行は不合格です。無限ループしてしまったときは、時間切れを待つか「雛形に戻す」で立て直してください。
+        </p>
+      </li>
+    </ul>
+  </div>
 
-    <div class="border-t border-line bg-surface-2 p-6 md:border-l md:border-t-0">
-      <h3 class="text-sm font-medium text-ink">保存されるもの</h3>
-      <dl class="mt-3 space-y-3 text-sm">
-        <div>
-          <dt class="text-xs text-muted">進捗</dt>
-          <dd class="mt-0.5 font-medium text-ink-soft">state/ の JSON</dd>
-        </div>
-        <div>
-          <dt class="text-xs text-muted">書いたコード</dt>
-          <dd class="mt-0.5 font-medium text-ink-soft">work/ の作業ディレクトリ</dd>
-        </div>
-        <div>
-          <dt class="text-xs text-muted">採点の履歴</dt>
-          <dd class="mt-0.5 font-medium text-ink-soft">history.jsonl に 1 行ずつ</dd>
-        </div>
-      </dl>
-      <p class="mt-4 text-xs leading-relaxed text-muted">
-        データは既定で <code class="rounded bg-surface px-1.5 py-0.5 font-mono">~/.prograde</code> にあります。保存先は
-        <code class="rounded bg-surface px-1.5 py-0.5 font-mono">prograde where</code> で確認できます。
-      </p>
-    </div>
+  <div class="bento-cell-soft p-6">
+    <h3 class="text-sm font-medium text-ink">保存されるもの</h3>
+    <dl class="mt-3 space-y-3 text-sm">
+      <div>
+        <dt class="text-xs text-muted">進捗</dt>
+        <dd class="mt-0.5 font-medium text-ink-soft">state/ の JSON</dd>
+      </div>
+      <div>
+        <dt class="text-xs text-muted">書いたコード</dt>
+        <dd class="mt-0.5 font-medium text-ink-soft">work/ の作業ディレクトリ</dd>
+      </div>
+      <div>
+        <dt class="text-xs text-muted">採点の履歴</dt>
+        <dd class="mt-0.5 font-medium text-ink-soft">history.jsonl に 1 行ずつ</dd>
+      </div>
+    </dl>
+    <p class="mt-4 text-xs leading-relaxed text-muted">
+      データは既定で <code class="rounded bg-surface px-1.5 py-0.5 font-mono">~/.prograde</code> にあります。保存先は
+      <code class="rounded bg-surface px-1.5 py-0.5 font-mono">prograde where</code> で確認できます。
+    </p>
   </div>
 </section>
 
 <section class="mt-8">
   <h2 class="text-xl font-medium tracking-tight text-ink">キーボード</h2>
-  <div class="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-    <div class="flex items-center justify-between gap-4 rounded-xl border border-line bg-surface px-4 py-3 text-sm">
+  <div class="bento mt-3 sm:grid-cols-2 lg:grid-cols-3">
+    <div class="bento-cell flex items-center justify-between gap-4 px-4 py-3 text-sm">
       <span class="text-ink-soft">採点する（できた！）</span>
       <span class="flex shrink-0 items-center gap-1">
         <span class="kbd">⌘</span><span class="text-xs text-muted">/</span><span class="kbd">Ctrl</span>
         <span class="text-xs text-muted">+</span><span class="kbd">Enter</span>
       </span>
     </div>
-    <div class="flex items-center justify-between gap-4 rounded-xl border border-line bg-surface px-4 py-3 text-sm">
+    <div class="bento-cell flex items-center justify-between gap-4 px-4 py-3 text-sm">
       <span class="text-ink-soft">保存する</span>
       <span class="flex shrink-0 items-center gap-1">
         <span class="kbd">⌘</span><span class="text-xs text-muted">/</span><span class="kbd">Ctrl</span>
         <span class="text-xs text-muted">+</span><span class="kbd">S</span>
       </span>
     </div>
-    <div class="flex items-center justify-between gap-4 rounded-xl border border-line bg-surface px-4 py-3 text-sm">
+    <div class="bento-cell flex items-center justify-between gap-4 px-4 py-3 text-sm">
       <span class="text-ink-soft">インデントを入れる</span>
       <span class="flex shrink-0 items-center gap-1"><span class="kbd">Tab</span></span>
     </div>
@@ -116,8 +114,8 @@
 
 <section class="mt-8">
   <h2 class="text-xl font-medium tracking-tight text-ink">よくある質問</h2>
-  <div class="mt-3 space-y-2">
-    <details class="group card overflow-hidden">
+  <div class="bento mt-3">
+    <details class="group bento-cell">
       <summary class="flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-3 text-sm font-medium text-ink">
         コードはどこに保存されますか？
         <Icon name="chevron-down" size={16} className="shrink-0 text-muted transition-transform group-open:rotate-180" />
@@ -127,7 +125,7 @@
       </p>
     </details>
 
-    <details class="group card overflow-hidden">
+    <details class="group bento-cell">
       <summary class="flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-3 text-sm font-medium text-ink">
         環境の準備に失敗します
         <Icon name="chevron-down" size={16} className="shrink-0 text-muted transition-transform group-open:rotate-180" />
@@ -137,7 +135,7 @@
       </p>
     </details>
 
-    <details class="group card overflow-hidden">
+    <details class="group bento-cell">
       <summary class="flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-3 text-sm font-medium text-ink">
         コースを追加できますか？
         <Icon name="chevron-down" size={16} className="shrink-0 text-muted transition-transform group-open:rotate-180" />
@@ -147,7 +145,7 @@
       </p>
     </details>
 
-    <details class="group card overflow-hidden">
+    <details class="group bento-cell">
       <summary class="flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-3 text-sm font-medium text-ink">
         進捗をリセットしたい
         <Icon name="chevron-down" size={16} className="shrink-0 text-muted transition-transform group-open:rotate-180" />
