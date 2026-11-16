@@ -108,7 +108,7 @@
 
     window.addEventListener("keydown", onKeydown);
     if (resultOpen && window.matchMedia("(max-width: 1023px)").matches) {
-      requestAnimationFrame(() => resultPanel?.scrollIntoView({ block: "start" }));
+      requestAnimationFrame(() => resultPanel?.scrollIntoView({ block: "end" }));
     }
 
     return () => {
@@ -252,7 +252,7 @@
     </form>
 
     {#if resultOpen}
-      <div class="absolute inset-0 z-20">
+      <div class="absolute inset-0 z-20 overflow-hidden rounded-2xl">
         <button
           type="button"
           class="result-backdrop absolute inset-0 cursor-default rounded-2xl bg-black/45 backdrop-blur-[2px]"
@@ -267,7 +267,7 @@
           aria-modal="true"
           aria-labelledby="result-title"
           tabindex="-1"
-          class="result-drawer scroll-mt-56 absolute inset-x-1 top-1 flex max-h-[calc(100%-0.5rem)] flex-col overflow-hidden rounded-2xl border border-line bg-surface shadow-2xl focus:outline-none sm:inset-x-2 sm:top-2"
+          class="result-drawer absolute inset-x-0 bottom-0 flex max-h-full flex-col overflow-hidden rounded-t-2xl border-t border-line bg-surface shadow-[0_-12px_32px_-16px_rgba(0,0,0,0.5)] focus:outline-none"
         >
         {#if form?.error}
           <header class="flex items-center gap-2 border-b border-line px-4 py-2.5">
@@ -514,8 +514,8 @@
   }
 
   .result-drawer {
-    animation: result-drawer-in 240ms cubic-bezier(0.2, 0.8, 0.2, 1);
-    transform-origin: top;
+    animation: result-drawer-in 300ms cubic-bezier(0.16, 1, 0.3, 1);
+    transform-origin: bottom;
   }
 
   @keyframes result-fade-in {
@@ -530,7 +530,7 @@
   @keyframes result-drawer-in {
     from {
       opacity: 0;
-      transform: translateY(-12px) scale(0.98);
+      transform: translateY(100%);
     }
     to {
       opacity: 1;
