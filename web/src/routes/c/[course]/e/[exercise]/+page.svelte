@@ -136,10 +136,10 @@
 
 <div class="xl:flex xl:h-full xl:min-h-0 xl:flex-col">
 <div
-  class="mt-4 grid items-start gap-4 lg:grid-cols-[minmax(240px,280px)_minmax(0,1fr)] xl:min-h-0 xl:flex-1 xl:grid-cols-[minmax(240px,280px)_minmax(0,1fr)_minmax(280px,300px)] xl:items-stretch xl:gap-0 xl:overflow-hidden xl:rounded-xl xl:border xl:border-line xl:bg-surface"
+  class="mt-4 grid items-start gap-4 lg:grid-cols-[minmax(240px,280px)_minmax(0,1fr)] xl:mt-0 xl:min-h-0 xl:flex-1 xl:grid-cols-[minmax(240px,280px)_minmax(0,1fr)_minmax(280px,300px)] xl:items-stretch xl:gap-0"
 >
   <aside
-    class="overflow-hidden border border-line bg-surface xl:h-full xl:max-h-[calc(100vh-7rem)] xl:min-h-0 xl:overflow-y-auto xl:border-y-0 xl:border-l-0 xl:border-r"
+    class="overflow-hidden border border-line bg-surface xl:h-full xl:min-h-0 xl:overflow-y-auto xl:border-y-0 xl:border-l-0 xl:border-r xl:pl-4"
     aria-label="この演習の手順"
   >
     <div class="border-b border-line px-4 py-4">
@@ -491,7 +491,7 @@
 
 </div>
 
-<div class="mt-6 flex flex-wrap items-center gap-x-4 gap-y-3 xl:shrink-0">
+<div class="mt-6 flex flex-wrap items-center gap-x-4 gap-y-3 xl:mt-0 xl:shrink-0 xl:border-t xl:border-line xl:px-8 xl:py-3">
   <a href={data.slideHref} class="order-1 inline-flex min-h-9 items-center gap-1 text-xs font-medium text-ink-soft hover:text-ink">
     <Icon name="arrow-left" size={16} />
     スライドを見る
