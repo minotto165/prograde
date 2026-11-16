@@ -255,7 +255,7 @@
       <div class="absolute inset-0 z-20">
         <button
           type="button"
-          class="result-backdrop absolute inset-0 cursor-default bg-black/45 backdrop-blur-[2px]"
+          class="result-backdrop absolute inset-0 cursor-default rounded-2xl bg-black/45 backdrop-blur-[2px]"
           aria-label="結果を閉じる"
           onclick={() => (resultDismissed = true)}
         ></button>
