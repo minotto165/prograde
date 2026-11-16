@@ -24,6 +24,9 @@
   let referenceOverride = $state<typeof data.reference>(null);
   let reference = $derived(referenceOverride ?? data.reference);
   let referenceBusy = $state(false);
+  let resultDismissed = $state(false);
+  let resultOpen = $derived(Boolean(result || form?.error) && !resultDismissed);
+  let resultPanel: HTMLElement | undefined = $state();
   let saveState = $state<"idle" | "saving" | "saved" | "error">("idle");
   let saveTimer: ReturnType<typeof setTimeout> | undefined;
   let saveInFlight = false;
@@ -92,6 +95,11 @@
 
   onMount(() => {
     function onKeydown(event: KeyboardEvent) {
+      if (event.key === "Escape" && resultOpen) {
+        event.preventDefault();
+        resultDismissed = true;
+        return;
+      }
       if (!(event.metaKey || event.ctrlKey) || event.shiftKey || event.altKey) return;
       if (event.key.toLowerCase() !== "s") return;
       event.preventDefault();
@@ -99,16 +107,20 @@
     }
 
     window.addEventListener("keydown", onKeydown);
-    if (form?.outcome || form?.error) {
-      if (window.matchMedia("(max-width: 1279px)").matches) {
-        document.getElementById("result")?.scrollIntoView({ block: "start" });
-      }
+    if (resultOpen && window.matchMedia("(max-width: 1023px)").matches) {
+      requestAnimationFrame(() => resultPanel?.scrollIntoView({ block: "start" }));
     }
 
     return () => {
       window.removeEventListener("keydown", onKeydown);
       clearSaveTimer();
     };
+  });
+
+  $effect(() => {
+    if (!resultOpen || !resultPanel) return;
+    const panel = resultPanel;
+    requestAnimationFrame(() => panel.focus({ preventScroll: true }));
   });
 </script>
 
@@ -159,7 +171,7 @@
 
   </aside>
 
-  <div class="flex min-w-0 flex-col gap-4 xl:h-full xl:min-h-0">
+  <div class="relative flex min-w-0 flex-col gap-4 xl:h-full xl:min-h-0">
     <form
       id="exercise-form"
       method="POST"
@@ -183,6 +195,17 @@
           {/each}
         </div>
         <div class="flex shrink-0 items-center gap-2 px-2">
+          {#if result && !resultOpen}
+            <button
+              type="button"
+              onclick={() => (resultDismissed = false)}
+              class="flex shrink-0 items-center gap-1 rounded-lg px-2 py-1.5 text-xs text-white/60 transition-colors hover:bg-white/10 hover:text-white"
+              aria-label="判定を開く"
+            >
+              <Icon name={result.ok ? "check" : "x"} size={16} />
+              判定
+            </button>
+          {/if}
           <span
             class="mr-1 text-[11px] {saveState === 'error' ? 'text-danger-soft' : 'text-white/45'}"
             role="status"
@@ -228,20 +251,40 @@
 
     </form>
 
-    {#if result || form?.error}
-      <section
-        id="result"
-        class="result-drawer scroll-mt-28 shrink-0 overflow-hidden rounded-2xl border border-line bg-surface shadow-sm"
-        aria-live="polite"
-      >
+    {#if resultOpen}
+      <div class="absolute inset-0 z-20">
+        <button
+          type="button"
+          class="result-backdrop absolute inset-0 cursor-default bg-black/45 backdrop-blur-[2px]"
+          aria-label="結果を閉じる"
+          onclick={() => (resultDismissed = true)}
+        ></button>
+
+        <div
+          id="result"
+          bind:this={resultPanel}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="result-title"
+          tabindex="-1"
+          class="result-drawer scroll-mt-56 absolute inset-x-1 top-1 flex max-h-[calc(100%-0.5rem)] flex-col overflow-hidden rounded-2xl border border-line bg-surface shadow-2xl focus:outline-none sm:inset-x-2 sm:top-2"
+        >
         {#if form?.error}
           <header class="flex items-center gap-2 border-b border-line px-4 py-2.5">
             <span class="grid size-6 shrink-0 place-items-center rounded-full bg-danger-soft text-danger">
               <Icon name="x" size={16} />
             </span>
-            <h2 class="text-sm font-medium text-ink">実行できませんでした</h2>
+            <h2 id="result-title" class="text-sm font-medium text-ink">実行できませんでした</h2>
+            <button
+              type="button"
+              onclick={() => (resultDismissed = true)}
+              class="ml-auto grid size-8 shrink-0 place-items-center rounded-lg text-muted transition-colors hover:bg-surface-2 hover:text-ink"
+              aria-label="結果を閉じる"
+            >
+              <Icon name="x" size={16} />
+            </button>
           </header>
-          <div class="px-4 py-4">
+          <div class="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-4">
             <pre class="whitespace-pre-wrap break-words font-mono text-[11px] leading-relaxed text-ink-soft">{form.error}</pre>
             {#if form.remediation}
               <p class="mt-3 font-mono text-[11px] text-muted">準備手順</p>
@@ -253,7 +296,7 @@
             <span class="grid size-6 shrink-0 place-items-center rounded-full {result.ok ? 'bg-brand-soft text-brand-strong' : 'bg-danger-soft text-danger'}">
               <Icon name={result.ok ? "check" : "x"} size={16} />
             </span>
-            <h2 class="text-sm font-medium text-ink">{outcome?.kind === "grade" ? "判定" : "実行結果"}</h2>
+            <h2 id="result-title" class="text-sm font-medium text-ink">{outcome?.kind === "grade" ? "判定" : "実行結果"}</h2>
             {#if outcome?.kind === "grade"}
               <span class="text-xs font-medium {result.ok ? 'text-brand-strong' : 'text-danger'}">{result.ok ? "合格" : "不合格"}</span>
               <span class="font-mono text-xs text-muted">{passedCount} / {result.checks.length}</span>
@@ -261,9 +304,17 @@
             <span class="ml-auto font-mono text-[11px] text-muted">
               exit {result.exitCode ?? "—"} · {result.durationMs}ms{#if result.timedOut} · 時間切れ{/if}
             </span>
+            <button
+              type="button"
+              onclick={() => (resultDismissed = true)}
+              class="grid size-8 shrink-0 place-items-center rounded-lg text-muted transition-colors hover:bg-surface-2 hover:text-ink"
+              aria-label="結果を閉じる"
+            >
+              <Icon name="x" size={16} />
+            </button>
           </header>
 
-          <div class="max-h-[min(22rem,45vh)] overflow-y-auto px-4 py-4">
+          <div class="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-4">
             <div class="grid gap-4 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
               <div class="min-w-0">
                 {#if outcome?.kind === "grade"}
@@ -357,7 +408,8 @@
             </footer>
           {/if}
         {/if}
-      </section>
+        </div>
+      </div>
     {/if}
   </div>
 
@@ -457,25 +509,37 @@
 </div>
 </div>
 <style>
+  .result-backdrop {
+    animation: result-fade-in 180ms ease-out;
+  }
+
   .result-drawer {
     animation: result-drawer-in 240ms cubic-bezier(0.2, 0.8, 0.2, 1);
     transform-origin: top;
   }
 
+  @keyframes result-fade-in {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
   @keyframes result-drawer-in {
     from {
       opacity: 0;
-      transform: translateY(-10px) scaleY(0.96);
-      clip-path: inset(0 0 100% 0);
+      transform: translateY(-12px) scale(0.98);
     }
     to {
       opacity: 1;
       transform: none;
-      clip-path: inset(0);
     }
   }
 
   @media (prefers-reduced-motion: reduce) {
+    .result-backdrop,
     .result-drawer {
       animation: none;
     }
