@@ -1,5 +1,6 @@
 <script lang="ts">
   import { onMount } from "svelte";
+  import AgentPanel from "$lib/components/AgentPanel.svelte";
   import CodeEditor from "$lib/components/CodeEditor.svelte";
   import Icon from "$lib/components/Icon.svelte";
   import PageHead from "$lib/components/PageHead.svelte";
@@ -32,6 +33,7 @@
   let resultDismissed = $state(false);
   let resultOpen = $derived(Boolean(result || form?.error) && !resultDismissed);
   let resultPanel: HTMLElement | undefined = $state();
+  let agentOpen = $state(false);
   let saveState = $state<"idle" | "saving" | "saved" | "error">("idle");
   let saveTimer: ReturnType<typeof setTimeout> | undefined;
   let saveInFlight = false;
@@ -98,8 +100,26 @@
     return text.replace(/\r\n/g, "\n");
   }
 
+  /** 未保存の内容も含めて、いまエディタが持っているコードを返す。 */
+  function currentFiles() {
+    const form = document.getElementById("exercise-form");
+    return files.map((file) => {
+      let code = file.code;
+      if (form instanceof HTMLFormElement) {
+        const field = form.elements.namedItem(`file:${file.path}`);
+        if (field instanceof HTMLInputElement || field instanceof HTMLTextAreaElement) code = field.value;
+      }
+      return { path: file.path, language: file.language, code };
+    });
+  }
+
   onMount(() => {
     function onKeydown(event: KeyboardEvent) {
+      if (event.key === "Escape" && agentOpen) {
+        event.preventDefault();
+        agentOpen = false;
+        return;
+      }
       if (event.key === "Escape" && resultOpen) {
         event.preventDefault();
         resultDismissed = true;
@@ -503,16 +523,36 @@
     </span>
   </div>
   <button
+    type="button"
+    onclick={() => (agentOpen = true)}
+    class="order-2 ml-auto inline-flex min-h-9 shrink-0 items-center gap-1.5 rounded-lg border border-line bg-surface px-3 text-xs font-medium text-ink-soft transition-colors hover:bg-surface-2 hover:text-ink sm:order-3"
+    aria-expanded={agentOpen}
+    aria-controls="agent-panel"
+  >
+    <Icon name="sparkles" size={16} />
+    AI に聞く
+  </button>
+  <button
     type="submit"
     form="exercise-form"
     formaction="?/grade"
-    class="btn btn-primary order-2 ml-auto shrink-0 sm:order-3 sm:ml-3 sm:min-h-9"
+    class="btn btn-primary order-2 ml-2 shrink-0 sm:order-4 sm:ml-3 sm:min-h-9"
     title="採点する（⌘/Ctrl + Enter）"
   >
     できた！
   </button>
 </div>
 </div>
+
+{#key data.exerciseId}
+  <AgentPanel
+    open={agentOpen}
+    onclose={() => (agentOpen = false)}
+    courseId={data.courseId}
+    exerciseId={data.exerciseId}
+    readFiles={currentFiles}
+  />
+{/key}
 <style>
   .result-backdrop {
     animation: result-fade-in 180ms ease-out;

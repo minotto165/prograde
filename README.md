@@ -156,6 +156,33 @@ PIN は簡易な入口で、通信は暗号化されない。信頼できるネ�
 - データは既定で `~/.prograde/`。`--root` か `PROGRADE_ROOT` で別の場所を指せる。
 - `--open` で起動後にブラウザを開く。
 
+### 学習アシスタント
+
+演習画面の「AI に聞く」で右からパネルが開き、その演習のスライド・手順書・
+いま書いているコード（未保存を含む）を読んで答える。エージェントはサーバー側で動き、
+読み取り専用の4ツール（`get_context` / `read_section_slides` / `read_current_code` / `read_brief`）
+だけを持つ。シェルやファイルの書き換えは渡していない。
+
+OpenAI 互換のエンドポイントを環境変数で指定して起動する。未設定でも画面は動き、
+パネルには設定方法が出る。
+
+```bash
+PROGRADE_AGENT_BASE_URL=http://127.0.0.1:3000/v1 \
+PROGRADE_AGENT_MODEL=<モデル名> \
+bun bin/prograde.ts web
+```
+
+| 変数 | 内容 |
+| --- | --- |
+| `PROGRADE_AGENT_BASE_URL` | OpenAI 互換 API のベース URL（必須） |
+| `PROGRADE_AGENT_MODEL` | モデル名（必須） |
+| `PROGRADE_AGENT_API_KEY` | API キー（ローカルサーバーなら不要） |
+| `PROGRADE_AGENT_CONTEXT_WINDOW` | コンテキスト長（既定 128000） |
+| `PROGRADE_AGENT_MAX_TOKENS` | 最大出力トークン（既定 8192） |
+
+会話はサーバーのメモリに6時間だけ保持する。ブラウザを閉じても同じタブなら
+セッション ID を `sessionStorage` に残す。
+
 画面と操作:
 
 | パス | 内容 |
