@@ -27,6 +27,53 @@
   let referenceOverride = $state<typeof data.reference>(null);
   let reference = $derived(referenceOverride ?? data.reference);
   let referenceBusy = $state(false);
+  let saveState = $state<"idle" | "saving" | "saved" | "error">("idle");
+  let saveTimer: ReturnType<typeof setTimeout> | undefined;
+  let saveInFlight = false;
+  let saveQueued = false;
+
+  function clearSaveTimer() {
+    if (saveTimer !== undefined) clearTimeout(saveTimer);
+    saveTimer = undefined;
+  }
+
+  function flashSave(state: "saved" | "error") {
+    saveState = state;
+    clearSaveTimer();
+    saveTimer = setTimeout(() => {
+      saveState = "idle";
+      saveTimer = undefined;
+    }, 2000);
+  }
+
+  async function saveCode() {
+    if (saveInFlight) {
+      saveQueued = true;
+      return;
+    }
+    const form = document.getElementById("exercise-form");
+    if (!(form instanceof HTMLFormElement)) return;
+    saveInFlight = true;
+    saveState = "saving";
+    clearSaveTimer();
+    try {
+      const response = await fetch(
+        `/api/save/${encodeURIComponent(data.courseId)}/${encodeURIComponent(data.exerciseId)}`,
+        { method: "POST", body: new FormData(form), headers: { accept: "application/json" } },
+      );
+      if (!response.ok) throw new Error(`保存に失敗しました（${response.status}）`);
+      flashSave("saved");
+    } catch (error) {
+      console.error(error);
+      flashSave("error");
+    } finally {
+      saveInFlight = false;
+      if (saveQueued) {
+        saveQueued = false;
+        void saveCode();
+      }
+    }
+  }
 
   async function rerunReference() {
     if (referenceBusy) return;
@@ -47,10 +94,24 @@
   }
 
   onMount(() => {
-    if (!form?.outcome && !form?.error) return;
-    if (window.matchMedia("(max-width: 1279px)").matches) {
-      document.getElementById("result")?.scrollIntoView({ block: "start" });
+    function onKeydown(event: KeyboardEvent) {
+      if (!(event.metaKey || event.ctrlKey) || event.shiftKey || event.altKey) return;
+      if (event.key.toLowerCase() !== "s") return;
+      event.preventDefault();
+      void saveCode();
     }
+
+    window.addEventListener("keydown", onKeydown);
+    if (form?.outcome || form?.error) {
+      if (window.matchMedia("(max-width: 1279px)").matches) {
+        document.getElementById("result")?.scrollIntoView({ block: "start" });
+      }
+    }
+
+    return () => {
+      window.removeEventListener("keydown", onKeydown);
+      clearSaveTimer();
+    };
   });
 </script>
 
@@ -149,6 +210,13 @@
           {/each}
         </div>
         <div class="flex shrink-0 items-center gap-2 px-2">
+          <span
+            class="mr-1 text-[11px] {saveState === 'error' ? 'text-danger-soft' : 'text-white/45'}"
+            role="status"
+            aria-live="polite"
+          >
+            {#if saveState === "saving"}保存中…{:else if saveState === "saved"}保存しました{:else if saveState === "error"}保存できませんでした{/if}
+          </span>
           <button
             type="button"
             onclick={() => (resetArmed = true)}

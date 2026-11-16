@@ -21,7 +21,7 @@
   <article class="card p-5 sm:p-6">
     <h2 class="font-medium text-ink">演習を解く</h2>
     <p class="mt-2 text-sm leading-relaxed text-muted">
-      エディタにコードを書いて「できた！」を押します。ビルド・実行・結果の比較まで自動で走ります。途中経過は右上の実行ボタンで確認できます。書いたコードは自動で保存されます。
+      エディタにコードを書いて「できた！」を押します。ビルド・実行・結果の比較まで自動で走ります。途中経過は右上の実行ボタンで確認できます。書いたコードは「できた！」「実行」のほか、⌘/Ctrl + S でも保存できます。
     </p>
   </article>
 
@@ -92,12 +92,19 @@
 
 <section class="mt-8">
   <h2 class="text-xl font-medium tracking-tight text-ink">キーボード</h2>
-  <div class="mt-3 grid gap-2 sm:grid-cols-2">
+  <div class="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
     <div class="flex items-center justify-between gap-4 rounded-xl border border-line bg-surface px-4 py-3 text-sm">
       <span class="text-ink-soft">採点する（できた！）</span>
       <span class="flex shrink-0 items-center gap-1">
         <span class="kbd">⌘</span><span class="text-xs text-muted">/</span><span class="kbd">Ctrl</span>
         <span class="text-xs text-muted">+</span><span class="kbd">Enter</span>
+      </span>
+    </div>
+    <div class="flex items-center justify-between gap-4 rounded-xl border border-line bg-surface px-4 py-3 text-sm">
+      <span class="text-ink-soft">保存する</span>
+      <span class="flex shrink-0 items-center gap-1">
+        <span class="kbd">⌘</span><span class="text-xs text-muted">/</span><span class="kbd">Ctrl</span>
+        <span class="text-xs text-muted">+</span><span class="kbd">S</span>
       </span>
     </div>
     <div class="flex items-center justify-between gap-4 rounded-xl border border-line bg-surface px-4 py-3 text-sm">
@@ -116,7 +123,7 @@
         <Icon name="chevron-down" size={16} className="shrink-0 text-muted transition-transform group-open:rotate-180" />
       </summary>
       <p class="border-t border-line px-4 py-3 text-sm leading-relaxed text-muted">
-        演習ごとの作業ディレクトリに保存されます。「できた！」「実行」を押した時点で書き込まれます。ブラウザを閉じても、次に開いたときは続きから編集できます。
+        演習ごとの作業ディレクトリに保存されます。「できた！」「実行」または ⌘/Ctrl + S で書き込まれます。ブラウザを閉じても、次に開いたときは続きから編集できます。
       </p>
     </details>
 

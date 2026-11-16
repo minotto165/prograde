@@ -11,6 +11,6 @@ export { lessonPage } from "./pages/lesson.ts";
 export { sectionPage } from "./pages/section.ts";
 export { exercisePage } from "./pages/exercise.ts";
 export { referenceRunFor, type ReferenceRun } from "./reference.ts";
-export { submit, run, reset, type SubmitOutcome } from "./actions.ts";
+export { submit, run, save, reset, type SaveOutcome, type SubmitOutcome } from "./actions.ts";
 export { EnvError } from "../../../../src/core/errors.ts";
 export type { LoadedCourse } from "../../../../src/core/course.ts";

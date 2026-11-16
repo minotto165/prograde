@@ -5,6 +5,10 @@ import { readEditable, collectFiles } from "./files.ts";
 import { loadEntry } from "./queries.ts";
 import type { FileView } from "./view.ts";
 
+export interface SaveOutcome {
+  savedAt: string;
+}
+
 export interface SubmitOutcome {
   kind: "grade" | "run" | "reset";
   result: GradeResult | null;
@@ -39,6 +43,14 @@ export async function run(courseId: string, exerciseId: string, form: FormData):
     files: await readEditable(await ensureWorkspace(ctx, entry), entry),
     solved: false,
   };
+}
+
+/** 採点せずに、いま書いているコードだけを作業コピーへ保存する。 */
+export async function save(courseId: string, exerciseId: string, form: FormData): Promise<SaveOutcome> {
+  const { ctx, entry } = await loadEntry(courseId, exerciseId);
+  const files = collectFiles(form, entry);
+  await writeWorkspace(ctx, entry, files);
+  return { savedAt: new Date().toISOString() };
 }
 
 export async function reset(courseId: string, exerciseId: string): Promise<SubmitOutcome> {
