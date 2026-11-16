@@ -267,7 +267,7 @@
           aria-modal="true"
           aria-labelledby="result-title"
           tabindex="-1"
-          class="result-drawer absolute inset-x-0 bottom-0 flex max-h-full flex-col overflow-hidden rounded-t-2xl border-t border-line bg-surface shadow-[0_-12px_32px_-16px_rgba(0,0,0,0.5)] focus:outline-none"
+          class="result-drawer absolute inset-x-0 bottom-0 flex max-h-full flex-col overflow-hidden border-t border-line bg-surface shadow-[0_-12px_32px_-16px_rgba(0,0,0,0.5)] focus:outline-none"
         >
         {#if form?.error}
           <header class="flex items-center gap-2 border-b border-line px-4 py-2.5">
