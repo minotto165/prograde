@@ -21,8 +21,13 @@
       : 0,
   );
   let passedCount = $derived(result ? result.checks.filter((check) => check.ok).length : 0);
-  let referenceOverride = $state<typeof data.reference>(null);
-  let reference = $derived(referenceOverride ?? data.reference);
+  type Reference = NonNullable<typeof data.reference>;
+  let referenceOverride = $state<{ outcome: typeof outcome; value: Reference } | null>(null);
+  let reference = $derived(
+    referenceOverride && referenceOverride.outcome === outcome
+      ? referenceOverride.value
+      : (outcome?.reference ?? data.reference),
+  );
   let referenceBusy = $state(false);
   let resultDismissed = $state(false);
   let resultOpen = $derived(Boolean(result || form?.error) && !resultDismissed);
@@ -83,7 +88,7 @@
         `/api/reference/${encodeURIComponent(data.courseId)}/${encodeURIComponent(data.exerciseId)}?fresh=1`,
       );
       if (!response.ok) return;
-      referenceOverride = (await response.json()) as typeof data.reference;
+      referenceOverride = { outcome, value: (await response.json()) as Reference };
     } finally {
       referenceBusy = false;
     }
