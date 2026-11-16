@@ -230,9 +230,9 @@
   <div bind:this={listEl} class="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-4" aria-live="polite">
     {#if configured === false}
       <div class="rounded-xl border border-accent/25 bg-accent-soft/60 px-3 py-3">
-        <p class="text-sm font-medium text-accent">モデルが未設定です</p>
+        <p class="text-sm font-medium text-accent">エージェントが未設定です</p>
         <p class="mt-1 text-xs leading-relaxed text-ink-soft">
-          OpenAI 互換のエンドポイントを環境変数で指定して、サーバーを起動し直してください。
+          モデルと API キーを環境変数で指定して、サーバーを起動し直してください。
         </p>
         {#if configHint}
           <pre class="mt-2 whitespace-pre-wrap break-words font-mono text-[10px] leading-relaxed text-muted">{configHint}</pre>

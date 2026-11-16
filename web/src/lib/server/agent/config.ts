@@ -106,7 +106,7 @@ export function createAgentRuntime(config: AgentConfig): AgentRuntime {
 
 export function agentConfigHint(): string {
   return [
-    "エージェントのモデルが未設定です。",
+    "エージェントが未設定です。",
     "OpenAI 互換のエンドポイントを環境変数で指定してから起動してください。",
     "PROGRADE_AGENT_BASE_URL=http://127.0.0.1:3000/v1",
     "PROGRADE_AGENT_MODEL=<モデル名>",
