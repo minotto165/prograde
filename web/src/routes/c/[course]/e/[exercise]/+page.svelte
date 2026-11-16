@@ -136,13 +136,13 @@
 
 <div class="xl:flex xl:h-full xl:min-h-0 xl:flex-col">
 <div
-  class="mt-4 grid items-start gap-4 lg:grid-cols-[minmax(280px,320px)_minmax(0,1fr)] xl:min-h-0 xl:flex-1 xl:grid-cols-[minmax(280px,320px)_minmax(0,1fr)_minmax(320px,360px)] xl:items-stretch"
+  class="mt-4 grid items-start gap-4 lg:grid-cols-[minmax(240px,280px)_minmax(0,1fr)] xl:min-h-0 xl:flex-1 xl:grid-cols-[minmax(240px,280px)_minmax(0,1fr)_minmax(280px,300px)] xl:items-stretch xl:gap-0 xl:overflow-hidden xl:rounded-xl xl:border xl:border-line xl:bg-surface"
 >
   <aside
-    class="card overflow-hidden xl:max-h-[calc(100vh-7rem)] xl:self-start xl:overflow-y-auto"
+    class="overflow-hidden border border-line bg-surface xl:h-full xl:max-h-[calc(100vh-7rem)] xl:min-h-0 xl:overflow-y-auto xl:border-y-0 xl:border-l-0 xl:border-r"
     aria-label="この演習の手順"
   >
-    <div class="border-b border-line px-5 py-4">
+    <div class="border-b border-line px-4 py-4">
       <p class="meta-label">手順</p>
       {#if data.objective}
         <div class="mt-3 border-l-2 border-brand pl-3">
@@ -153,15 +153,15 @@
     </div>
 
     {#if data.briefHtml}
-      <div class="doc px-5 py-5 text-sm">
+      <div class="doc px-4 py-4 text-sm">
         {@html data.briefHtml}
       </div>
     {:else}
-      <p class="px-5 py-5 text-sm text-muted">この演習の手順はありません。</p>
+      <p class="px-4 py-4 text-sm text-muted">この演習の手順はありません。</p>
     {/if}
 
     {#if data.hints.length > 0}
-      <details class="group mx-5 mb-5 rounded-xl border border-accent/20 bg-accent-soft/60 px-4 py-3">
+      <details class="group mx-4 mb-4 rounded-xl border border-accent/20 bg-accent-soft/60 px-3 py-3">
         <summary class="flex cursor-pointer list-none items-center justify-between gap-2 text-xs font-medium text-accent">
           ヒント
           <Icon name="chevron-down" size={16} className="shrink-0 transition-transform group-open:rotate-180" />
@@ -176,12 +176,12 @@
 
   </aside>
 
-  <div class="relative flex min-w-0 flex-col gap-4 xl:h-full xl:min-h-0">
+  <div class="relative flex min-w-0 flex-col gap-4 xl:h-full xl:min-h-0 xl:border-r xl:border-line">
     <form
       id="exercise-form"
       method="POST"
       action="?/grade"
-      class="flex min-h-[440px] flex-col overflow-hidden rounded-2xl border border-white/10 bg-code shadow-sm sm:min-h-[520px] xl:min-h-0 xl:flex-1"
+      class="flex min-h-[440px] flex-col overflow-hidden rounded-2xl border border-white/10 bg-code shadow-sm sm:min-h-[520px] xl:min-h-0 xl:flex-1 xl:rounded-none xl:border-0 xl:shadow-none"
     >
       <div class="flex items-stretch border-b border-white/10 bg-white/[0.04]">
         <div class="flex min-w-0 flex-1 items-center gap-1 overflow-x-auto px-2 pt-2" role="group" aria-label="編集するファイル">
@@ -257,10 +257,10 @@
     </form>
 
     {#if resultOpen}
-      <div class="absolute inset-0 z-20 overflow-hidden rounded-2xl">
+      <div class="absolute inset-0 z-20 overflow-hidden rounded-2xl xl:rounded-none">
         <button
           type="button"
-          class="result-backdrop absolute inset-0 cursor-default rounded-2xl bg-black/45 backdrop-blur-[2px]"
+          class="result-backdrop absolute inset-0 cursor-default rounded-2xl bg-black/45 backdrop-blur-[2px] xl:rounded-none"
           aria-label="結果を閉じる"
           onclick={() => (resultDismissed = true)}
         ></button>
@@ -418,9 +418,9 @@
     {/if}
   </div>
 
-  <div class="flex min-h-0 flex-col gap-4 lg:col-start-2 lg:row-start-2 xl:col-start-3 xl:row-start-1 xl:h-full xl:overflow-y-auto">
+  <div class="flex min-h-0 flex-col overflow-hidden rounded-2xl border border-white/10 bg-code shadow-sm lg:col-start-2 lg:row-start-2 xl:col-start-3 xl:row-start-1 xl:h-full xl:rounded-none xl:border-0 xl:shadow-none">
     <section
-      class="flex min-h-[192px] max-h-[256px] flex-col overflow-hidden rounded-2xl border border-white/10 bg-code shadow-sm xl:min-h-0 xl:max-h-none xl:flex-1"
+      class="flex min-h-[192px] max-h-[256px] flex-col overflow-hidden border-b border-white/10 xl:min-h-0 xl:max-h-none xl:flex-1"
       aria-label="あなたの標準出力"
       aria-live="polite"
     >
@@ -456,7 +456,7 @@
     </section>
 
     <section
-      class="flex min-h-[192px] max-h-[256px] flex-col overflow-hidden rounded-2xl border border-white/10 bg-code shadow-sm xl:min-h-0 xl:max-h-none xl:flex-1"
+      class="flex min-h-[192px] max-h-[256px] flex-col overflow-hidden xl:min-h-0 xl:max-h-none xl:flex-1"
       aria-label="お手本の標準出力"
     >
       <header class="flex shrink-0 items-center justify-between gap-2 px-4 py-2.5">
