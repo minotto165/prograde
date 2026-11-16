@@ -43,6 +43,19 @@
     return `prograde-agent:${courseId}:${exerciseId}`;
   }
 
+  function newSessionId(): string {
+    if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+      return crypto.randomUUID().replaceAll("-", "").slice(0, 32);
+    }
+    const bytes = new Uint8Array(16);
+    if (typeof crypto !== "undefined" && typeof crypto.getRandomValues === "function") {
+      crypto.getRandomValues(bytes);
+    } else {
+      for (let i = 0; i < bytes.length; i += 1) bytes[i] = Math.floor(Math.random() * 256);
+    }
+    return Array.from(bytes, (value) => value.toString(16).padStart(2, "0")).join("");
+  }
+
   function ensureSession(): string {
     if (sessionId) return sessionId;
     let stored: string | null = null;
@@ -50,7 +63,7 @@
       stored = sessionStorage.getItem(sessionKey());
     } catch {}
     if (!stored) {
-      stored = crypto.randomUUID().replaceAll("-", "").slice(0, 32);
+      stored = newSessionId();
       try {
         sessionStorage.setItem(sessionKey(), stored);
       } catch {}
