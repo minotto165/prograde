@@ -614,10 +614,11 @@ export async function main(argv: string[]): Promise<void> {
     .option("--port <n>", "待ち受けポート（既定 4173）", "4173")
     .option("--host <addr>", "待ち受けるアドレス（既定 127.0.0.1）", "127.0.0.1")
     .option("--origin <url>", "公開 URL（未指定なら host から決める）")
+    .option("--pin", "6桁の PIN を生成して要求する（既定は不要）")
     .option("--open", "起動後にブラウザで開く")
     .action(
       async (
-        options: { port: string; host: string; origin?: string; open?: boolean },
+        options: { port: string; host: string; origin?: string; pin?: boolean; open?: boolean },
         command: Command,
       ) => {
         const globals = command.optsWithGlobals() as GlobalOptions;
@@ -626,6 +627,7 @@ export async function main(argv: string[]): Promise<void> {
           port: Number(options.port),
           origin: options.origin,
           root: globals.root,
+          pin: options.pin,
           open: options.open,
         });
       },

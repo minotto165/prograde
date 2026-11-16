@@ -134,7 +134,13 @@ bun bin/prograde.ts web --host 0.0.0.0
 ```
 
 起動時に LAN の IPv4 を検出し、`ORIGIN=http://<LAN IP>:<port>` を静的に設定して
-その URL を表示する。あわせて6桁の PIN を生成して表示し、ブラウザの最初のアクセスで入力を求める。
+その URL を表示する。既定では PIN なしで公開される。
+`--pin` を付けると6桁の PIN を生成して表示し、ブラウザの最初のアクセスで入力を求める。
+
+```bash
+bun bin/prograde.ts web --host 0.0.0.0 --pin
+```
+
 PIN は起動のたびに変わり、同じブラウザなら12時間は再入力なしで使える。
 `localhost` と LAN IP の両方からはフォームを送信できない（ORIGIN が1つだけのため）。
 

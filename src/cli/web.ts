@@ -161,6 +161,8 @@ export interface WebOptions {
   origin?: string;
   root?: string;
   open?: boolean;
+  /** 6桁の PIN を生成して要求する。既定は不要。 */
+  pin?: boolean;
 }
 
 /** web/build/index.js を子プロセスで起動し、終了コードを返す。 */
@@ -176,7 +178,7 @@ export async function runWeb(options: WebOptions): Promise<number> {
 
   const resolved = resolveWebOrigin({ host: options.host, port: options.port, origin: options.origin });
   const port = String(parsePort(options.port));
-  const pin = resolved.lan ? generatePin() : undefined;
+  const pin = options.pin ? generatePin() : undefined;
   const sessionSecret = pin ? randomBytes(32).toString("hex") : undefined;
   console.log(pc.dim("prograde web"));
   console.log("  " + pc.cyan(resolved.origin));
@@ -186,7 +188,14 @@ export async function runWeb(options: WebOptions): Promise<number> {
   }
   console.log("  " + pc.dim("データ: " + ctx.root));
   if (resolved.lan) {
-    console.log("  " + pc.yellow("LAN に公開しています。信頼できるネットワークだけで使ってください。"));
+    console.log(
+      "  " +
+        pc.yellow(
+          pin
+            ? "LAN に公開しています。信頼できるネットワークだけで使ってください。"
+            : "LAN に公開しています。PIN なしなので、同じネットワークの誰でもアクセスできます。",
+        ),
+    );
     console.log("  " + pc.dim("localhost からはフォームを送信できません（ORIGIN が LAN のアドレスのため）。"));
   }
   console.log("  " + pc.dim("停止: Ctrl+C"));
