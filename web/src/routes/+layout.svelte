@@ -1,5 +1,6 @@
 <script lang="ts">
   import "../app.css";
+  import Breadcrumb from "$lib/components/Breadcrumb.svelte";
   import Icon from "$lib/components/Icon.svelte";
   import { afterNavigate } from "$app/navigation";
   import { page } from "$app/stores";
@@ -13,6 +14,21 @@
   let narrow = $derived(!wide && path.includes("/ch/"));
   let coursesActive = $derived(path === "/" || path.startsWith("/c/"));
   let helpActive = $derived(path.startsWith("/help"));
+
+  type ExerciseHeader = {
+    courseId?: string;
+    courseLabel?: string;
+    lessonTitle?: string;
+    lessonHref?: string;
+    sectionTitle?: string;
+    sectionHref?: string;
+    title?: string;
+    position?: { index: number; total: number };
+    env?: string;
+    solved?: boolean;
+  };
+
+  let exercise = $derived(wide ? ($page.data as ExerciseHeader) : null);
 
   function navClass(active: boolean): string {
     return `rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
@@ -80,11 +96,39 @@
       ? "w-full px-4 sm:px-6 lg:px-8"
       : "mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8"}>
       <div class="flex min-h-16 w-full flex-wrap items-center gap-x-3 gap-y-2 py-2.5 {narrow ? 'mx-auto max-w-3xl' : ''}">
-        <a href="/" class="rounded-lg text-lg font-semibold tracking-tight text-ink" aria-label="prograde ホーム">
+        <a href="/" class="order-1 rounded-lg text-lg font-semibold tracking-tight text-ink" aria-label="prograde ホーム">
           prograde
         </a>
 
-        <nav class="ml-auto flex items-center gap-1" aria-label="メイン">
+        {#if exercise && exercise.title && exercise.courseId && exercise.courseLabel}
+          <div class="order-3 flex w-full min-w-0 flex-wrap items-center gap-x-3 gap-y-1 md:order-2 md:w-auto md:flex-1">
+            <Breadcrumb
+              items={[
+                { label: exercise.courseLabel, href: `/c/${exercise.courseId}` },
+                { label: exercise.lessonTitle, href: exercise.lessonHref },
+                { label: exercise.sectionTitle, href: exercise.sectionHref },
+              ]}
+            />
+            <span aria-hidden="true" class="hidden h-4 w-px shrink-0 bg-line lg:block"></span>
+            <h1 class="min-w-0 max-w-full truncate text-base font-medium leading-tight tracking-tight text-ink sm:text-lg">
+              {exercise.title}
+            </h1>
+            <div class="flex w-full flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted sm:ml-auto sm:w-auto">
+              {#if exercise.position}
+                <span class="font-mono">演習 {exercise.position.index} / {exercise.position.total}</span>
+              {/if}
+              {#if exercise.env}<span class="font-mono">{exercise.env}</span>{/if}
+              {#if exercise.solved}
+                <span class="inline-flex items-center text-brand-strong">
+                  <Icon name="check" size={16} />
+                  <span class="sr-only">合格済み</span>
+                </span>
+              {/if}
+            </div>
+          </div>
+        {/if}
+
+        <nav class="order-2 ml-auto flex items-center gap-1 md:order-3" aria-label="メイン">
           <a href="/" class={navClass(coursesActive)} aria-current={coursesActive ? "page" : undefined}>コース</a>
           <a href="/help" class={navClass(helpActive)} aria-current={helpActive ? "page" : undefined}>使い方</a>
           <button

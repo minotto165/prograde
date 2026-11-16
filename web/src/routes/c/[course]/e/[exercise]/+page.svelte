@@ -1,6 +1,5 @@
 <script lang="ts">
   import { onMount } from "svelte";
-  import Breadcrumb from "$lib/components/Breadcrumb.svelte";
   import CodeEditor from "$lib/components/CodeEditor.svelte";
   import Icon from "$lib/components/Icon.svelte";
   import PageHead from "$lib/components/PageHead.svelte";
@@ -11,13 +10,11 @@
   let outcome = $derived(form?.outcome ?? null);
   let files = $derived(outcome?.files ?? data.files);
   let result = $derived(outcome?.result ?? null);
-  let solved = $derived(Boolean(outcome?.solved || data.solved));
   let selectedPath = $state<string | null>(null);
   let resetArmed = $state(false);
   let activeIndex = $derived(
     selectedPath ? Math.max(0, files.findIndex((file) => file.path === selectedPath)) : 0,
   );
-  let lessonUrl = $derived(data.lessonHref);
   let progressPercent = $derived(
     data.lessonProgress.total > 0
       ? Math.round((data.lessonProgress.solved / data.lessonProgress.total) * 100)
@@ -121,30 +118,6 @@
 />
 
 <div class="xl:flex xl:h-full xl:min-h-0 xl:flex-col">
-<div class="flex flex-wrap items-center gap-x-4 gap-y-1">
-  <Breadcrumb
-    items={[
-      { label: data.courseLabel, href: `/c/${data.courseId}` },
-      { label: data.lessonTitle, href: lessonUrl },
-      { label: data.sectionTitle, href: data.sectionHref },
-    ]}
-  />
-  <div class="flex w-full flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted sm:ml-auto sm:w-auto">
-    <span class="font-mono">演習 {data.position.index} / {data.position.total}</span>
-    <span class="font-mono">{data.env}</span>
-    {#if solved}
-      <span class="inline-flex items-center text-brand-strong">
-        <Icon name="check" size={16} />
-        <span class="sr-only">合格済み</span>
-      </span>
-    {/if}
-  </div>
-</div>
-
-<h1 class="mt-3 text-xl font-medium leading-tight tracking-tight text-ink sm:text-2xl">
-  {data.title}
-</h1>
-
 <div
   class="mt-4 grid items-start gap-4 lg:grid-cols-[minmax(280px,320px)_minmax(0,1fr)] xl:min-h-0 xl:flex-1 xl:grid-cols-[minmax(280px,320px)_minmax(0,1fr)_minmax(320px,360px)] xl:items-stretch"
 >
