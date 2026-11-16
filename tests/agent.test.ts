@@ -65,6 +65,7 @@ describe("agent: 設定", () => {
     const config = readAgentConfig({
       PROGRADE_AGENT_BASE_URL: "https://opencode.ai/inference/go",
       PROGRADE_AGENT_MODEL: "deepseek-v4.1-flash",
+      PROGRADE_AGENT_API_KEY: "test-key",
     });
     expect(config?.baseUrl).toBe("https://opencode.ai/inference/go/openai/v1");
     expect(isOpenCodeGoBaseUrl(config!.baseUrl)).toBe(true);
@@ -74,8 +75,18 @@ describe("agent: 設定", () => {
     const config = readAgentConfig({
       PROGRADE_AGENT_BASE_URL: "https://opencode.ai/inference/go/openai/",
       PROGRADE_AGENT_MODEL: "deepseek-v4.1-flash",
+      PROGRADE_AGENT_API_KEY: "test-key",
     });
     expect(config?.baseUrl).toBe("https://opencode.ai/inference/go/openai/v1");
+  });
+
+  test("OpenCode Go は API キーが無いと未設定として扱う", () => {
+    expect(
+      readAgentConfig({
+        PROGRADE_AGENT_BASE_URL: "https://opencode.ai/inference/go",
+        PROGRADE_AGENT_MODEL: "deepseek-v4.1-flash",
+      }),
+    ).toBeNull();
   });
 
   test("OpenAI 互換のモデルを組み立てる", () => {

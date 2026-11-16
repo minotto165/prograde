@@ -53,8 +53,11 @@ export function readAgentConfig(env: Record<string, string | undefined> = proces
   const model = env.PROGRADE_AGENT_MODEL?.trim();
   if (!baseUrl || !model) return null;
   const apiKey = env.PROGRADE_AGENT_API_KEY?.trim();
+  const normalizedBaseUrl = cleanBaseUrl(baseUrl);
+  // OpenCode Go は認証必須。ダミーキーで送ると 401 になるだけなので未設定扱いにする。
+  if (isOpenCodeGoBaseUrl(normalizedBaseUrl) && !apiKey) return null;
   return {
-    baseUrl: cleanBaseUrl(baseUrl),
+    baseUrl: normalizedBaseUrl,
     model,
     // OpenAI 互換サーバーはキーを要求しないことが多いが、SDK 側は空を許さない。
     // 未指定ならダミーを渡し、実際の認証はサーバーに任せる。
@@ -107,6 +110,6 @@ export function agentConfigHint(): string {
     "OpenAI 互換のエンドポイントを環境変数で指定してから起動してください。",
     "PROGRADE_AGENT_BASE_URL=http://127.0.0.1:3000/v1",
     "PROGRADE_AGENT_MODEL=<モデル名>",
-    "必要なら PROGRADE_AGENT_API_KEY=<キー>",
+    "PROGRADE_AGENT_API_KEY=<キー>（OpenCode Go では必須）",
   ].join("\n");
 }
