@@ -315,7 +315,7 @@
           </header>
 
           <div class="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-4">
-            <div class="grid gap-4 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
+            <div class="space-y-4">
               <div class="min-w-0">
                 {#if outcome?.kind === "grade"}
                   <p class="text-sm leading-relaxed {result.ok ? 'font-medium text-brand-strong' : 'text-danger'}">{result.message}</p>
