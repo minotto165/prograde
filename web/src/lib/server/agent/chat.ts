@@ -1,5 +1,5 @@
 import { Agent, type AgentMessage } from "@earendil-works/pi-agent-core";
-import type { AgentRuntime } from "./config.ts";
+import { isOpenCodeGoBaseUrl, type AgentRuntime } from "./config.ts";
 import {
   AGENT_TOOL_LABELS,
   agentSystemPrompt,
@@ -55,6 +55,19 @@ export interface AgentStreamInput {
   signal?: AbortSignal;
 }
 
+/** OpenCode Go は会話ごとの安定したセッション ID と独自 UA を要求する。 */
+function streamOptions(input: AgentStreamInput, options: Parameters<AgentRuntime["models"]["streamSimple"]>[2]) {
+  if (!isOpenCodeGoBaseUrl(input.runtime.config.baseUrl)) return options;
+  return {
+    ...options,
+    headers: {
+      "user-agent": "prograde/0.1",
+      "x-opencode-session": input.sessionId,
+      ...options?.headers,
+    },
+  };
+}
+
 /** SSE で1ターン分の出来事を流す。テキストは差分、ツールは開始/終了だけを送る。 */
 export function createAgentStream(input: AgentStreamInput): ReadableStream<Uint8Array> {
   const encoder = new TextEncoder();
@@ -88,7 +101,8 @@ export function createAgentStream(input: AgentStreamInput): ReadableStream<Uint8
           // 失敗したターンで保存済みの履歴を壊さないよう、配列は複製して渡す。
           messages: [...history],
         },
-        streamFn: (model, context, options) => input.runtime.models.streamSimple(model, context, options),
+        streamFn: (model, context, options) =>
+          input.runtime.models.streamSimple(model, context, streamOptions(input, options)),
         sessionId: input.sessionId,
       });
 

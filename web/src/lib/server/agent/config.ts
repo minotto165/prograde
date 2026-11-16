@@ -31,8 +31,20 @@ function positiveInt(value: string | undefined, fallback: number): number {
   return Number.isSafeInteger(parsed) && parsed > 0 ? parsed : fallback;
 }
 
+const OPENCODE_GO_ROOT = "https://opencode.ai/inference/go";
+
+/** OpenCode Go のルート URL は chat completions のベースではない。 */
+export function isOpenCodeGoBaseUrl(baseUrl: string): boolean {
+  return baseUrl === OPENCODE_GO_ROOT || baseUrl.startsWith(OPENCODE_GO_ROOT + "/");
+}
+
 function cleanBaseUrl(value: string): string {
-  return value.trim().replace(/\/+$/, "");
+  const url = value.trim().replace(/\/+$/, "");
+  // OpenCode Go の API は /openai/v1 配下にしか生えていない。
+  // 案内されるルート URL をそのまま貼られても動くように補正する。
+  if (url === OPENCODE_GO_ROOT) return OPENCODE_GO_ROOT + "/openai/v1";
+  if (url === OPENCODE_GO_ROOT + "/openai") return OPENCODE_GO_ROOT + "/openai/v1";
+  return url;
 }
 
 /** 設定が無ければ null。モデル名や URL の妥当性はここでは見ない。 */

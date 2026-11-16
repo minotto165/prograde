@@ -2,6 +2,7 @@ import { describe, expect, test } from "bun:test";
 import {
   agentConfigHint,
   createAgentRuntime,
+  isOpenCodeGoBaseUrl,
   readAgentConfig,
 } from "../web/src/lib/server/agent/config.ts";
 import {
@@ -58,6 +59,23 @@ describe("agent: 設定", () => {
     const hint = agentConfigHint();
     expect(hint).toContain("PROGRADE_AGENT_BASE_URL");
     expect(hint).toContain("PROGRADE_AGENT_MODEL");
+  });
+
+  test("OpenCode Go のルート URL を chat completions のベースに補正する", () => {
+    const config = readAgentConfig({
+      PROGRADE_AGENT_BASE_URL: "https://opencode.ai/inference/go",
+      PROGRADE_AGENT_MODEL: "deepseek-v4.1-flash",
+    });
+    expect(config?.baseUrl).toBe("https://opencode.ai/inference/go/openai/v1");
+    expect(isOpenCodeGoBaseUrl(config!.baseUrl)).toBe(true);
+  });
+
+  test("OpenCode Go の /openai も /openai/v1 に補正する", () => {
+    const config = readAgentConfig({
+      PROGRADE_AGENT_BASE_URL: "https://opencode.ai/inference/go/openai/",
+      PROGRADE_AGENT_MODEL: "deepseek-v4.1-flash",
+    });
+    expect(config?.baseUrl).toBe("https://opencode.ai/inference/go/openai/v1");
   });
 
   test("OpenAI 互換のモデルを組み立てる", () => {

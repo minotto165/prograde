@@ -179,6 +179,11 @@ PROGRADE_AGENT_MODEL=<モデル名>
 bun bin/prograde.ts web
 ```
 
+OpenCode Go を使う場合、ベース URL は `https://opencode.ai/inference/go` のままでよい
+（chat completions 用の `/openai/v1` を自動で補う）。会話ごとの `x-opencode-session` と
+独自の User-Agent も送る。API キーは OpenCode Console で発行して
+`PROGRADE_AGENT_API_KEY` に置く。
+
 | 変数 | 内容 |
 | --- | --- |
 | `PROGRADE_AGENT_BASE_URL` | OpenAI 互換 API のベース URL（必須） |
