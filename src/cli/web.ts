@@ -1,4 +1,4 @@
-import { networkInterfaces } from "node:os";
+import { hostname as osHostname, networkInterfaces } from "node:os";
 import { isIP } from "node:net";
 import { randomBytes, randomInt } from "node:crypto";
 import { join } from "node:path";
@@ -18,6 +18,10 @@ export interface WebOriginInput {
   port: number;
   origin?: string;
   interfaces?: Record<string, readonly WebInterfaceInfo[] | undefined>;
+  /** mDNS のホスト名。省略すると OS のホスト名を使う。 */
+  hostname?: string;
+  /** テスト用。省略すると実行中のプラットフォームを使う。 */
+  platform?: NodeJS.Platform;
 }
 
 export interface WebOrigin {
@@ -103,9 +107,22 @@ export function parsePort(value: string | number): number {
 }
 
 /**
+ * mDNS で引ける名前を返す。macOS は <hostname>.local を広告している。
+ * 既に .local で終わる名前はそのまま使う（Linux の avahi など）。
+ */
+function mdnsHostname(hostname: string, platform: NodeJS.Platform): string | null {
+  const value = hostname.trim().replace(/\.$/, "");
+  if (!value) return null;
+  if (value.toLowerCase().endsWith(".local")) return value;
+  if (platform === "darwin") return value + ".local";
+  return null;
+}
+
+/**
  * SvelteKit の ORIGIN を決める。
  *
- * ループバックならそのホスト、0.0.0.0 / :: なら LAN の IPv4 を選ぶ。
+ * ループバックならそのホスト、0.0.0.0 / :: なら mDNS の <hostname>.local を選ぶ。
+ * .local が使えない環境では LAN の IPv4、それも無ければ 127.0.0.1 に落とす。
  * --origin が指定されたらそれを優先する。Host ヘッダーからは推測しない
  * （DNS リバインディングで任意のドメインを受け入れてしまうため）。
  */
@@ -120,14 +137,20 @@ export function resolveWebOrigin(input: WebOriginInput): WebOrigin {
     return { origin: normalizeOrigin(origin), lan, host };
   }
 
-  const candidates = detectLanIpv4(input.interfaces);
-  if (candidates.length === 0) {
-    throw new UserError(
-      "LAN の IPv4 アドレスが見つかりません。--origin http://<ホスト>:<ポート> で公開 URL を指定してください",
-    );
+  const hostname = input.hostname ?? osHostname();
+  const platform = input.platform ?? process.platform;
+  const mdns = mdnsHostname(hostname, platform);
+  if (mdns) {
+    return { origin: normalizeOrigin("http://" + mdns + ":" + port), lan: true, host };
   }
-  const address = candidates[0];
-  return { origin: "http://" + address + ":" + port, lan: true, host };
+
+  const address = detectLanIpv4(input.interfaces)[0];
+  if (address) {
+    return { origin: "http://" + address + ":" + port, lan: true, host };
+  }
+
+  // ネットワークが無くても起動できるよう、最後はループバックに落とす。
+  return { origin: "http://127.0.0.1:" + port, lan: true, host };
 }
 
 /** 6桁の PIN。先頭の 0 を落とさない。 */
@@ -196,7 +219,7 @@ export async function runWeb(options: WebOptions): Promise<number> {
             : "LAN に公開しています。PIN なしなので、同じネットワークの誰でもアクセスできます。",
         ),
     );
-    console.log("  " + pc.dim("localhost からはフォームを送信できません（ORIGIN が LAN のアドレスのため）。"));
+    console.log("  " + pc.dim("表示された URL を Mac でも他端末でも使ってください（localhost は別の Origin です）。"));
   }
   console.log("  " + pc.dim("停止: Ctrl+C"));
 

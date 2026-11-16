@@ -44,10 +44,37 @@ describe("web: ORIGIN の決定", () => {
     expect(resolveWebOrigin({ host: "::1", port: 4173 }).origin).toBe("http://[::1]:4173");
   });
 
-  test("0.0.0.0 は LAN の IPv4 を静的 ORIGIN にする", () => {
-    const resolved = resolveWebOrigin({ host: "0.0.0.0", port: 4173, interfaces });
-    expect(resolved.origin).toBe("http://192.168.1.20:4173");
+  test("0.0.0.0 は mDNS の <hostname>.local を ORIGIN にする", () => {
+    const resolved = resolveWebOrigin({
+      host: "0.0.0.0",
+      port: 4173,
+      interfaces,
+      hostname: "macbook-pro.local",
+      platform: "darwin",
+    });
+    expect(resolved.origin).toBe("http://macbook-pro.local:4173");
     expect(resolved.lan).toBe(true);
+  });
+
+  test(".local が無いホスト名には macOS で .local を付ける", () => {
+    const resolved = resolveWebOrigin({
+      host: "0.0.0.0",
+      port: 4173,
+      hostname: "macbook-pro",
+      platform: "darwin",
+    });
+    expect(resolved.origin).toBe("http://macbook-pro.local:4173");
+  });
+
+  test("macOS 以外で .local が無ければ LAN の IPv4 に落とす", () => {
+    const resolved = resolveWebOrigin({
+      host: "0.0.0.0",
+      port: 4173,
+      interfaces,
+      hostname: "linuxbox",
+      platform: "linux",
+    });
+    expect(resolved.origin).toBe("http://192.168.1.20:4173");
   });
 
   test("特定の非ループバック IP はそのまま使う", () => {
@@ -67,9 +94,26 @@ describe("web: ORIGIN の決定", () => {
     expect(resolved.lan).toBe(false);
   });
 
-  test("LAN の候補が無ければ --origin を促す", () => {
-    expect(() => resolveWebOrigin({ host: "0.0.0.0", port: 4173, interfaces: {} })).toThrow(UserError);
-    expect(() => resolveWebOrigin({ host: "0.0.0.0", port: 4173, interfaces: {} })).toThrow("--origin");
+  test("ネットワークが無くても .local で起動できる", () => {
+    const resolved = resolveWebOrigin({
+      host: "0.0.0.0",
+      port: 4173,
+      interfaces: {},
+      hostname: "macbook-pro.local",
+      platform: "darwin",
+    });
+    expect(resolved.origin).toBe("http://macbook-pro.local:4173");
+  });
+
+  test("ホスト名も LAN も無ければ 127.0.0.1 に落とす", () => {
+    const resolved = resolveWebOrigin({
+      host: "0.0.0.0",
+      port: 4173,
+      interfaces: {},
+      hostname: "",
+      platform: "darwin",
+    });
+    expect(resolved.origin).toBe("http://127.0.0.1:4173");
   });
 
   test("origin の scheme・パス・認証情報を検査する", () => {

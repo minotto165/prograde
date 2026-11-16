@@ -612,7 +612,7 @@ export async function main(argv: string[]): Promise<void> {
     .command("web")
     .description("Web UI を起動する")
     .option("--port <n>", "待ち受けポート（既定 4173）", "4173")
-    .option("--host <addr>", "待ち受けるアドレス（既定 127.0.0.1）", "127.0.0.1")
+    .option("--host <addr>", "待ち受けるアドレス（既定 0.0.0.0）", "0.0.0.0")
     .option("--origin <url>", "公開 URL（未指定なら host から決める）")
     .option("--pin", "6桁の PIN を生成して要求する（既定は不要）")
     .option("--open", "起動後にブラウザで開く")

@@ -124,25 +124,31 @@ cd web && bun run build
 bun bin/prograde.ts web
 ```
 
-既定は `http://127.0.0.1:4173`。`--port` で変えられる。`ORIGIN` は起動時に決まり、
-`--origin` で上書きできる。
+既定は `http://<hostname>.local:4173`（例: `http://macbook-pro.local:4173`）。
+`--port` で変えられる。`ORIGIN` は起動時に決まり、`--origin` で上書きできる。
 
-LAN に公開するとき:
+既定で `0.0.0.0` を待ち受けるので、同じ LAN の他端末からも開ける。
+`<hostname>.local` は mDNS の名前で、Mac 自身では 127.0.0.1、同じ LAN の他端末では
+LAN IP に解決される。Wi-Fi が無くても Mac ではそのまま使える。
+他端末が mDNS を引けない場合は `--origin http://<LAN IP>:4173` を明示し、Mac も同じ URL で開く。
+
+ローカル専用にするとき:
 
 ```bash
-bun bin/prograde.ts web --host 0.0.0.0
+bun bin/prograde.ts web --host 127.0.0.1
 ```
 
-起動時に LAN の IPv4 を検出し、`ORIGIN=http://<LAN IP>:<port>` を静的に設定して
-その URL を表示する。既定では PIN なしで公開される。
-`--pin` を付けると6桁の PIN を生成して表示し、ブラウザの最初のアクセスで入力を求める。
+`localhost` は別の Origin になるので、表示された URL を Mac でも他端末でも使う。
+`localhost` からはフォーム（採点・リセット・PIN 解錠）を送信できない。
+
+既定では PIN なしで公開される。`--pin` を付けると6桁の PIN を生成して表示し、
+ブラウザの最初のアクセスで入力を求める。
 
 ```bash
-bun bin/prograde.ts web --host 0.0.0.0 --pin
+bun bin/prograde.ts web --pin
 ```
 
 PIN は起動のたびに変わり、同じブラウザなら12時間は再入力なしで使える。
-`localhost` と LAN IP の両方からはフォームを送信できない（ORIGIN が1つだけのため）。
 
 PIN は簡易な入口で、通信は暗号化されない。信頼できるネットワークだけで使う。
 
