@@ -262,6 +262,22 @@
   color: var(--color-ink-soft);
 }
 
+.doc blockquote > :first-child,
+.doc li > :first-child {
+  margin-top: 0;
+}
+
+.doc blockquote > :last-child,
+.doc li > :last-child {
+  margin-bottom: 0;
+}
+
+.doc img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 0.5rem;
+}
+
 .doc hr {
   margin: 1.5rem 0;
   border-color: var(--color-line);

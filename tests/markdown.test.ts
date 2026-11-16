@@ -3,7 +3,7 @@ import { escapeHtml, renderMarkdown } from "../web/src/lib/markdown.ts";
 
 const BT = String.fromCharCode(96);
 
-describe("markdown: 教材向けの最小レンダラ", () => {
+describe("markdown: 教材向けの Markdown レンダラ", () => {
   test("HTML をエスケープする", () => {
     expect(escapeHtml('<a href="x">&</a>')).toBe("&lt;a href=&quot;x&quot;&gt;&amp;&lt;/a&gt;");
   });
@@ -43,5 +43,34 @@ describe("markdown: 教材向けの最小レンダラ", () => {
     const html = renderMarkdown("<script>alert(1)</script>");
     expect(html).not.toContain("<script>");
     expect(html).toContain("&lt;script&gt;");
+  });
+
+  test("表とネストしたリストを扱える", () => {
+    const html = renderMarkdown("| a | b |\n| - | - |\n| 1 | 2 |\n\n- 親\n  - 子");
+    expect(html).toContain("<table>");
+    expect(html).toContain("<th>a</th>");
+    expect(html).toContain("<td>2</td>");
+    expect(html).toContain("<ul>\n<li>親<ul>");
+  });
+
+  test("相対リンクは同じタブ、外部リンクは新しいタブで開く", () => {
+    const html = renderMarkdown("[内部](/help) [外部](https://example.com)");
+    expect(html).toContain('<a href="/help">内部</a>');
+    expect(html).toContain('<a href="https://example.com" target="_blank" rel="noreferrer">外部</a>');
+  });
+
+  test("危険なスキームのリンクは文字だけ残す", () => {
+    const html = renderMarkdown("[危険](javascript:alert(1)) [データ](data:text/html,x)");
+    expect(html).not.toContain("javascript:");
+    expect(html).not.toContain("data:text/html");
+    expect(html).toContain("危険");
+    expect(html).toContain("データ");
+  });
+
+  test("画像は安全な URL だけ表示する", () => {
+    const html = renderMarkdown("![図](https://example.com/a.png) ![危険](javascript:alert(1))");
+    expect(html).toContain('<img src="https://example.com/a.png" alt="図" loading="lazy">');
+    expect(html).not.toContain("javascript:");
+    expect(html).toContain("危険");
   });
 });
