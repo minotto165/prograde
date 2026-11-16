@@ -133,6 +133,14 @@ export const AGENT_TOOL_LABELS: Record<string, string> = {
   read_brief: "手順書を読んでいます",
 };
 
+/** 履歴に残すときの短い名前。進行中の表示には AGENT_TOOL_LABELS を使う。 */
+export const AGENT_TOOL_TITLES: Record<string, string> = {
+  get_context: "演習の状況",
+  read_section_slides: "スライド",
+  read_current_code: "コード",
+  read_brief: "手順書",
+};
+
 /** 読み取り専用の4ツール。ファイルシステムやシェルは渡さない。 */
 export function createAgentTools(context: AgentExerciseContext, files: AgentFile[]): AgentTool<any>[] {
   return [

@@ -99,9 +99,3 @@ async function readHead(path: string, limit: number): Promise<string> {
   return buf.subarray(0, limit).toString("utf8");
 }
 
-export function stripAnsi(s: string): string {
-  // CSI シーケンス + OSC シーケンス
-  return s
-    .replace(/\u001b\[[0-9;?]*[ -/]*[@-~]/g, "")
-    .replace(/\u001b\][^\u0007]*\u0007/g, "");
-}

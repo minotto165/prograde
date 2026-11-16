@@ -54,7 +54,7 @@ describe("course: データだけでコースを読む", () => {
       id: "l1-e01",
       files: [{ path: "../escape.sh", text: "echo bad\n", editable: true }],
     });
-    await expect(scratchCourse(files, "escape")).rejects.toThrow(/files\.0\.path/);
+    await expect(scratchCourse(files, "escape")).rejects.toThrow(/files\[0\]\.path/);
   });
 
   test("レッスン・章・セクションをまたいで演習の順序を保つ", async () => {

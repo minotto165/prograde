@@ -2,7 +2,7 @@ import { describe, expect, it } from "bun:test";
 import { mkdtemp } from "node:fs/promises";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
-import { exec, stripAnsi } from "../src/core/runner.ts";
+import { exec } from "../src/core/runner.ts";
 
 async function tempCwd(): Promise<string> {
   return mkdtemp(join(tmpdir(), "prograde-runner-"));
@@ -50,8 +50,3 @@ describe("exec", () => {
   });
 });
 
-describe("stripAnsi", () => {
-  it("色コードを落とす", () => {
-    expect(stripAnsi("\u001b[31merror\u001b[0m")).toBe("error");
-  });
-});

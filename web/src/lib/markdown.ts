@@ -1,10 +1,7 @@
 import { Marked } from "marked";
+import escapeHtml from "escape-html";
 
-const ESCAPES: Record<string, string> = { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" };
-
-export function escapeHtml(text: string): string {
-  return text.replace(/[&<>"]/g, (ch) => ESCAPES[ch]);
-}
+export { escapeHtml };
 
 /** 教材から外部へ飛ばしてよい URL だけを通す。相対リンクとアンカーはそのまま許可する。 */
 function safeHref(href: string): string | null {

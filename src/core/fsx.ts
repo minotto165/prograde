@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { mkdir, readFile, rename, unlink, open, stat, cp, rm } from "node:fs/promises";
+import { mkdir, readFile, rename, unlink, open, stat, rm } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { homedir, hostname } from "node:os";
 import { randomBytes } from "node:crypto";
@@ -13,11 +13,7 @@ export function expandHome(p: string): string {
 }
 
 function describeZodIssues(path: string, error: z.ZodError): string {
-  const issues = error.issues.map((issue) => {
-    const where = issue.path.length > 0 ? issue.path.join(".") : "(root)";
-    return where + ": " + issue.message;
-  });
-  return path + ": " + issues.join(" / ");
+  return path + ":\n" + z.prettifyError(error);
 }
 
 export async function readJson<T>(path: string, schema: z.ZodType<T>): Promise<T> {
@@ -188,13 +184,3 @@ export async function removeDir(path: string): Promise<void> {
   await rm(path, { recursive: true, force: true });
 }
 
-/** src の中身を dest に上書きコピーする（dest/src-name ではなく中身を展開する）。 */
-export async function copyDir(src: string, dest: string): Promise<void> {
-  await mkdir(dest, { recursive: true });
-  for await (const entry of new Bun.Glob("**/*").scan({ cwd: src, onlyFiles: true })) {
-    const from = join(src, entry);
-    const to = join(dest, entry);
-    await mkdir(dirname(to), { recursive: true });
-    await cp(from, to, { force: true });
-  }
-}

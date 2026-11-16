@@ -2,9 +2,12 @@
   import { onMount } from "svelte";
   import { v4 as uuidv4 } from "uuid";
   import Icon from "$lib/components/Icon.svelte";
+  import { renderMarkdown } from "$lib/markdown";
 
   type ChatFile = { path: string; language: string; code: string };
-  type ChatMessage = { role: "user" | "assistant"; text: string };
+  type ToolState = "running" | "done" | "error";
+  type ToolRun = { id: string; name: string; title: string; state: ToolState };
+  type ChatMessage = { role: "user" | "assistant"; text: string; tools: ToolRun[] };
 
   let {
     open = false,
@@ -77,8 +80,8 @@
     if (!message || busy) return;
     error = null;
     draft = "";
-    messages.push({ role: "user", text: message });
-    messages.push({ role: "assistant", text: "" });
+    messages.push({ role: "user", text: message, tools: [] });
+    messages.push({ role: "assistant", text: "", tools: [] });
     const answer = messages[messages.length - 1];
     busy = true;
     controller = new AbortController();
@@ -134,8 +137,25 @@
               answer.text += payload.delta;
               requestAnimationFrame(scrollToBottom);
             } else if (payload.type === "tool") {
-              if (payload.phase === "start") toolLabel = String(payload.label ?? "教材を読んでいます");
-              else if (payload.phase === "end") toolLabel = "";
+              const id = String(payload.id ?? payload.name ?? "");
+              const name = String(payload.name ?? "");
+              const title = String(payload.title ?? payload.label ?? name ?? "ツール");
+              const existing = answer.tools.find((tool) => tool.id === id);
+              if (payload.phase === "start") {
+                if (existing) {
+                  existing.state = "running";
+                  existing.title = title;
+                } else {
+                  answer.tools.push({ id, name, title, state: "running" });
+                }
+                toolLabel = String(payload.label ?? title);
+              } else if (payload.phase === "end") {
+                const state: ToolState = payload.isError ? "error" : "done";
+                if (existing) existing.state = state;
+                else answer.tools.push({ id, name, title, state });
+                toolLabel = "";
+              }
+              requestAnimationFrame(scrollToBottom);
             } else if (payload.type === "error") {
               error = String(payload.message ?? "応答を得られませんでした。");
               toolLabel = "";
@@ -144,17 +164,17 @@
           boundary = buffer.indexOf("\n\n");
         }
       }
-      if (!answer.text && !error) {
+      if (!answer.text && answer.tools.length === 0 && !error) {
         messages.pop();
         error = "応答がありませんでした。";
       }
     } catch (cause) {
       toolLabel = "";
       if (controller.signal.aborted) {
-        if (!answer.text) messages.pop();
+        if (!answer.text && answer.tools.length === 0) messages.pop();
       } else {
         error = cause instanceof Error ? cause.message : String(cause);
-        if (!answer.text) messages.pop();
+        if (!answer.text && answer.tools.length === 0) messages.pop();
         if (configured === false) configHint = error;
       }
     } finally {
@@ -262,9 +282,28 @@
           <div class="ml-8 rounded-2xl rounded-br-md bg-brand-soft px-3 py-2 text-sm leading-relaxed text-ink">
             <p class="whitespace-pre-wrap break-words">{message.text}</p>
           </div>
-        {:else if message.text}
+        {:else if message.text || message.tools.length > 0}
           <div class="mr-2 rounded-2xl rounded-bl-md border border-line bg-surface-2 px-3 py-2 text-sm leading-relaxed text-ink-soft">
-            <p class="whitespace-pre-wrap break-words">{message.text}</p>
+            {#if message.text}
+              <div class="chat-md">{@html renderMarkdown(message.text)}</div>
+            {/if}
+            {#if message.tools.length > 0}
+              <div class={message.text ? "mt-2 space-y-1 border-t border-line pt-2" : "space-y-1"}>
+                {#each message.tools as tool (tool.id)}
+                  <div class="flex items-start gap-1.5 text-[11px] leading-5 text-muted">
+                    {#if tool.state === "running"}
+                      <span class="mt-1.5 size-1.5 shrink-0 animate-pulse rounded-full bg-brand"></span>
+                    {:else if tool.state === "error"}
+                      <Icon name="x" size={12} className="mt-0.5 shrink-0 text-danger" />
+                    {:else}
+                      <Icon name="check" size={12} className="mt-0.5 shrink-0 text-brand" />
+                    {/if}
+                    <span class="min-w-0 break-words">{tool.title}</span>
+                    {#if tool.state === "error"}<span class="text-danger">失敗</span>{/if}
+                  </div>
+                {/each}
+              </div>
+            {/if}
           </div>
         {/if}
       {/each}

@@ -5,6 +5,8 @@
  * どの言語のどのツールかはコース側の設定が決める。
  */
 
+import { isDeepStrictEqual } from "node:util";
+
 export type Severity = "error" | "warning" | "note";
 
 export interface Diagnostic {
@@ -174,24 +176,7 @@ export function parseJsonl(spec: JsonlSpec, text: string, phase: "provision" | "
   return out;
 }
 
-export function deepEqual(a: unknown, b: unknown): boolean {
-  if (a === b) return true;
-  if (typeof a !== typeof b) return false;
-  if (a === null || b === null) return false;
-  if (Array.isArray(a) && Array.isArray(b)) {
-    if (a.length !== b.length) return false;
-    return a.every((item, i) => deepEqual(item, b[i]));
-  }
-  if (typeof a === "object" && typeof b === "object") {
-    const ak = Object.keys(a as object).sort();
-    const bk = Object.keys(b as object).sort();
-    if (ak.length !== bk.length || !ak.every((k, i) => k === bk[i])) return false;
-    return ak.every((k) =>
-      deepEqual((a as Record<string, unknown>)[k], (b as Record<string, unknown>)[k]),
-    );
-  }
-  return false;
-}
+export const deepEqual = isDeepStrictEqual;
 
 export function formatDiagnostics(list: Diagnostic[], limit = 10): string {
   const shown = list.slice(0, limit);

@@ -2,6 +2,7 @@ import { Agent, type AgentMessage } from "@earendil-works/pi-agent-core";
 import { isOpenCodeGoBaseUrl, type AgentRuntime } from "./config.ts";
 import {
   AGENT_TOOL_LABELS,
+  AGENT_TOOL_TITLES,
   agentSystemPrompt,
   createAgentTools,
   type AgentExerciseContext,
@@ -140,8 +141,10 @@ export function createAgentStream(input: AgentStreamInput): ReadableStream<Uint8
           send({
             type: "tool",
             phase: "start",
+            id: event.toolCallId,
             name: event.toolName,
             label: AGENT_TOOL_LABELS[event.toolName] ?? event.toolName,
+            title: AGENT_TOOL_TITLES[event.toolName] ?? event.toolName,
           });
           return;
         }
@@ -149,8 +152,10 @@ export function createAgentStream(input: AgentStreamInput): ReadableStream<Uint8
           send({
             type: "tool",
             phase: "end",
+            id: event.toolCallId,
             name: event.toolName,
             label: AGENT_TOOL_LABELS[event.toolName] ?? event.toolName,
+            title: AGENT_TOOL_TITLES[event.toolName] ?? event.toolName,
             isError: event.isError,
           });
         }
