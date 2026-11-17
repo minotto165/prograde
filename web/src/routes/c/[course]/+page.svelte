@@ -38,9 +38,9 @@
     <span class="text-xs tabular-nums text-muted">{data.lessons.length} レッスン</span>
   </div>
 
-  <ol class="bento mt-4">
+  <ol class="mt-4 grid gap-3">
     {#each data.lessons as lesson, index (lesson.id)}
-      <li class="bento-cell p-5 sm:p-6">
+      <li class="card p-5">
         <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-x-4">
           <div class="min-w-0 flex-1">
             <div class="flex flex-wrap items-center gap-x-2 gap-y-1">
