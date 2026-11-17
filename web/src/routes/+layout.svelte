@@ -151,7 +151,7 @@
       id="main"
       tabindex="-1"
       class={wide
-        ? "w-full flex-1 px-4 py-5 sm:px-6 lg:px-8 xl:h-full xl:min-h-0"
+        ? "w-full flex-1 xl:h-full xl:min-h-0"
         : "mx-auto w-full max-w-6xl flex-1 px-4 py-8 sm:px-6 sm:py-10 lg:px-8"}
     >
       {@render children()}
