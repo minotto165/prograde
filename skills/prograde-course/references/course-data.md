@@ -10,7 +10,6 @@
 tracks/<courseId>/
   course.json
   content/<lessonId>/
-    quiz.json                        任意
     chapters/<chapterId>/
       sections/<sectionId>/
         slides/01.md
@@ -76,7 +75,7 @@ tracks/<courseId>/
 
 ローダーは次を検査する。
 
-- レッスン直下は `chapters/` と `quiz.json` だけ。他のファイルやディレクトリはエラー。
+- レッスン直下は `chapters/` だけ。他のファイルやディレクトリはエラー。
 - 章直下は `sections/` だけ。
 - セクション直下は `slides/` と `ex/` だけ。
 - `ex/` 直下は演習ディレクトリがちょうど 1 つ。ファイルは置けない。
@@ -272,33 +271,9 @@ JSON の一部を確認:
 - `parse: "regex"` は `pattern` 必須。名前付きグループ `file`、`line`、`column`、`endLine`、`endColumn`、`severity`、`code`、`message` を使える。
 - `parse: "jsonl"` は 1 行 1 JSON。`map` は「フィールド → JSON Pointer」。`filter` で対象行を絞れる。
 
-## quiz.json（任意）
+## クイズ（休止中）
 
-レッスン直下の `quiz.json`。CLI のクイズで使う。Web のレッスン画面には出ない。
-
-```json
-{
-  "questions": [
-    {
-      "id": "q1",
-      "prompt": "文字列を表示する関数はどれ？",
-      "options": [
-        { "id": "a", "text": "print" },
-        { "id": "b", "text": "input" }
-      ],
-      "answers": ["a"],
-      "multiple": false,
-      "explanation": "print は標準出力に書き出します。"
-    }
-  ]
-}
-```
-
-- `options` は 2 つ以上。
-- `answers` は `options[].id` を指す。1 つ以上。
-- `multiple` が `false` のとき、`answers` は 1 つだけ。
-- 問題 ID の重複はロードエラー。
-- `explanation` は任意。
+クイズは現在休止中。レッスン直下に `quiz.json` を置かない。置くとロードエラーになる。復活させるまで、クイズの生成・採点は行わない。
 
 ## エラーの読み方
 

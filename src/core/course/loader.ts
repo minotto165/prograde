@@ -26,6 +26,12 @@ import type {
 const ENV_NAME = /^[a-z0-9][a-z0-9_-]*$/;
 const SLIDE_FILE = /^(\d{2})(?:[-_].+)?\.md$/;
 
+/**
+ * クイズは現在休止中。復活させるときは true に戻し、スキルと README の記述、
+ * CLI の quiz コマンドを Git の履歴から戻す。
+ */
+const QUIZ_ENABLED = false;
+
 function fail(courseId: string, message: string): never {
   throw new DataError("course " + courseId + ": " + message);
 }
@@ -262,7 +268,11 @@ export async function loadCourse(ctx: Ctx, id: string): Promise<LoadedCourse> {
 
     const chaptersDir = join(lessonDir, "chapters");
     await expectDirs(id, chaptersDir, lessonRel + "/chapters", ref.chapters.map((chapter) => chapter.id));
-    const quiz = await readJsonIfExists(join(lessonDir, "quiz.json"), QuizSchema);
+    const quizPath = join(lessonDir, "quiz.json");
+    if (!QUIZ_ENABLED && (await pathExists(quizPath))) {
+      fail(id, "レッスン " + ref.id + " の quiz.json は現在休止中です。クイズを復活させるまで置かないでください");
+    }
+    const quiz = QUIZ_ENABLED ? await readJsonIfExists(quizPath, QuizSchema) : null;
     if (quiz) validateQuiz(id, ref.id, quiz);
     const chapters: LoadedChapter[] = [];
     const lessonExercises: ExerciseEntry[] = [];

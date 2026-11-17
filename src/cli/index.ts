@@ -21,7 +21,6 @@ import { ensureWorkspace, editableFiles, resetWorkspace } from "../core/attempt.
 import { readProgress, recordAttempt, recordReset } from "../core/progress.ts";
 import { selftest } from "../core/selftest.ts";
 import { lint } from "../core/lint.ts";
-import { gradeQuiz } from "../core/quiz.ts";
 import { pathExists } from "../core/fsx.ts";
 import { runWeb } from "./web.ts";
 
@@ -33,10 +32,6 @@ interface GlobalOptions {
 
 function printJson(value: unknown): void {
   console.log(JSON.stringify(value));
-}
-
-function collect(value: string, previous: string[]): string[] {
-  return [...previous, value];
 }
 
 function ctxOf(command: Command): Ctx {
@@ -386,60 +381,6 @@ export async function main(argv: string[]): Promise<void> {
 
       },
     );
-
-  program
-    .command("quiz")
-    .argument("<lessonId>", "レッスン ID")
-    .description("振り返りクイズを表示・採点する")
-    .option("--answer <spec>", "回答（例: q1=a または q1=a,c。複数回指定可）", collect, [] as string[])
-    .option("--all", "すべての問題と答えを表示")
-    .action(async (lessonId: string, options: { answer: string[]; all?: boolean }, command: Command) => {
-      const { course } = await courseOf(command);
-      const globalOptions = command.optsWithGlobals() as GlobalOptions;
-      const lesson = findLesson(course, lessonId);
-      const quiz = lesson.quiz;
-      if (!quiz) throw new UserError(lessonId + ": クイズがありません");
-
-      const chosen = new Map<string, string[]>();
-      for (const spec of options.answer) {
-        const at = spec.indexOf("=");
-        if (at <= 0) throw new UserError("--answer の形式が不正です: " + spec);
-        const questionId = spec.slice(0, at).trim();
-        const ids = spec.slice(at + 1).split(",").map((value) => value.trim()).filter(Boolean);
-        chosen.set(questionId, ids);
-      }
-
-      if (chosen.size === 0) {
-        if (globalOptions.json) return printJson({ lesson: lessonId, quiz });
-        for (const [index, question] of quiz.questions.entries()) {
-          console.log(
-            pc.bold("Q" + (index + 1) + ". " + question.prompt) +
-              (question.multiple ? pc.dim("  （複数選択）") : ""),
-          );
-          for (const option of question.options) console.log("  " + option.id + ") " + option.text);
-          if (options.all) {
-            console.log("  " + pc.green("答え: " + question.answers.join(",")));
-            if (question.explanation) console.log("  " + pc.dim(question.explanation));
-          }
-          console.log("");
-        }
-        console.log(pc.dim("回答: prograde quiz " + lessonId + " --answer q1=a"));
-        return;
-      }
-
-      const graded = gradeQuiz(quiz, chosen);
-      if (globalOptions.json) return printJson({ lesson: lessonId, failed: graded.failed, results: graded.results });
-      for (const question of quiz.questions) {
-        const result = graded.results.find((item) => item.id === question.id)!;
-        console.log((result.ok ? pc.green("✓ ") : pc.red("× ")) + question.id + "  " + question.prompt);
-        if (!result.ok) {
-          console.log("  " + pc.dim("答え: " + question.answers.join(",")));
-          if (question.explanation) console.log("  " + pc.dim(question.explanation));
-        }
-      }
-      console.log(graded.ok ? pc.green("全問正解") : pc.yellow(graded.failed + " 問不正解"));
-      if (!graded.ok) process.exitCode = 1;
-    });
 
   program
     .command("open")

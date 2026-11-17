@@ -33,7 +33,6 @@ Prograde のチェックアウトは通常 `/Users/minotto/dev/prograde`。別�
 - 言語・実行環境（Python、Rust、JavaScript、SQL など）
 - 対象者と前提知識
 - 規模（レッスン数、章数、セクション数）
-- 振り返りクイズを付けるか
 
 既存コースを拡張する場合は、先に `bun bin/prograde.ts -c <course> list` と `bun bin/prograde.ts -c <course> lesson <lessonId>` で現在の ID と並びを確認する。**既存のコース ID・演習 ID は進捗のキーなので変えない。**
 
@@ -168,6 +167,6 @@ bun bin/prograde.ts -c <courseId> selftest
 
 ## 参照資料
 
-- `references/course-data.md`: ディレクトリ、`course.json`、`exercise.json`、環境、観測、判定、クイズの正確な形。
+- `references/course-data.md`: ディレクトリ、`course.json`、`exercise.json`、環境、観測、判定の正確な形。
 - `references/authoring.md`: カリキュラム、スライド、課題文、ヒント、採点パターン、アンチパターン。
 - `references/verification.md`: 検証コマンド、失敗の読み方、スモークテスト、進捗衛生。

@@ -40,6 +40,24 @@ describe("course: データだけでコースを読む", () => {
     expect(aliases.get("result")?.kind).toBe("file");
   });
 
+  test("休止中のクイズは読み込みを拒否する", async () => {
+    const files = basicCourseFiles("quiz-off", ["l1-e01"]);
+    files["content/l1/quiz.json"] = JSON.stringify({
+      questions: [
+        {
+          id: "q1",
+          prompt: "どれ？",
+          options: [
+            { id: "a", text: "A" },
+            { id: "b", text: "B" },
+          ],
+          answers: ["a"],
+        },
+      ],
+    });
+    await expect(scratchCourse(files, "quiz-off")).rejects.toThrow(/休止中/);
+  });
+
   test("コースが2つあるときは指定を要求する", async () => {
     const ctx = await tempCtx();
     await writeCourse(ctx.root, "alpha", basicCourseFiles("alpha", ["l1-e01"]));

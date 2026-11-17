@@ -19,7 +19,6 @@ bun bin/prograde.ts -c python-basics list
 bun bin/prograde.ts -c python-basics lesson basics
 bun bin/prograde.ts -c python-basics lesson basics --chapter pyb-01 --section greeting --slide 1
 bun bin/prograde.ts -c python-basics lesson basics --json
-bun bin/prograde.ts -c python-basics quiz basics --answer q1=a
 bun bin/prograde.ts -c python-basics open pyb-01-e01
 bun bin/prograde.ts -c python-basics check pyb-01-e01
 bun bin/prograde.ts -c python-basics check pyb-01-e01 --files main.py helper.py
@@ -43,7 +42,6 @@ timeout は不合格扱い。
 tracks/<courseId>/
   course.json                 # id, label, ext, envs, lessons[].chapters[].sections[]
   content/<lessonId>/
-    quiz.json                 # 振り返りクイズ（任意）
     chapters/<chapterId>/
       sections/<sectionId>/
         slides/NN.md          # ページ送り教材（1枚=1ファイル、番号順）
@@ -215,7 +213,6 @@ OpenCode Go を使う場合、ベース URL は `https://opencode.ai/inference/g
 - 「実行だけ」は判定を表示せず、終了コードと出力だけを見せる（履歴には記録しない）。
 - 提出したコードは作業コピーに保存されるので、次に開くと続きから書ける。「できた！」「実行」のほか、⌘/Ctrl + S でも保存できる。「雛形に戻す」で初期状態に戻る。エディタは CodeMirror で、入力中にキーワード・組み込み関数・同じファイルの変数を補完候補に出す。
 - コース > レッスン > 章 > セクション > スライド / 演習 の5階層。セクションは1枚以上の `slides/NN.md` と1つの演習を持ち、スライドを番号順に1ページずつ表示して最後に演習へ進む。
-- クイズの回答は保存しない（何度でも試せる）。
 - SSR のみで、クライアント JS が無くてもフォームが動く。CLI と同じ `src/core` を共有する。
 
 ## 開発
