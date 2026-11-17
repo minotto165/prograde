@@ -1,4 +1,5 @@
 <script lang="ts">
+  import "katex/dist/katex.min.css";
   import "../app.css";
   import Breadcrumb from "$lib/components/Breadcrumb.svelte";
   import Icon from "$lib/components/Icon.svelte";

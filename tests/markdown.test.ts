@@ -73,4 +73,50 @@ describe("markdown: 教材向けの Markdown レンダラ", () => {
     expect(html).not.toContain("javascript:");
     expect(html).toContain("危険");
   });
+
+  test("インライン数式を KaTeX で描画する", () => {
+    const html = renderMarkdown("式は $a^2 + b^2$ です。");
+    expect(html).toContain('<span class="katex">');
+    expect(html).toContain("<math");
+    expect(html).not.toContain("$a^2");
+  });
+
+  test("日本語の句読点や助詞が数式の直後でも描画する", () => {
+    const html = renderMarkdown("分数は $\\frac{1}{2}$、助詞は $x$は です。");
+    expect(html).toContain('<span class="katex">');
+    expect(html).not.toContain("\\frac{1}{2}$、");
+    expect(html).not.toContain("$x$は");
+  });
+
+  test("開き括弧の直後の数式も描画する", () => {
+    const html = renderMarkdown("（$x + 1$）");
+    expect(html).toContain('<span class="katex">');
+  });
+
+  test("別行の数式を display mode で描画する", () => {
+    const html = renderMarkdown("$$\n\\frac{1}{2}\n$$");
+    expect(html).toContain('<span class="katex-display">');
+    expect(html).toContain("\\frac{1}{2}");
+  });
+
+  test("コードの中のドル記号は数式にしない", () => {
+    const src = "インライン " + BT + "$x$" + BT + " と\n\n" + BT + BT + BT + "text\n$y$\n" + BT + BT + BT;
+    const html = renderMarkdown(src);
+    expect(html).toContain("<code>$x$</code>");
+    expect(html).toContain("$y$");
+    expect(html).not.toContain('class="katex"');
+  });
+
+  test("数式の構文エラーでも本文を壊さない", () => {
+    const html = renderMarkdown("前 $\\notacommand{x}$ 後");
+    expect(html).toContain("前");
+    expect(html).toContain("後");
+    expect(html).toContain("notacommand");
+  });
+
+  test("通貨のドル記号を数式と誤認しない", () => {
+    const html = renderMarkdown("$5 and $10");
+    expect(html).toContain("$5 and $10");
+    expect(html).not.toContain('class="katex"');
+  });
 });

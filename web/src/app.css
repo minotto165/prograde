@@ -357,6 +357,18 @@
   margin-bottom: 0;
 }
 
+.doc .katex,
+.chat-md .katex {
+  color: var(--color-ink);
+}
+
+.doc .katex-display,
+.chat-md .katex-display {
+  margin: 1rem 0;
+  overflow-x: auto;
+  padding: 0.15rem 0;
+}
+
 .doc img {
   max-width: 100%;
   height: auto;

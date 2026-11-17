@@ -1,4 +1,5 @@
 import { Marked } from "marked";
+import { katexExtension } from "./markdown-katex";
 import escapeHtml from "escape-html";
 
 export { escapeHtml };
@@ -53,6 +54,8 @@ const markdown = new Marked({
     },
   },
 });
+
+markdown.use(katexExtension());
 
 /** 教材向けの Markdown。見た目は app.css の .doc がタグ単位で整える。 */
 export function renderMarkdown(source: string): string {
