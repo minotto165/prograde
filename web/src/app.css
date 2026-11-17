@@ -115,6 +115,7 @@
   }
 
   .bento-exercise {
+    border: 0;
     grid-template-areas: "guide" "code" "your" "ref" "footer";
     grid-template-columns: minmax(0, 1fr);
   }
