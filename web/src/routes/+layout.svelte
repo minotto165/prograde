@@ -13,7 +13,6 @@
   let wide = $derived(path.includes("/e/"));
   let narrow = $derived(!wide && path.includes("/ch/"));
   let coursesActive = $derived(path === "/" || path.startsWith("/c/"));
-  let helpActive = $derived(path.startsWith("/help"));
 
   type ExerciseHeader = {
     courseId?: string;
@@ -23,12 +22,25 @@
     sectionTitle?: string;
     sectionHref?: string;
     title?: string;
-    position?: { index: number; total: number };
-    env?: string;
-    solved?: boolean;
   };
 
   let exercise = $derived(wide ? ($page.data as ExerciseHeader) : null);
+
+  let exerciseCrumbs = $derived.by(() => {
+    if (!exercise) return [];
+    const items: { label: string; href?: string }[] = [];
+    if (exercise.courseLabel && exercise.courseId) {
+      items.push({ label: exercise.courseLabel, href: `/c/${exercise.courseId}` });
+    }
+    if (exercise.lessonTitle) {
+      items.push({ label: exercise.lessonTitle, href: exercise.lessonHref });
+    }
+    if (exercise.sectionTitle && exercise.sectionTitle !== exercise.title) {
+      items.push({ label: exercise.sectionTitle, href: exercise.sectionHref });
+    }
+    if (exercise.title) items.push({ label: exercise.title });
+    return items;
+  });
 
   function navClass(active: boolean): string {
     return `rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
@@ -90,6 +102,19 @@
 
 <a class="skip-link" href="#main">本文へスキップ</a>
 
+{#snippet themeToggle()}
+  <button
+    type="button"
+    onclick={toggleTheme}
+    class="grid size-9 place-items-center rounded-lg text-ink-soft transition-colors hover:bg-surface-2 hover:text-ink"
+    aria-label="表示テーマを切り替える"
+    title="ライト／ダークを切り替える"
+  >
+    <Icon name="moon" size={16} className="dark:hidden" />
+    <Icon name="sun" size={16} className="hidden dark:block" />
+  </button>
+{/snippet}
+
 <div class="flex min-h-screen flex-col lg:h-dvh lg:overflow-hidden">
   <header class="sticky top-0 z-20 shrink-0 border-b border-line/80 bg-canvas/85 backdrop-blur">
     <div class={wide
@@ -102,46 +127,20 @@
 
         {#if exercise && exercise.title && exercise.courseId && exercise.courseLabel}
           <div class="order-3 flex w-full min-w-0 flex-wrap items-center gap-x-3 gap-y-1 md:order-2 md:w-auto md:flex-1">
-            <Breadcrumb
-              items={[
-                { label: exercise.courseLabel, href: `/c/${exercise.courseId}` },
-                { label: exercise.lessonTitle, href: exercise.lessonHref },
-                { label: exercise.sectionTitle, href: exercise.sectionHref },
-              ]}
-            />
-            <span aria-hidden="true" class="hidden h-4 w-px shrink-0 bg-line lg:block"></span>
-            <h1 class="min-w-0 max-w-full truncate text-base font-medium leading-tight tracking-tight text-ink sm:text-lg">
-              {exercise.title}
-            </h1>
-            <div class="flex w-full flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted sm:ml-auto sm:w-auto">
-              {#if exercise.position}
-                <span class="font-mono">演習 {exercise.position.index} / {exercise.position.total}</span>
-              {/if}
-              {#if exercise.env}<span class="font-mono">{exercise.env}</span>{/if}
-              {#if exercise.solved}
-                <span class="inline-flex items-center text-brand-strong">
-                  <Icon name="check" size={16} />
-                  <span class="sr-only">合格済み</span>
-                </span>
-              {/if}
-            </div>
+            <Breadcrumb items={exerciseCrumbs} />
           </div>
         {/if}
 
-        <nav class="order-2 ml-auto flex items-center gap-1 md:order-3" aria-label="メイン">
-          <a href="/" class={navClass(coursesActive)} aria-current={coursesActive ? "page" : undefined}>コース</a>
-          <a href="/help" class={navClass(helpActive)} aria-current={helpActive ? "page" : undefined}>使い方</a>
-          <button
-            type="button"
-            onclick={toggleTheme}
-            class="grid size-9 place-items-center rounded-lg text-ink-soft transition-colors hover:bg-surface-2 hover:text-ink"
-            aria-label="表示テーマを切り替える"
-            title="ライト／ダークを切り替える"
-          >
-            <Icon name="moon" size={16} className="dark:hidden" />
-            <Icon name="sun" size={16} className="hidden dark:block" />
-          </button>
-        </nav>
+        {#if wide}
+          <div class="order-2 ml-auto flex items-center gap-1 md:order-3">
+            {@render themeToggle()}
+          </div>
+        {:else}
+          <nav class="order-2 ml-auto flex items-center gap-1 md:order-3" aria-label="メイン">
+            <a href="/" class={navClass(coursesActive)} aria-current={coursesActive ? "page" : undefined}>コース</a>
+            {@render themeToggle()}
+          </nav>
+        {/if}
       </div>
     </div>
   </header>

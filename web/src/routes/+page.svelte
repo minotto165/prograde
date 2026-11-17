@@ -68,7 +68,6 @@
       <p class="mt-1 text-sm text-muted">
         データルートの <code class="rounded bg-surface px-1.5 py-0.5 font-mono text-xs">tracks/</code> にコースを追加してください。
       </p>
-      <a href="/help" class="btn btn-secondary mt-4">コースの追加方法を見る</a>
     </li>
   {/each}
 </ul>

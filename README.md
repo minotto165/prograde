@@ -200,7 +200,6 @@ OpenCode Go を使う場合、ベース URL は `https://opencode.ai/inference/g
 | パス | 内容 |
 | --- | --- |
 | `/` | コース一覧と全体進捗、続きから解く導線 |
-| `/help` | 使い方と採点の仕組み |
 | `/unlock` | PIN の入力（LAN 公開時のみ） |
 | `/c/<course>` | レッスン一覧と進捗 |
 | `/c/<course>/l/<lesson>` | 章とセクションの一覧、レッスン全体の進捗 |

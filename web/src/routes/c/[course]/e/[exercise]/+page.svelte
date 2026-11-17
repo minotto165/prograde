@@ -154,6 +154,8 @@
   description={`${data.lessonTitle} の演習。${data.objective || "コードを書いて実行結果で確かめます。"}`}
 />
 
+<h1 class="sr-only">{data.title}</h1>
+
 <div class="bento bento-dark bento-exercise xl:h-full xl:min-h-0">
   <aside
     class="bento-cell bento-area-guide xl:min-h-0 xl:overflow-y-auto"
