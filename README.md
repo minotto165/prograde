@@ -1,64 +1,81 @@
 # prograde
 
-ローカル完結のプログラミング練習プラットフォーム。コースはデータ、採点は実行結果だけを見る。
+ローカル完結のプログラミング練習プラットフォーム。教材はデータ、採点は実行結果だけを見る。
 
-## 何をするものか
+- `check` はビルドと実行を行い、終了コード・標準出力・ファイルだけで合否を返す。
+- 教材・環境・判定は `tracks/<courseId>/` に書く。エンジンは言語を知らない。
+- スライドと課題文は Markdown。数式は KaTeX で描画する。
+- 進捗は `~/.prograde/state/history.jsonl` への追記が真実。
+- CLI でも Web でも学べる。
 
-- 演習を解いて `prograde check` すると、ビルドして実行して、結果（終了コード・標準出力・ファイル）だけで合否を返す。
-- 教材・環境・判定はすべてコースのデータ（`tracks/<id>/`）に書く。エンジンは言語を知らない。
-- スライドと課題文の Markdown は KaTeX の数式に対応する。
-- 進捗は `state/history.jsonl` への追記が真実。`state/progress.json` はいつでも作り直せる投影。
-- コース（`tracks/`）と進捗（`state/`）はホームの `~/.prograde/` に置く。リポジトリには含めない。
-- データの場所は `--root` > `PROGRADE_ROOT` > `~/.prograde` の順で決まる。
-
-## 使い方
+## 使う
 
 ```bash
 bun bin/prograde.ts courses
-bun bin/prograde.ts -c python-basics list
-bun bin/prograde.ts -c python-basics lesson basics
-bun bin/prograde.ts -c python-basics lesson basics --chapter pyb-01 --section greeting --slide 1
-bun bin/prograde.ts -c python-basics lesson basics --json
-bun bin/prograde.ts -c python-basics open pyb-01-e01
-bun bin/prograde.ts -c python-basics check pyb-01-e01
-bun bin/prograde.ts -c python-basics check pyb-01-e01 --files main.py helper.py
-bun bin/prograde.ts -c python-basics hint pyb-01-e01 --all
-bun bin/prograde.ts -c python-basics status
-bun bin/prograde.ts -c python-basics selftest
-bun bin/prograde.ts -c python-basics lint
+bun bin/prograde.ts -c <course> list
+bun bin/prograde.ts -c <course> open <exId>
+bun bin/prograde.ts -c <course> check <exId>
+bun bin/prograde.ts -c <course> status
+```
+
+| コマンド | 用途 |
+| --- | --- |
+| `list` | レッスン・章・セクション・演習の一覧 |
+| `lesson` | スライドと演習の表示 |
+| `open` | 作業コピーを用意する |
+| `check` | 採点する |
+| `run` | 採点せずに実行する |
+| `hint` | ヒントを表示する |
+| `reset` | 作業コピーを雛形に戻す |
+| `selftest` | 全演習の模範解答を採点する |
+| `lint` | 教材データを検査する |
+| `status` | 進捗を表示する |
+| `web` | Web UI を起動する |
+
+データの場所は `--root` > `PROGRADE_ROOT` > `~/.prograde` の順で決まる。
+
+終了コードは 0 合格 / 1 不合格 / 2 データ・使い方の誤り / 3 環境が用意できない / 4 内部エラー。timeout は不合格。
+
+## Web
+
+```bash
+cd web && bun run build
 bun bin/prograde.ts web
 ```
 
-上の例は、`~/.prograde/tracks/python-basics` を置いている場合（`--root` で別の場所も指定できる）。
+既定では `http://<hostname>.local:4173` で待ち受け、同じ LAN の他端末からも開ける。ローカル専用なら `--host 127.0.0.1`、入口に PIN を付けるなら `--pin`。
 
-終了コード: 0 合格 / 1 不合格 / 2 データ・使い方の誤り / 3 環境が用意できない / 4 内部エラー。
-timeout は不合格扱い。
+演習画面の「AI に聞く」を使うときは、リポジトリ直下の `.env` に OpenAI 互換 API を設定する。
 
-## コースの書き方
+```bash
+PROGRADE_AGENT_BASE_URL=http://127.0.0.1:3000/v1
+PROGRADE_AGENT_MODEL=<model>
+# 必要なら
+# PROGRADE_AGENT_API_KEY=<key>
+```
+
+## コースを作る
 
 1コース = 1ディレクトリ。
 
 ```
 tracks/<courseId>/
-  course.json                 # id, label, ext, envs, lessons[].chapters[].sections[]
+  course.json
   content/<lessonId>/
-    chapters/<chapterId>/
-      sections/<sectionId>/
-        slides/NN.md          # ページ送り教材（1枚=1ファイル、番号順）
-        ex/<exId>/            # セクションにちょうど1つ
-          exercise.json       # 環境・ファイル・実行・観測・判定
-          brief.md            # 課題文
-          starter.<ext>       # 雛形（files[].from）
-          solution/<path>     # 模範解答（selftest が使う）
-          fixtures/           # 擬似ツールなど（任意）
+    chapters/<chapterId>/sections/<sectionId>/
+      slides/NN.md
+      ex/<exId>/
+        exercise.json
+        brief.md
+        starter.<ext>
+        solution/<path>
+        fixtures/
 ```
 
-スライドと `brief.md` は Markdown。数式は `$...$`（インライン）と `$$...$$`（別行）で KaTeX として描画する。開始の `$` は行頭・空白・開き括弧の直後に置き、終了の `$` の直前は空白にしない。終了直後には日本語の助詞や句読点も置ける。
-
-コース > レッスン > 章 > セクション > スライド / 演習 の5階層。`course.json` が唯一の索引で、
-ディレクトリの過不足は読み込み時にエラーになる。セクションは1枚以上のスライドと1つの演習を持つ。
-
-`exercise.json` の骨格:
+- `course.json` が唯一の索引。ディレクトリの過不足は読み込み時にエラーになる。
+- コース > レッスン > 章 > セクション > スライド / 演習 の5階層。
+- 1セクション = 1枚以上のスライド + 1つの演習。
+- `exercise.json` に環境・ファイル・実行手順・観測点・判定を書く。
 
 ```json
 {
@@ -71,158 +88,18 @@ tracks/<courseId>/
   "judge": [
     { "on": "exit", "match": "equals", "value": 0 },
     { "on": "out", "match": "exact", "value": "42\n" }
-  ],
-  "xp": 10,
-  "hints": ["print(42)"]
+  ]
 }
 ```
 
-- 実行は `build` → `run` の2段。失敗した段で止まる。
-- 観測は `exit` / `stdout` / `stderr` / `file` / `exists`。
-- 判定は `exact` / `contains` / `regex` / `equals` / `json` / `count`。
-- プレースホルダ: `{src}`（編集ファイル。1つのときだけ）`{work}` `{course}` `{cache}` `{ext}`。
-
-### 環境（env）
-
-`course.json` の `envs` に、その言語の道具をどう用意するかを書く。エンジンは中身を解釈しない。
-
-```json
-{
-  "rust": {
-    "cacheKey": "rust-1.83",
-    "provision": [["rustup", "toolchain", "install", "1.83.0"]],
-    "probe": ["rustc", "--version"],
-    "path": ["{cache}/bin"],
-    "network": "off",
-    "limits": { "timeoutMs": 20000 },
-    "remediation": "SETUP.md"
-  }
-}
-```
-
-- `provision` は一度だけ走り、成功したら `state/cache/<course>/<env>/` に記録される（`cacheKey` が変われば作り直し）。失敗はキャッシュしない。
-- 失敗時は `remediation` のファイル本文を添えて exit 3 で止まる。
-- 環境変数: `PROGRADE` `PROGRADE_COURSE` `PROGRADE_ENV` `PROGRADE_CACHE` `PROGRADE_COURSE_DIR` `PROGRADE_NETWORK`。
-
-### 診断（コンパイラのエラー）
-
-`exercise.json` の `diagnostics` に、どの出力をどう読むかだけを書く。
-
-```json
-{ "when": "build", "parse": "regex",
-  "pattern": "^(?<file>[^:]+):(?<line>\\d+): (?<severity>error|warning): (?<message>.+)$",
-  "flags": "gm" }
-```
-
-`parse: "jsonl"` なら `map` でフィールドを JSON Pointer に写す。
-
-## Web
-
-Web だけで学習を完結できる（CLI は不要）。
-
-```bash
-cd web && bun run build
-bun bin/prograde.ts web
-```
-
-既定は `http://<hostname>.local:4173`（例: `http://macbook-pro.local:4173`）。
-`--port` で変えられる。`ORIGIN` は起動時に決まり、`--origin` で上書きできる。
-
-既定で `0.0.0.0` を待ち受けるので、同じ LAN の他端末からも開ける。
-`<hostname>.local` は mDNS の名前で、Mac 自身では 127.0.0.1、同じ LAN の他端末では
-LAN IP に解決される。Wi-Fi が無くても Mac ではそのまま使える。
-他端末が mDNS を引けない場合は `--origin http://<LAN IP>:4173` を明示し、Mac も同じ URL で開く。
-
-ローカル専用にするとき:
-
-```bash
-bun bin/prograde.ts web --host 127.0.0.1
-```
-
-`localhost` は別の Origin になるので、表示された URL を Mac でも他端末でも使う。
-`localhost` からはフォーム（採点・リセット・PIN 解錠）を送信できない。
-
-既定では PIN なしで公開される。`--pin` を付けると6桁の PIN を生成して表示し、
-ブラウザの最初のアクセスで入力を求める。
-
-```bash
-bun bin/prograde.ts web --pin
-```
-
-PIN は起動のたびに変わり、同じブラウザなら12時間は再入力なしで使える。
-
-PIN は簡易な入口で、通信は暗号化されない。信頼できるネットワークだけで使う。
-
-- ビルドが無いとエラーになる（`cd web && bun run build`）。
-- データは既定で `~/.prograde/`。`--root` か `PROGRADE_ROOT` で別の場所を指せる。
-- `--open` で起動後にブラウザを開く。
-
-### 学習アシスタント
-
-演習画面の「AI に聞く」で右からパネルが開き、その演習のスライド・手順書・
-いま書いているコード（未保存を含む）を読んで答える。エージェントはサーバー側で動き、
-読み取り専用の4ツール（`get_context` / `read_section_slides` / `read_current_code` / `read_brief`）
-だけを持つ。シェルやファイルの書き換えは渡していない。
-
-OpenAI 互換のエンドポイントを環境変数で指定して起動する。未設定でも画面は動き、
-パネルには設定方法が出る。リポジトリ直下に `.env` を置けば、`bun bin/prograde.ts web` が
-起動時に自動で読み込む（Bun の機能）。シェルで明示した環境変数のほうが優先される。
-
-```bash
-# .env（リポジトリ直下。.gitignore 済み）
-PROGRADE_AGENT_BASE_URL=http://127.0.0.1:3000/v1
-PROGRADE_AGENT_MODEL=<モデル名>
-# 必要なら
-# PROGRADE_AGENT_API_KEY=<キー>
-```
-
-```bash
-bun bin/prograde.ts web
-```
-
-OpenCode Go を使う場合、ベース URL は `https://opencode.ai/inference/go` のままでよい
-（chat completions 用の `/openai/v1` を自動で補う）。会話ごとの `x-opencode-session` と
-独自の User-Agent も送る。API キーは OpenCode Console で発行して
-`PROGRADE_AGENT_API_KEY` に置く。
-
-| 変数 | 内容 |
-| --- | --- |
-| `PROGRADE_AGENT_BASE_URL` | OpenAI 互換 API のベース URL（必須） |
-| `PROGRADE_AGENT_MODEL` | モデル名（必須） |
-| `PROGRADE_AGENT_API_KEY` | API キー（ローカルサーバーなら不要） |
-| `PROGRADE_AGENT_CONTEXT_WINDOW` | コンテキスト長（既定 128000） |
-| `PROGRADE_AGENT_MAX_TOKENS` | 最大出力トークン（既定 8192） |
-
-会話はサーバーのメモリに6時間だけ保持する。ブラウザを閉じても同じタブなら
-セッション ID を `sessionStorage` に残す。
-
-画面と操作:
-
-| パス | 内容 |
-| --- | --- |
-| `/` | コース一覧と全体進捗、続きから解く導線 |
-| `/unlock` | PIN の入力（LAN 公開時のみ） |
-| `/c/<course>` | レッスン一覧と進捗 |
-| `/c/<course>/l/<lesson>` | 章とセクションの一覧、レッスン全体の進捗 |
-| `/c/<course>/l/<lesson>/ch/<chapter>/s/<section>` | セクションのスライド。`/<n>` でページ送り |
-| `/c/<course>/e/<exercise>` | 3ペイン（手順 / エディタ / コンソールと見本）、採点 / 実行だけ / 保存 / 雛形に戻す、レッスン進捗バー |
-
-- 演習画面は左に手順（課題・判定・ヒント）、中央にファイルタブ付きエディタ、右にコンソールと見本を並べる。下部はレッスンの進捗バー。
-- 「見本」はコースの `judge` をそのまま表示したもの。本体に言語固有の知識は入れない。
-- 採点結果は合格・不合格、判定ごとの期待値と実際値、診断、標準出力・標準エラーで返す。
-- 「実行だけ」は判定を表示せず、終了コードと出力だけを見せる（履歴には記録しない）。
-- 提出したコードは作業コピーに保存されるので、次に開くと続きから書ける。「できた！」「実行」のほか、⌘/Ctrl + S でも保存できる。「雛形に戻す」で初期状態に戻る。エディタは CodeMirror で、入力中にキーワード・組み込み関数・同じファイルの変数を補完候補に出す。
-- コース > レッスン > 章 > セクション > スライド / 演習 の5階層。セクションは1枚以上の `slides/NN.md` と1つの演習を持ち、スライドを番号順に1ページずつ表示して最後に演習へ進む。
-- SSR のみで、クライアント JS が無くてもフォームが動く。CLI と同じ `src/core` を共有する。
+詳しい形式は `skills/prograde-course/references/course-data.md` を参照。
 
 ## 開発
 
 ```bash
-bun test          # エンジン（一時ディレクトリに生成したコースで検証）
-bun run typecheck # エンジンと web/ の TypeScript を型検査
+bun test
+bun run typecheck
+cd web && bun run build
 ```
 
-`tests/no-hardcode.test.ts` が `src/core` と `src/cli` に言語固有の語（rustc, npm, docker など）が入っていないことを検証する。
-テストは一時ディレクトリにコースを生成するので、`tracks/` が無くても通る。
-新しい言語を足すときは `~/.prograde/tracks/` にコースを足すだけで、エンジンには触らない。コースはリポジトリにコミットしない。
-データを非公開 Git で管理したい場合は、`~/.prograde` で `git init` し、`state/` と `work/` を `.gitignore` する。
+テストは一時ディレクトリにコースを生成するので、`~/.prograde/tracks/` が無くても通る。
