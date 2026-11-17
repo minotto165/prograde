@@ -89,8 +89,9 @@ describe("markdown: 教材向けの Markdown レンダラ", () => {
   });
 
   test("開き括弧の直後の数式も描画する", () => {
-    const html = renderMarkdown("（$x + 1$）");
+    const html = renderMarkdown("（$x + 1$）と ($y$)。");
     expect(html).toContain('<span class="katex">');
+    expect(html).not.toContain("$y$");
   });
 
   test("別行の数式を display mode で描画する", () => {
