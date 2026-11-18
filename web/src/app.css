@@ -210,6 +210,7 @@
     top: 0;
     right: calc(var(--bento-ref-w) - 5px);
     bottom: var(--bento-footer-h);
+    z-index: 21;
     width: 9px;
     cursor: col-resize;
   }
