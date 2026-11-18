@@ -39,6 +39,174 @@
   let saveInFlight = false;
   let saveQueued = false;
 
+  const LAYOUT_KEY = "prograde:exercise-layout";
+  const GUIDE_MIN = 200;
+  const GUIDE_MAX = 480;
+  const RESULTS_MIN = 240;
+  const RESULTS_MAX = 520;
+  const CODE_MIN = 420;
+  const SPLIT_MIN = 0.25;
+  const SPLIT_MAX = 0.75;
+
+  let bento: HTMLElement | undefined = $state();
+  let footer: HTMLElement | undefined = $state();
+  let guideWidth = $state(280);
+  let resultsWidth = $state(300);
+  let resultSplit = $state(0.5);
+  let footerHeight = $state(0);
+  let layoutReady = $state(false);
+  let dragging = $state<"guide" | "results" | "split" | null>(null);
+
+  type DragKind = "guide" | "results" | "split";
+  interface DragState {
+    kind: DragKind;
+    startX: number;
+    startY: number;
+    guide: number;
+    results: number;
+    split: number;
+    total: number;
+  }
+  let drag: DragState | null = null;
+
+  function clamp(value: number, min: number, max: number): number {
+    return Math.min(max, Math.max(min, value));
+  }
+
+  function wideLayout(): boolean {
+    return typeof window !== "undefined" && window.matchMedia("(min-width: 80rem)").matches;
+  }
+
+  function maxGuideWidth(): number {
+    const width = bento?.clientWidth ?? (typeof window !== "undefined" ? window.innerWidth : 1440);
+    const results = wideLayout() ? resultsWidth : 0;
+    return Math.max(GUIDE_MIN, Math.min(GUIDE_MAX, width - results - CODE_MIN));
+  }
+
+  function maxResultsWidth(): number {
+    const width = bento?.clientWidth ?? (typeof window !== "undefined" ? window.innerWidth : 1440);
+    return Math.max(RESULTS_MIN, Math.min(RESULTS_MAX, width - guideWidth - CODE_MIN));
+  }
+
+  function clampLayout() {
+    guideWidth = Math.round(clamp(guideWidth, GUIDE_MIN, maxGuideWidth()));
+    resultsWidth = Math.round(clamp(resultsWidth, RESULTS_MIN, maxResultsWidth()));
+    resultSplit = Math.round(clamp(resultSplit, SPLIT_MIN, SPLIT_MAX) * 1000) / 1000;
+  }
+
+  function loadLayout() {
+    try {
+      const raw = localStorage.getItem(LAYOUT_KEY);
+      if (raw) {
+        const saved = JSON.parse(raw) as { guide?: unknown; results?: unknown; split?: unknown };
+        if (typeof saved.guide === "number") guideWidth = saved.guide;
+        if (typeof saved.results === "number") resultsWidth = saved.results;
+        if (typeof saved.split === "number") resultSplit = saved.split;
+      }
+    } catch {
+      // 保存値が壊れていたら初期値のまま。
+    }
+    clampLayout();
+  }
+
+  function saveLayout() {
+    try {
+      localStorage.setItem(
+        LAYOUT_KEY,
+        JSON.stringify({ guide: guideWidth, results: resultsWidth, split: resultSplit }),
+      );
+    } catch {
+      // 保存できなくても操作は続けられる。
+    }
+  }
+
+  function resetLayout() {
+    guideWidth = 280;
+    resultsWidth = 300;
+    resultSplit = 0.5;
+    clampLayout();
+    saveLayout();
+  }
+
+  function beginDrag(kind: DragKind, event: PointerEvent) {
+    if (event.button !== 0) return;
+    event.preventDefault();
+    try {
+      (event.currentTarget as HTMLElement).setPointerCapture?.(event.pointerId);
+    } catch {
+      // 合成イベントなど、ポインタが有効でない場合は捕捉しない。
+    }
+    drag = {
+      kind,
+      startX: event.clientX,
+      startY: event.clientY,
+      guide: guideWidth,
+      results: resultsWidth,
+      split: resultSplit,
+      total: Math.max(1, (bento?.clientHeight ?? 0) - footerHeight),
+    };
+    dragging = kind;
+    document.body.classList.add(kind === "split" ? "bento-resizing-row" : "bento-resizing-col");
+  }
+
+  function onPointerMove(event: PointerEvent) {
+    if (!drag) return;
+    if (drag.kind === "guide") {
+      guideWidth = Math.round(clamp(drag.guide + event.clientX - drag.startX, GUIDE_MIN, maxGuideWidth()));
+      return;
+    }
+    if (drag.kind === "results") {
+      resultsWidth = Math.round(
+        clamp(drag.results - (event.clientX - drag.startX), RESULTS_MIN, maxResultsWidth()),
+      );
+      return;
+    }
+    const next = drag.split + (event.clientY - drag.startY) / drag.total;
+    resultSplit = Math.round(clamp(next, SPLIT_MIN, SPLIT_MAX) * 1000) / 1000;
+  }
+
+  function endDrag() {
+    if (!drag) return;
+    drag = null;
+    dragging = null;
+    document.body.classList.remove("bento-resizing-row", "bento-resizing-col");
+    saveLayout();
+  }
+
+  function nudge(kind: DragKind, event: KeyboardEvent) {
+    const step = event.shiftKey ? 32 : 8;
+    if (kind === "guide") {
+      let next: number;
+      if (event.key === "ArrowLeft") next = clamp(guideWidth - step, GUIDE_MIN, maxGuideWidth());
+      else if (event.key === "ArrowRight") next = clamp(guideWidth + step, GUIDE_MIN, maxGuideWidth());
+      else if (event.key === "Home") next = GUIDE_MIN;
+      else if (event.key === "End") next = maxGuideWidth();
+      else return;
+      event.preventDefault();
+      guideWidth = Math.round(next);
+    } else if (kind === "results") {
+      let next: number;
+      if (event.key === "ArrowLeft") next = clamp(resultsWidth + step, RESULTS_MIN, maxResultsWidth());
+      else if (event.key === "ArrowRight") next = clamp(resultsWidth - step, RESULTS_MIN, maxResultsWidth());
+      else if (event.key === "Home") next = RESULTS_MIN;
+      else if (event.key === "End") next = maxResultsWidth();
+      else return;
+      event.preventDefault();
+      resultsWidth = Math.round(next);
+    } else {
+      const splitStep = event.shiftKey ? 0.1 : 0.025;
+      let next: number;
+      if (event.key === "ArrowUp") next = resultSplit - splitStep;
+      else if (event.key === "ArrowDown") next = resultSplit + splitStep;
+      else if (event.key === "Home") next = SPLIT_MIN;
+      else if (event.key === "End") next = SPLIT_MAX;
+      else return;
+      event.preventDefault();
+      resultSplit = Math.round(clamp(next, SPLIT_MIN, SPLIT_MAX) * 1000) / 1000;
+    }
+    saveLayout();
+  }
+
   function clearSaveTimer() {
     if (saveTimer !== undefined) clearTimeout(saveTimer);
     saveTimer = undefined;
@@ -131,13 +299,34 @@
       void saveCode();
     }
 
+    loadLayout();
+    footerHeight = footer?.offsetHeight ?? 0;
+    layoutReady = true;
+
+    const observer = new ResizeObserver(() => {
+      footerHeight = footer?.offsetHeight ?? 0;
+      clampLayout();
+    });
+    if (bento) observer.observe(bento);
+    if (footer) observer.observe(footer);
+
     window.addEventListener("keydown", onKeydown);
+    window.addEventListener("pointermove", onPointerMove);
+    window.addEventListener("pointerup", endDrag);
+    window.addEventListener("pointercancel", endDrag);
+    window.addEventListener("blur", endDrag);
     if (resultOpen && window.matchMedia("(max-width: 1023px)").matches) {
       requestAnimationFrame(() => resultPanel?.scrollIntoView({ block: "end" }));
     }
 
     return () => {
+      observer.disconnect();
       window.removeEventListener("keydown", onKeydown);
+      window.removeEventListener("pointermove", onPointerMove);
+      window.removeEventListener("pointerup", endDrag);
+      window.removeEventListener("pointercancel", endDrag);
+      window.removeEventListener("blur", endDrag);
+      document.body.classList.remove("bento-resizing-row", "bento-resizing-col");
       clearSaveTimer();
     };
   });
@@ -156,7 +345,11 @@
 
 <h1 class="sr-only">{data.title}</h1>
 
-<div class="bento bento-dark bento-exercise xl:h-full xl:min-h-0">
+<div
+  bind:this={bento}
+  class="bento bento-dark bento-exercise xl:h-full xl:min-h-0"
+  style={`--bento-guide-w: ${guideWidth}px; --bento-ref-w: ${resultsWidth}px; --bento-your-fr: ${resultSplit}fr; --bento-ref-fr: ${1 - resultSplit}fr; --bento-split-ratio: ${resultSplit}; --bento-footer-h: ${footerHeight}px;`}
+>
   <aside
     class="bento-cell bento-area-guide xl:min-h-0 xl:overflow-y-auto"
     aria-label="この演習の手順"
@@ -506,7 +699,10 @@
       </div>
     </section>
 
-  <div class="bento-cell bento-area-footer grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-3 px-4 py-3 sm:flex sm:flex-wrap xl:px-8">
+  <div
+    bind:this={footer}
+    class="bento-cell bento-area-footer grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-3 px-4 py-3 sm:flex sm:flex-wrap xl:px-8"
+  >
   <a href={data.slideHref} class="inline-flex min-h-9 items-center gap-1 text-xs font-medium text-ink-soft hover:text-ink">
     <Icon name="arrow-left" size={16} />
     スライドを見る
@@ -537,6 +733,62 @@
     できた！
   </button>
 </div>
+
+  {#if layoutReady}
+    <!-- svelte-ignore a11y_no_noninteractive_tabindex -->
+    <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
+    <div
+      class="bento-resizer bento-resizer-guide"
+      role="separator"
+      aria-label="手順の幅を調整"
+      aria-orientation="vertical"
+      aria-valuemin={GUIDE_MIN}
+      aria-valuemax={Math.round(maxGuideWidth())}
+      aria-valuenow={Math.round(guideWidth)}
+      tabindex="0"
+      data-dragging={dragging === "guide"}
+      title="ドラッグで幅を調整（ダブルクリックで初期値）"
+      onpointerdown={(event) => beginDrag("guide", event)}
+      onkeydown={(event) => nudge("guide", event)}
+      ondblclick={resetLayout}
+    ></div>
+
+    <!-- svelte-ignore a11y_no_noninteractive_tabindex -->
+    <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
+    <div
+      class="bento-resizer bento-resizer-results"
+      role="separator"
+      aria-label="実行結果の幅を調整"
+      aria-orientation="vertical"
+      aria-valuemin={RESULTS_MIN}
+      aria-valuemax={Math.round(maxResultsWidth())}
+      aria-valuenow={Math.round(resultsWidth)}
+      tabindex="0"
+      data-dragging={dragging === "results"}
+      title="ドラッグで幅を調整（ダブルクリックで初期値）"
+      onpointerdown={(event) => beginDrag("results", event)}
+      onkeydown={(event) => nudge("results", event)}
+      ondblclick={resetLayout}
+    ></div>
+
+    <!-- svelte-ignore a11y_no_noninteractive_tabindex -->
+    <!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
+    <div
+      class="bento-resizer bento-resizer-split"
+      role="separator"
+      aria-label="実行結果とお手本の高さを調整"
+      aria-orientation="horizontal"
+      aria-valuemin={Math.round(SPLIT_MIN * 100)}
+      aria-valuemax={Math.round(SPLIT_MAX * 100)}
+      aria-valuenow={Math.round(resultSplit * 100)}
+      tabindex="0"
+      data-dragging={dragging === "split"}
+      title="ドラッグで高さを調整（ダブルクリックで初期値）"
+      onpointerdown={(event) => beginDrag("split", event)}
+      onkeydown={(event) => nudge("split", event)}
+      ondblclick={resetLayout}
+    ></div>
+  {/if}
 </div>
 
 {#key data.exerciseId}

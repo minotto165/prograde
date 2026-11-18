@@ -107,6 +107,13 @@
   }
 
   .bento-exercise {
+    --bento-guide-w: 280px;
+    --bento-ref-w: 300px;
+    --bento-your-fr: 1fr;
+    --bento-ref-fr: 1fr;
+    --bento-split-ratio: 0.5;
+    --bento-footer-h: 0px;
+    position: relative;
     grid-template-areas: "guide" "code" "your" "ref" "footer";
     grid-template-columns: minmax(0, 1fr);
   }
@@ -118,7 +125,7 @@
         "guide your"
         "guide ref"
         "footer footer";
-      grid-template-columns: minmax(240px, 280px) minmax(0, 1fr);
+      grid-template-columns: var(--bento-guide-w) minmax(0, 1fr);
     }
   }
 
@@ -128,8 +135,8 @@
         "guide code your"
         "guide code ref"
         "footer footer footer";
-      grid-template-columns: minmax(240px, 280px) minmax(0, 1fr) minmax(280px, 300px);
-      grid-template-rows: minmax(0, 1fr) minmax(0, 1fr) auto;
+      grid-template-columns: var(--bento-guide-w) minmax(0, 1fr) var(--bento-ref-w);
+      grid-template-rows: minmax(0, var(--bento-your-fr)) minmax(0, var(--bento-ref-fr)) auto;
     }
   }
 
@@ -157,6 +164,100 @@
 
   .bento-area-footer {
     grid-area: footer;
+  }
+
+  .bento-resizer {
+    position: absolute;
+    z-index: 20;
+    display: none;
+    background: transparent;
+    touch-action: none;
+  }
+
+  .bento-resizer::after {
+    content: "";
+    position: absolute;
+    background: transparent;
+    transition: background-color 120ms ease;
+  }
+
+  .bento-resizer:hover::after,
+  .bento-resizer:focus-visible::after,
+  .bento-resizer[data-dragging="true"]::after {
+    background: var(--color-brand);
+  }
+
+  .bento-resizer:focus-visible {
+    outline: none;
+  }
+
+  .bento-resizer-guide {
+    top: 0;
+    bottom: var(--bento-footer-h);
+    left: calc(var(--bento-guide-w) - 4px);
+    width: 9px;
+    cursor: col-resize;
+  }
+
+  .bento-resizer-guide::after {
+    top: 0;
+    bottom: 0;
+    left: 4px;
+    width: 1px;
+  }
+
+  .bento-resizer-results {
+    top: 0;
+    right: calc(var(--bento-ref-w) - 5px);
+    bottom: var(--bento-footer-h);
+    width: 9px;
+    cursor: col-resize;
+  }
+
+  .bento-resizer-results::after {
+    top: 0;
+    right: 4px;
+    bottom: 0;
+    width: 1px;
+  }
+
+  .bento-resizer-split {
+    top: calc((100% - var(--bento-footer-h)) * var(--bento-split-ratio));
+    right: 0;
+    width: var(--bento-ref-w);
+    height: 9px;
+    cursor: row-resize;
+    transform: translateY(-4px);
+  }
+
+  .bento-resizer-split::after {
+    top: 4px;
+    right: 0;
+    left: 0;
+    height: 1px;
+  }
+
+  @media (min-width: 64rem) {
+    .bento-resizer-guide {
+      display: block;
+    }
+  }
+
+  @media (min-width: 80rem) {
+    .bento-resizer-results,
+    .bento-resizer-split {
+      display: block;
+    }
+  }
+
+  body.bento-resizing-col {
+    cursor: col-resize;
+    user-select: none;
+  }
+
+  body.bento-resizing-row {
+    cursor: row-resize;
+    user-select: none;
   }
 
   .bento :where(a, button, input, textarea, select, summary, [tabindex]):focus-visible {
